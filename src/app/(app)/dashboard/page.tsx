@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Card,
@@ -6,15 +6,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Overview } from '@/components/dashboard/overview';
-import { RecentTransactions } from '@/components/dashboard/recent-transactions';
-import { DollarSign, CreditCard, ArrowDown, ArrowUp } from 'lucide-react';
-import { AddExpenseDialog } from '@/components/add-expense-dialog';
-import { useAuth } from '@/hooks/use-auth';
-import { getTransactions, Transaction } from '@/lib/transactions';
-import { useEffect, useState, useCallback } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/card";
+import { Overview } from "@/components/dashboard/overview";
+import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { DollarSign, CreditCard, ArrowDown, ArrowUp } from "lucide-react";
+import { AddTransactionDialog } from "@/components/add-transaction-dialog";
+import { useAuth } from "@/hooks/use-auth";
+import { getTransactions, Transaction } from "@/lib/transactions";
+import { useEffect, useState, useCallback } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -36,10 +36,10 @@ export default function DashboardPage() {
 
   // Calculations
   const totalIncome = transactions
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.amount, 0);
   const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
   const netIncome = totalIncome - totalExpenses;
   const totalTransactions = transactions.length;
@@ -72,24 +72,36 @@ export default function DashboardPage() {
   return (
     <>
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight font-headline">
+          Dashboard
+        </h2>
         <div className="flex items-center space-x-2">
-          <AddExpenseDialog onExpenseAdded={refreshData} />
+          <AddTransactionDialog onTransactionAdded={refreshData} />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Income
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+            {netIncome >= 0 ? (
+              <ArrowUp className="h-4 w-4 text-green-500" />
+            ) : (
+              <ArrowDown className="h-4 w-4 text-red-500" />
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${netIncome.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">All time balance</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${totalIncome.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              All time income
-            </p>
+            <p className="text-xs text-muted-foreground">All time income</p>
           </CardContent>
         </Card>
         <Card>
@@ -100,24 +112,13 @@ export default function DashboardPage() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              All time expenses
-            </p>
+            <div className="text-2xl font-bold">
+              ${totalExpenses.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">All time expenses</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
-            {netIncome >= 0 ? <ArrowUp className="h-4 w-4 text-green-500" /> : <ArrowDown className="h-4 w-4 text-red-500" />}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${netIncome.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              All time balance
-            </p>
-          </CardContent>
-        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Transactions</CardTitle>
@@ -125,18 +126,19 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+{totalTransactions}</div>
-            <p className="text-xs text-muted-foreground">
-              in total
-            </p>
+            <p className="text-xs text-muted-foreground">in total</p>
           </CardContent>
         </Card>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-1 lg:col-span-5">
-           <Overview data={transactions} />
+          <Overview data={transactions} />
         </div>
         <div className="col-span-1 lg:col-span-2">
-          <RecentTransactions transactions={transactions.slice(0, 5)} totalCount={transactions.length} />
+          <RecentTransactions
+            transactions={transactions.slice(0, 5)}
+            totalCount={transactions.length}
+          />
         </div>
       </div>
     </>

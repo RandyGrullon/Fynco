@@ -28,9 +28,17 @@ export type Transaction = {
     | "Salary"
     | "Utilities"
     | "Entertainment"
+    | "Investment"
+    | "Gift"
+    | "Refund"
     | "Other";
   source: string;
-  method: "Credit Card" | "Debit Card" | "Cash" | "Bank Transfer";
+  method:
+    | "Credit Card"
+    | "Debit Card"
+    | "Cash"
+    | "Bank Transfer"
+    | "Direct Deposit";
 };
 
 function getTransactionsCollection(userId: string) {

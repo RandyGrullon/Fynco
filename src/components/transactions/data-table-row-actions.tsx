@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { MoreHorizontal, Pen, Trash } from 'lucide-react';
-import { Row } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Pen, Trash } from "lucide-react";
+import { Row } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,12 +20,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { deleteTransaction, Transaction } from '@/lib/transactions';
-import { useAuth } from '@/hooks/use-auth';
-import { useState } from 'react';
-import { AddExpenseDialog } from '../add-expense-dialog';
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { deleteTransaction, Transaction } from "@/lib/transactions";
+import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
+import { AddTransactionDialog } from "../add-transaction-dialog";
 
 interface DataTableRowActionsProps<TData extends Transaction> {
   row: Row<TData>;
@@ -34,7 +34,7 @@ interface DataTableRowActionsProps<TData extends Transaction> {
 
 export function DataTableRowActions<TData extends Transaction>({
   row,
-  refreshData
+  refreshData,
 }: DataTableRowActionsProps<TData>) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -45,15 +45,15 @@ export function DataTableRowActions<TData extends Transaction>({
     const result = await deleteTransaction(row.original.id, user.uid);
     if (result.success) {
       toast({
-        title: 'Transaction Deleted',
-        description: 'The transaction has been successfully deleted.',
-        className: 'bg-accent text-accent-foreground',
+        title: "Transaction Deleted",
+        description: "The transaction has been successfully deleted.",
+        className: "bg-accent text-accent-foreground",
       });
       refreshData();
     } else {
       toast({
-        variant: 'destructive',
-        title: 'Error',
+        variant: "destructive",
+        title: "Error",
         description: `Failed to delete transaction: ${result.error}`,
       });
     }
@@ -63,10 +63,10 @@ export function DataTableRowActions<TData extends Transaction>({
 
   return (
     <AlertDialog>
-      <AddExpenseDialog
+      <AddTransactionDialog
         open={isEditDialogOpen}
         setOpen={setIsEditDialogOpen}
-        onExpenseAdded={refreshData}
+        onTransactionAdded={refreshData}
         transaction={transaction}
       />
       <DropdownMenu>
@@ -86,14 +86,17 @@ export function DataTableRowActions<TData extends Transaction>({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+            <DropdownMenuItem
+              className="text-destructive"
+              onSelect={(e) => e.preventDefault()}
+            >
               <Trash className="mr-2 h-3.5 w-3.5 text-destructive/70" />
               Delete
             </DropdownMenuItem>
           </AlertDialogTrigger>
         </DropdownMenuContent>
       </DropdownMenu>
-       <AlertDialogContent>
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -103,7 +106,10 @@ export function DataTableRowActions<TData extends Transaction>({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+          <AlertDialogAction
+            onClick={handleDelete}
+            className="bg-destructive hover:bg-destructive/90"
+          >
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>
