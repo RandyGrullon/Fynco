@@ -9,25 +9,38 @@ import {
 } from "@/components/ui/card";
 import { Overview } from "@/components/dashboard/overview";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
-import { DollarSign, CreditCard, ArrowDown, ArrowUp } from "lucide-react";
+import {
+  DollarSign,
+  CreditCard,
+  ArrowDown,
+  ArrowUp,
+  Wallet,
+} from "lucide-react";
 import { AddTransactionDialog } from "@/components/add-transaction-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { getTransactions, Transaction } from "@/lib/transactions";
+import { getAccounts, Account } from "@/lib/accounts";
 import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
 
   const refreshData = useCallback(async () => {
     if (user) {
       setLoading(true);
-      const fetchedTransactions = await getTransactions(user.uid);
+      const [fetchedTransactions, fetchedAccounts] = await Promise.all([
+        getTransactions(user.uid),
+        getAccounts(user.uid),
+      ]);
       setTransactions(fetchedTransactions);
+      setAccounts(fetchedAccounts);
       setLoading(false);
     }
   }, [user]);
@@ -45,6 +58,10 @@ export default function DashboardPage() {
     .reduce((sum, t) => sum + t.amount, 0);
   const netIncome = totalIncome - totalExpenses;
   const totalTransactions = transactions.length;
+  const totalAccountsBalance = accounts.reduce(
+    (sum, account) => sum + account.balance,
+    0
+  );
 
   if (loading) {
     return (
@@ -53,7 +70,8 @@ export default function DashboardPage() {
           <Skeleton className="h-9 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Skeleton className="h-32" />
           <Skeleton className="h-32" />
           <Skeleton className="h-32" />
           <Skeleton className="h-32" />
@@ -81,7 +99,7 @@ export default function DashboardPage() {
           <AddTransactionDialog onTransactionAdded={refreshData} />
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Net Income</CardTitle>
@@ -124,7 +142,24 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">All time expenses</p>
           </CardContent>
         </Card>
-
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Accounts Balance
+            </CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(totalAccountsBalance)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <Link href="/accounts" className="text-primary hover:underline">
+                {accounts.length} account{accounts.length !== 1 ? "s" : ""}
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Transactions</CardTitle>

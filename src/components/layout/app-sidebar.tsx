@@ -1,19 +1,20 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
+import Link from "next/link";
 import {
   Wallet,
   LayoutDashboard,
   ArrowLeftRight,
   Settings,
-} from 'lucide-react';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
-  { href: '/settings', icon: Settings, label: 'Settings' },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/accounts", icon: Wallet, label: "Accounts" },
+  { href: "/transactions", icon: ArrowLeftRight, label: "Transactions" },
+  { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
 export function AppSidebar() {
@@ -22,7 +23,10 @@ export function AppSidebar() {
   return (
     <div className="flex h-full max-h-screen flex-col gap-2">
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-        <Link href="/" className="flex items-center gap-2 font-headline font-semibold">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-headline font-semibold"
+        >
           <Wallet className="h-6 w-6 text-primary" />
           <span>Fynco</span>
         </Link>
@@ -36,8 +40,8 @@ export function AppSidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-                  { 'bg-muted text-primary': isActive }
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                  { "bg-muted text-primary": isActive }
                 )}
               >
                 <item.icon className="h-4 w-4" />
