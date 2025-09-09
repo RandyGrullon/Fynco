@@ -34,18 +34,18 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
 
   return (
     <div className="flex h-full max-h-screen flex-col gap-2">
-      <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+      <div className="flex h-16 items-center border-b px-6 lg:h-[60px] lg:px-6">
         <Link
           href="/"
           onClick={handleLinkClick}
-          className="flex items-center gap-2 font-headline font-semibold"
+          className="flex items-center gap-3 font-headline font-semibold text-lg"
         >
-          <Wallet className="h-6 w-6 text-primary" />
+          <Wallet className="h-7 w-7 text-primary" />
           <span>Fynco</span>
         </Link>
       </div>
       <div className="flex-1">
-        <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+        <nav className="grid items-start px-4 text-base font-medium lg:px-4 lg:text-sm">
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
@@ -54,11 +54,11 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
                 href={item.href}
                 onClick={handleLinkClick}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                  "flex items-center gap-4 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:text-primary lg:gap-3 lg:px-3 lg:py-2",
                   { "bg-muted text-primary": isActive }
                 )}
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-5 w-5 lg:h-4 lg:w-4" />
                 {item.label}
               </Link>
             );

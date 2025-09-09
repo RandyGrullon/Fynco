@@ -18,7 +18,7 @@ export function AppHeader() {
             <span className="sr-only">Toggle Menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="sm:max-w-xs p-0">
+        <SheetContent side="left" className="w-80 sm:max-w-xs p-0">
           <AppSidebar onNavigate={() => setSidebarOpen(false)} />
         </SheetContent>
       </Sheet>
