@@ -24,7 +24,9 @@ import RecurringTransactionsList from "@/components/recurring/recurring-transact
 
 export default function RecurringTransactionsPage() {
   const { user } = useAuth();
-  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransactionWithAccount[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<
+    RecurringTransactionWithAccount[]
+  >([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +35,7 @@ export default function RecurringTransactionsPage() {
       setLoading(true);
       const [fetchedTransactions, fetchedAccounts] = await Promise.all([
         getRecurringTransactions(user.uid),
-        getAccounts(user.uid)
+        getAccounts(user.uid),
       ]);
       setRecurringTransactions(fetchedTransactions);
       setAccounts(fetchedAccounts);
@@ -46,12 +48,18 @@ export default function RecurringTransactionsPage() {
   }, [refreshData]);
 
   // Calculate summary statistics
-  const activeRecurringCount = recurringTransactions.filter(t => t.isActive).length;
+  const activeRecurringCount = recurringTransactions.filter(
+    (t) => t.isActive
+  ).length;
   const monthlyIncome = recurringTransactions
-    .filter(t => t.isActive && t.type === "income" && t.frequency === "monthly")
+    .filter(
+      (t) => t.isActive && t.type === "income" && t.frequency === "monthly"
+    )
     .reduce((sum, t) => sum + t.amount, 0);
   const monthlyExpenses = recurringTransactions
-    .filter(t => t.isActive && t.type === "expense" && t.frequency === "monthly")
+    .filter(
+      (t) => t.isActive && t.type === "expense" && t.frequency === "monthly"
+    )
     .reduce((sum, t) => sum + t.amount, 0);
 
   if (loading) {
@@ -91,7 +99,7 @@ export default function RecurringTransactionsPage() {
           >
             <RefreshCcw className="h-4 w-4" />
           </Button>
-          <AddRecurringTransactionDialog 
+          <AddRecurringTransactionDialog
             accounts={accounts}
             onTransactionAdded={refreshData}
           />
@@ -115,7 +123,9 @@ export default function RecurringTransactionsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Monthly Income
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -132,7 +142,9 @@ export default function RecurringTransactionsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Monthly Expenses
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -150,9 +162,15 @@ export default function RecurringTransactionsPage() {
 
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="mb-4 w-full sm:w-auto">
-          <TabsTrigger value="all" className="flex-1 sm:flex-none">All</TabsTrigger>
-          <TabsTrigger value="income" className="flex-1 sm:flex-none">Income</TabsTrigger>
-          <TabsTrigger value="expense" className="flex-1 sm:flex-none">Expenses</TabsTrigger>
+          <TabsTrigger value="all" className="flex-1 sm:flex-none">
+            All
+          </TabsTrigger>
+          <TabsTrigger value="income" className="flex-1 sm:flex-none">
+            Income
+          </TabsTrigger>
+          <TabsTrigger value="expense" className="flex-1 sm:flex-none">
+            Expenses
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">
@@ -162,7 +180,7 @@ export default function RecurringTransactionsPage() {
                 <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
                   You don't have any recurring transactions yet.
                 </p>
-                <AddRecurringTransactionDialog 
+                <AddRecurringTransactionDialog
                   accounts={accounts}
                   onTransactionAdded={refreshData}
                 >
@@ -174,8 +192,8 @@ export default function RecurringTransactionsPage() {
               </CardContent>
             </Card>
           ) : (
-            <RecurringTransactionsList 
-              transactions={recurringTransactions} 
+            <RecurringTransactionsList
+              transactions={recurringTransactions}
               accounts={accounts}
               onTransactionUpdated={refreshData}
             />
@@ -183,13 +201,14 @@ export default function RecurringTransactionsPage() {
         </TabsContent>
 
         <TabsContent value="income">
-          {recurringTransactions.filter(t => t.type === "income").length === 0 ? (
+          {recurringTransactions.filter((t) => t.type === "income").length ===
+          0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 sm:py-10">
                 <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
                   You don't have any recurring income yet.
                 </p>
-                <AddRecurringTransactionDialog 
+                <AddRecurringTransactionDialog
                   accounts={accounts}
                   onTransactionAdded={refreshData}
                   initialType="income"
@@ -202,8 +221,10 @@ export default function RecurringTransactionsPage() {
               </CardContent>
             </Card>
           ) : (
-            <RecurringTransactionsList 
-              transactions={recurringTransactions.filter(t => t.type === "income")} 
+            <RecurringTransactionsList
+              transactions={recurringTransactions.filter(
+                (t) => t.type === "income"
+              )}
               accounts={accounts}
               onTransactionUpdated={refreshData}
             />
@@ -211,13 +232,14 @@ export default function RecurringTransactionsPage() {
         </TabsContent>
 
         <TabsContent value="expense">
-          {recurringTransactions.filter(t => t.type === "expense").length === 0 ? (
+          {recurringTransactions.filter((t) => t.type === "expense").length ===
+          0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 sm:py-10">
                 <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
                   You don't have any recurring expenses yet.
                 </p>
-                <AddRecurringTransactionDialog 
+                <AddRecurringTransactionDialog
                   accounts={accounts}
                   onTransactionAdded={refreshData}
                   initialType="expense"
@@ -230,8 +252,10 @@ export default function RecurringTransactionsPage() {
               </CardContent>
             </Card>
           ) : (
-            <RecurringTransactionsList 
-              transactions={recurringTransactions.filter(t => t.type === "expense")} 
+            <RecurringTransactionsList
+              transactions={recurringTransactions.filter(
+                (t) => t.type === "expense"
+              )}
               accounts={accounts}
               onTransactionUpdated={refreshData}
             />

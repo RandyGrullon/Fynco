@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { Account, getAccountById } from "./accounts";
 
-export type RecurrenceFrequency = 
+export type RecurrenceFrequency =
   | "daily"
   | "weekly"
   | "biweekly"
@@ -54,19 +54,24 @@ function getRecurringTransactionsCollection(userId: string) {
 }
 
 export async function addRecurringTransaction(
-  transaction: Omit<RecurringTransaction, "id" | "userId" | "createdAt" | "updatedAt" | "nextProcessDate">,
+  transaction: Omit<
+    RecurringTransaction,
+    "id" | "userId" | "createdAt" | "updatedAt" | "nextProcessDate"
+  >,
   userId: string
 ) {
   try {
-    const recurringTransactionsCollection = getRecurringTransactionsCollection(userId);
+    const recurringTransactionsCollection =
+      getRecurringTransactionsCollection(userId);
     const now = Timestamp.now();
 
     // Calculate next process date based on start date and frequency
     const nextProcessDate = calculateNextProcessDate(
-      new Date(transaction.startDate instanceof Timestamp 
-        ? transaction.startDate.toDate() 
-        : typeof transaction.startDate === 'string' 
-          ? new Date(transaction.startDate) 
+      new Date(
+        transaction.startDate instanceof Timestamp
+          ? transaction.startDate.toDate()
+          : typeof transaction.startDate === "string"
+          ? new Date(transaction.startDate)
           : transaction.startDate
       ),
       transaction.frequency
@@ -75,7 +80,9 @@ export async function addRecurringTransaction(
     const docRef = await addDoc(recurringTransactionsCollection, {
       ...transaction,
       userId,
-      nextProcessDate: nextProcessDate ? Timestamp.fromDate(nextProcessDate) : null,
+      nextProcessDate: nextProcessDate
+        ? Timestamp.fromDate(nextProcessDate)
+        : null,
       createdAt: now,
       updatedAt: now,
     });
@@ -93,7 +100,13 @@ export async function updateRecurringTransaction(
   userId: string
 ) {
   try {
-    const recurringTransactionRef = doc(db, "users", userId, "recurringTransactions", id);
+    const recurringTransactionRef = doc(
+      db,
+      "users",
+      userId,
+      "recurringTransactions",
+      id
+    );
     const now = Timestamp.now();
     const updateData = { ...transaction, updatedAt: now };
 
@@ -103,21 +116,21 @@ export async function updateRecurringTransaction(
       const currentDoc = await getDoc(recurringTransactionRef);
       if (currentDoc.exists()) {
         const currentData = currentDoc.data() as RecurringTransaction;
-        
-        const startDate = transaction.startDate 
-          ? (transaction.startDate instanceof Date 
-              ? transaction.startDate 
-              : typeof transaction.startDate === 'string'
-                ? new Date(transaction.startDate)
-                : (transaction.startDate as Timestamp).toDate())
-          : (currentData.startDate instanceof Timestamp 
-              ? currentData.startDate.toDate() 
-              : typeof currentData.startDate === 'string'
-                ? new Date(currentData.startDate)
-                : currentData.startDate as Date);
-        
+
+        const startDate = transaction.startDate
+          ? transaction.startDate instanceof Date
+            ? transaction.startDate
+            : typeof transaction.startDate === "string"
+            ? new Date(transaction.startDate)
+            : (transaction.startDate as Timestamp).toDate()
+          : currentData.startDate instanceof Timestamp
+          ? currentData.startDate.toDate()
+          : typeof currentData.startDate === "string"
+          ? new Date(currentData.startDate)
+          : (currentData.startDate as Date);
+
         const frequency = transaction.frequency || currentData.frequency;
-        
+
         const nextProcessDate = calculateNextProcessDate(startDate, frequency);
         if (nextProcessDate) {
           updateData.nextProcessDate = Timestamp.fromDate(nextProcessDate);
@@ -135,7 +148,13 @@ export async function updateRecurringTransaction(
 
 export async function deleteRecurringTransaction(id: string, userId: string) {
   try {
-    const recurringTransactionRef = doc(db, "users", userId, "recurringTransactions", id);
+    const recurringTransactionRef = doc(
+      db,
+      "users",
+      userId,
+      "recurringTransactions",
+      id
+    );
     await deleteDoc(recurringTransactionRef);
     return { success: true };
   } catch (error) {
@@ -144,27 +163,51 @@ export async function deleteRecurringTransaction(id: string, userId: string) {
   }
 }
 
-export async function getRecurringTransactions(userId: string): Promise<RecurringTransactionWithAccount[]> {
+export async function getRecurringTransactions(
+  userId: string
+): Promise<RecurringTransactionWithAccount[]> {
   try {
-    const recurringTransactionsCollection = getRecurringTransactionsCollection(userId);
-    const q = query(recurringTransactionsCollection, orderBy("createdAt", "desc"));
+    const recurringTransactionsCollection =
+      getRecurringTransactionsCollection(userId);
+    const q = query(
+      recurringTransactionsCollection,
+      orderBy("createdAt", "desc")
+    );
     const querySnapshot = await getDocs(q);
-    
+
     const recurringTransactions: RecurringTransactionWithAccount[] = [];
-    
+
     for (const doc of querySnapshot.docs) {
       const data = doc.data() as RecurringTransaction;
       const transaction: RecurringTransactionWithAccount = {
         ...data,
         id: doc.id,
-        startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
-        endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
-        lastProcessed: data.lastProcessed instanceof Timestamp ? data.lastProcessed.toDate() : data.lastProcessed,
-        nextProcessDate: data.nextProcessDate instanceof Timestamp ? data.nextProcessDate.toDate() : data.nextProcessDate,
-        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
-        updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : data.updatedAt,
+        startDate:
+          data.startDate instanceof Timestamp
+            ? data.startDate.toDate()
+            : data.startDate,
+        endDate:
+          data.endDate instanceof Timestamp
+            ? data.endDate.toDate()
+            : data.endDate,
+        lastProcessed:
+          data.lastProcessed instanceof Timestamp
+            ? data.lastProcessed.toDate()
+            : data.lastProcessed,
+        nextProcessDate:
+          data.nextProcessDate instanceof Timestamp
+            ? data.nextProcessDate.toDate()
+            : data.nextProcessDate,
+        createdAt:
+          data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate()
+            : data.createdAt,
+        updatedAt:
+          data.updatedAt instanceof Timestamp
+            ? data.updatedAt.toDate()
+            : data.updatedAt,
       };
-      
+
       // Get account details
       if (data.accountId) {
         try {
@@ -173,13 +216,16 @@ export async function getRecurringTransactions(userId: string): Promise<Recurrin
             transaction.account = account;
           }
         } catch (accountError) {
-          console.error("Error fetching account for recurring transaction:", accountError);
+          console.error(
+            "Error fetching account for recurring transaction:",
+            accountError
+          );
         }
       }
-      
+
       recurringTransactions.push(transaction);
     }
-    
+
     return recurringTransactions;
   } catch (error) {
     console.error("Error getting recurring transactions: ", error);
@@ -187,24 +233,51 @@ export async function getRecurringTransactions(userId: string): Promise<Recurrin
   }
 }
 
-export async function getRecurringTransaction(userId: string, id: string): Promise<RecurringTransactionWithAccount | null> {
+export async function getRecurringTransaction(
+  userId: string,
+  id: string
+): Promise<RecurringTransactionWithAccount | null> {
   try {
-    const recurringTransactionRef = doc(db, "users", userId, "recurringTransactions", id);
+    const recurringTransactionRef = doc(
+      db,
+      "users",
+      userId,
+      "recurringTransactions",
+      id
+    );
     const docSnap = await getDoc(recurringTransactionRef);
-    
+
     if (docSnap.exists()) {
       const data = docSnap.data() as RecurringTransaction;
       const transaction: RecurringTransactionWithAccount = {
         ...data,
         id: docSnap.id,
-        startDate: data.startDate instanceof Timestamp ? data.startDate.toDate() : data.startDate,
-        endDate: data.endDate instanceof Timestamp ? data.endDate.toDate() : data.endDate,
-        lastProcessed: data.lastProcessed instanceof Timestamp ? data.lastProcessed.toDate() : data.lastProcessed,
-        nextProcessDate: data.nextProcessDate instanceof Timestamp ? data.nextProcessDate.toDate() : data.nextProcessDate,
-        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt,
-        updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : data.updatedAt,
+        startDate:
+          data.startDate instanceof Timestamp
+            ? data.startDate.toDate()
+            : data.startDate,
+        endDate:
+          data.endDate instanceof Timestamp
+            ? data.endDate.toDate()
+            : data.endDate,
+        lastProcessed:
+          data.lastProcessed instanceof Timestamp
+            ? data.lastProcessed.toDate()
+            : data.lastProcessed,
+        nextProcessDate:
+          data.nextProcessDate instanceof Timestamp
+            ? data.nextProcessDate.toDate()
+            : data.nextProcessDate,
+        createdAt:
+          data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate()
+            : data.createdAt,
+        updatedAt:
+          data.updatedAt instanceof Timestamp
+            ? data.updatedAt.toDate()
+            : data.updatedAt,
       };
-      
+
       // Get account details
       if (data.accountId) {
         try {
@@ -213,10 +286,13 @@ export async function getRecurringTransaction(userId: string, id: string): Promi
             transaction.account = account;
           }
         } catch (accountError) {
-          console.error("Error fetching account for recurring transaction:", accountError);
+          console.error(
+            "Error fetching account for recurring transaction:",
+            accountError
+          );
         }
       }
-      
+
       return transaction;
     } else {
       return null;
@@ -228,22 +304,25 @@ export async function getRecurringTransaction(userId: string, id: string): Promi
 }
 
 // Helper function to calculate the next process date based on frequency
-function calculateNextProcessDate(startDate: Date, frequency: RecurrenceFrequency): Date | null {
+function calculateNextProcessDate(
+  startDate: Date,
+  frequency: RecurrenceFrequency
+): Date | null {
   const now = new Date();
   const result = new Date(startDate);
-  
+
   // If start date is in the future, that's the next process date
   if (startDate > now) {
     return startDate;
   }
-  
+
   // Start from the start date and find the next occurrence based on frequency
   switch (frequency) {
     case "daily":
       // Move to the next day from now
       result.setDate(now.getDate() + 1);
       break;
-      
+
     case "weekly":
       // Find the next occurrence of the same day of week
       const dayOfWeek = startDate.getDay();
@@ -251,7 +330,7 @@ function calculateNextProcessDate(startDate: Date, frequency: RecurrenceFrequenc
       if (daysToAdd <= 0) daysToAdd += 7;
       result.setDate(now.getDate() + daysToAdd);
       break;
-      
+
     case "biweekly":
       // Similar to weekly but with 14 days interval
       // Calculate days since start
@@ -261,28 +340,38 @@ function calculateNextProcessDate(startDate: Date, frequency: RecurrenceFrequenc
       const nextBiweeklyDate = new Date(startDate);
       nextBiweeklyDate.setDate(startDate.getDate() + (biweeklyCycles + 1) * 14);
       return nextBiweeklyDate;
-      
+
     case "monthly":
       // Move to the same day next month
       result.setMonth(now.getMonth() + 1);
-      result.setDate(Math.min(startDate.getDate(), getDaysInMonth(result.getFullYear(), result.getMonth())));
+      result.setDate(
+        Math.min(
+          startDate.getDate(),
+          getDaysInMonth(result.getFullYear(), result.getMonth())
+        )
+      );
       break;
-      
+
     case "quarterly":
       // Move to the same day 3 months later
       result.setMonth(now.getMonth() + 3);
-      result.setDate(Math.min(startDate.getDate(), getDaysInMonth(result.getFullYear(), result.getMonth())));
+      result.setDate(
+        Math.min(
+          startDate.getDate(),
+          getDaysInMonth(result.getFullYear(), result.getMonth())
+        )
+      );
       break;
-      
+
     case "yearly":
       // Move to the same day/month next year
       result.setFullYear(now.getFullYear() + 1);
       break;
-      
+
     default:
       return null;
   }
-  
+
   return result;
 }
 

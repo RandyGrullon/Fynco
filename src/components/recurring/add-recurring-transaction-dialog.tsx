@@ -30,7 +30,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -41,7 +45,10 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Account } from "@/lib/accounts";
-import { addRecurringTransaction, RecurrenceFrequency } from "@/lib/recurring-transactions";
+import {
+  addRecurringTransaction,
+  RecurrenceFrequency,
+} from "@/lib/recurring-transactions";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const recurringTransactionSchema = z.object({
@@ -52,11 +59,20 @@ const recurringTransactionSchema = z.object({
   category: z.string().min(1, "Category is required"),
   startDate: z.date(),
   endDate: z.date().nullable().optional(),
-  frequency: z.enum(["daily", "weekly", "biweekly", "monthly", "quarterly", "yearly"]),
+  frequency: z.enum([
+    "daily",
+    "weekly",
+    "biweekly",
+    "monthly",
+    "quarterly",
+    "yearly",
+  ]),
   isActive: z.boolean().default(true),
 });
 
-type RecurringTransactionFormValues = z.infer<typeof recurringTransactionSchema>;
+type RecurringTransactionFormValues = z.infer<
+  typeof recurringTransactionSchema
+>;
 
 interface AddRecurringTransactionDialogProps {
   accounts: Account[];
@@ -174,12 +190,16 @@ export function AddRecurringTransactionDialog({
         <DialogHeader>
           <DialogTitle>Add Recurring Transaction</DialogTitle>
           <DialogDescription>
-            Set up a new recurring transaction that will be processed automatically.
+            Set up a new recurring transaction that will be processed
+            automatically.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="type"
@@ -228,7 +248,8 @@ export function AddRecurringTransactionDialog({
                       placeholder="0.00"
                       step="0.01"
                       onChange={(e) => {
-                        const value = e.target.value === '' ? '0' : e.target.value;
+                        const value =
+                          e.target.value === "" ? "0" : e.target.value;
                         field.onChange(parseFloat(value));
                       }}
                       value={field.value}
@@ -259,7 +280,10 @@ export function AddRecurringTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Account</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select account" />
@@ -284,20 +308,24 @@ export function AddRecurringTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(selectedType === "income" ? incomeCategories : expenseCategories).map(
-                        (category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        )
-                      )}
+                      {(selectedType === "income"
+                        ? incomeCategories
+                        : expenseCategories
+                      ).map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -311,7 +339,10 @@ export function AddRecurringTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Frequency</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
@@ -440,7 +471,11 @@ export function AddRecurringTransactionDialog({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
