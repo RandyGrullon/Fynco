@@ -91,9 +91,9 @@ export function StatisticsOverview({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight font-headline">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline">
             Financial Statistics
           </h2>
           <p className="text-muted-foreground">
@@ -101,14 +101,14 @@ export function StatisticsOverview({
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="text-sm">
+          <Badge variant="outline" className="text-sm py-1.5">
             {getTimePeriodLabel()}
           </Badge>
         </div>
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
@@ -176,8 +176,8 @@ export function StatisticsOverview({
       </div>
 
       {/* Income vs Expenses Comparison */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               This Month Income
@@ -192,14 +192,25 @@ export function StatisticsOverview({
             <div className="text-2xl font-bold">
               {formatCurrency(summary.thisMonthIncome)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {incomeChange >= 0 ? "+" : ""}
-              {incomeChange.toFixed(1)}% from last month
-            </p>
+            <div className="flex items-center mt-1">
+              <div
+                className={`text-xs px-2 py-0.5 rounded-md ${
+                  incomeChange >= 0
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {incomeChange >= 0 ? "+" : ""}
+                {incomeChange.toFixed(1)}%
+              </div>
+              <p className="text-xs text-muted-foreground ml-2">
+                from last month
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               This Month Expenses
@@ -214,14 +225,25 @@ export function StatisticsOverview({
             <div className="text-2xl font-bold">
               {formatCurrency(summary.thisMonthExpenses)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {expenseChange >= 0 ? "+" : ""}
-              {expenseChange.toFixed(1)}% from last month
-            </p>
+            <div className="flex items-center mt-1">
+              <div
+                className={`text-xs px-2 py-0.5 rounded-md ${
+                  expenseChange <= 0
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {expenseChange >= 0 ? "+" : ""}
+                {expenseChange.toFixed(1)}%
+              </div>
+              <p className="text-xs text-muted-foreground ml-2">
+                from last month
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Recurring Transactions
@@ -232,101 +254,141 @@ export function StatisticsOverview({
             <div className="text-2xl font-bold">
               {summary.activeRecurringTransactions}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {summary.totalRecurringTransactions} total configured
+            <div className="w-full bg-muted h-2 rounded-full mt-2">
+              <div
+                className="bg-primary h-2 rounded-full"
+                style={{
+                  width: `${
+                    (summary.activeRecurringTransactions /
+                      Math.max(1, summary.totalRecurringTransactions)) *
+                    100
+                  }%`,
+                }}
+              ></div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {summary.activeRecurringTransactions} active out of{" "}
+              {summary.totalRecurringTransactions} total
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts Section */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {/* Monthly Trends */}
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Monthly Trends</CardTitle>
+        <Card className="col-span-1 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2" />
+              Monthly Trends
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyTrendsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="month"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickFormatter={(value) => `${currencySymbol}${value}`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    borderColor: "hsl(var(--border))",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="income"
-                  stroke="hsl(var(--chart-2))"
-                  name="Income"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="expenses"
-                  stroke="hsl(var(--chart-1))"
-                  name="Expenses"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="netIncome"
-                  stroke="hsl(var(--chart-3))"
-                  name="Net Income"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <CardContent className="px-0 pb-0 sm:px-6">
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={monthlyTrendsData}
+                  margin={{ right: 10, left: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="month"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickMargin={10}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickFormatter={(value) => `${currencySymbol}${value}`}
+                    width={60}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      borderColor: "hsl(var(--border))",
+                    }}
+                    formatter={(value: number) => [formatCurrency(value)]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="income"
+                    stroke="hsl(var(--chart-2))"
+                    name="Income"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke="hsl(var(--chart-1))"
+                    name="Expenses"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="netIncome"
+                    stroke="hsl(var(--chart-3))"
+                    name="Net Income"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
         {/* Top Expense Categories */}
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Top Expense Categories</CardTitle>
+        <Card className="col-span-1 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="flex items-center">
+              <Target className="h-5 w-5 mr-2" />
+              Top Expense Categories
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={topExpenseData}
-                  dataKey="amount"
-                  nameKey="category"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ category, percentage }) =>
-                    `${category} (${percentage.toFixed(1)}%)`
-                  }
-                >
-                  {topExpenseData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number) => [
-                    formatCurrency(value),
-                    "Amount",
-                  ]}
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    borderColor: "hsl(var(--border))",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={topExpenseData}
+                    dataKey="amount"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ category, percentage }) =>
+                      `${category.substring(0, 10)}${
+                        category.length > 10 ? "..." : ""
+                      } (${percentage.toFixed(1)}%)`
+                    }
+                  >
+                    {topExpenseData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => [
+                      formatCurrency(value),
+                      "Amount",
+                    ]}
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      borderColor: "hsl(var(--border))",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -340,8 +402,8 @@ export function StatisticsOverview({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
               <p className="text-sm font-medium">Expense to Income Ratio</p>
               <div className="text-2xl font-bold">
                 {summary.expenseToIncomeRatio.toFixed(2)}
@@ -350,46 +412,73 @@ export function StatisticsOverview({
                 value={Math.min(100, summary.expenseToIncomeRatio * 100)}
                 className="h-2"
               />
-              <p className="text-xs text-muted-foreground">
-                {summary.expenseToIncomeRatio < 0.8
-                  ? "Healthy"
-                  : summary.expenseToIncomeRatio < 1
-                  ? "Moderate"
-                  : "High Risk"}
-              </p>
+              <div className="flex items-center mt-1">
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-md ${
+                    summary.expenseToIncomeRatio < 0.8
+                      ? "bg-green-100 text-green-800"
+                      : summary.expenseToIncomeRatio < 1
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {summary.expenseToIncomeRatio < 0.8
+                    ? "Healthy"
+                    : summary.expenseToIncomeRatio < 1
+                    ? "Moderate"
+                    : "High Risk"}
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
               <p className="text-sm font-medium">Average Daily Expense</p>
               <div className="text-2xl font-bold">
                 {formatCurrency(summary.averageDailyExpense)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground flex items-center mt-2">
+                <Calendar className="h-3.5 w-3.5 mr-1" />
                 Based on transaction history
-              </p>
+              </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
               <p className="text-sm font-medium">Average Transaction</p>
               <div className="text-2xl font-bold">
                 {formatCurrency(summary.averageTransactionAmount)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Income: {formatCurrency(summary.averageIncomeAmount)}
-                <br />
-                Expense: {formatCurrency(summary.averageExpenseAmount)}
-              </p>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="text-xs text-green-600 bg-green-100/50 p-1 rounded">
+                  Income: {formatCurrency(summary.averageIncomeAmount)}
+                </div>
+                <div className="text-xs text-red-600 bg-red-100/50 p-1 rounded">
+                  Expense: {formatCurrency(summary.averageExpenseAmount)}
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Account Distribution</p>
+            <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
+              <p className="text-sm font-medium">Account Balance Status</p>
               <div className="text-2xl font-bold">
                 {summary.accountsWithPositiveBalance}/{summary.totalAccounts}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Accounts with positive balance
-                <br />
-                Highest: {formatCurrency(summary.highestAccountBalance)}
+              <div className="w-full bg-muted h-2 rounded-full mt-2">
+                <div
+                  className="bg-primary h-2 rounded-full"
+                  style={{
+                    width: `${
+                      (summary.accountsWithPositiveBalance /
+                        Math.max(1, summary.totalAccounts)) *
+                      100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+              <p className="text-xs text-muted-foreground flex justify-between mt-1">
+                <span>Positive accounts</span>
+                <span>
+                  Highest: {formatCurrency(summary.highestAccountBalance)}
+                </span>
               </p>
             </div>
           </div>
@@ -397,31 +486,40 @@ export function StatisticsOverview({
       </Card>
 
       {/* Account & Category Breakdown */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         {/* Account Types */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
-            <CardTitle>Account Distribution</CardTitle>
+            <CardTitle className="flex items-center">
+              <CreditCard className="h-5 w-5 mr-2" />
+              Account Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {summary.accountsByType.map((accountType) => (
                 <div
                   key={accountType.type}
-                  className="flex items-center justify-between"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-lg p-3 hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex flex-col">
+                  <div className="flex flex-col mb-2 sm:mb-0">
                     <span className="font-medium">{accountType.type}</span>
                     <span className="text-sm text-muted-foreground">
                       {accountType.count} account
                       {accountType.count !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">
-                      {formatCurrency(accountType.totalBalance)}
+                  <div className="flex items-center justify-between sm:justify-end sm:space-x-4">
+                    <div className="flex flex-col sm:items-end">
+                      <div className="font-semibold">
+                        {formatCurrency(accountType.totalBalance)}
+                      </div>
+                      <Progress
+                        value={accountType.percentage}
+                        className="h-1.5 w-20 sm:w-24 mt-1"
+                      />
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm rounded-full bg-muted px-2 py-1 w-16 text-center">
                       {accountType.percentage.toFixed(1)}%
                     </div>
                   </div>
@@ -432,44 +530,73 @@ export function StatisticsOverview({
         </Card>
 
         {/* Recurring Transaction Summary */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
-            <CardTitle>Estimated Monthly Recurring</CardTitle>
+            <CardTitle className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2" />
+              Estimated Monthly Recurring
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-green-600">
-                  Recurring Income
-                </span>
-                <span className="font-bold text-green-600">
-                  {formatCurrency(summary.estimatedMonthlyRecurringIncome)}
-                </span>
+            <div className="space-y-6">
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Recurring Income</span>
+                  <span className="font-bold text-green-600">
+                    {formatCurrency(summary.estimatedMonthlyRecurringIncome)}
+                  </span>
+                </div>
+                <Progress
+                  value={summary.estimatedMonthlyRecurringIncome > 0 ? 100 : 0}
+                  className="h-2 bg-green-100"
+                />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-red-600">
-                  Recurring Expenses
-                </span>
-                <span className="font-bold text-red-600">
-                  {formatCurrency(summary.estimatedMonthlyRecurringExpenses)}
-                </span>
+
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    Recurring Expenses
+                  </span>
+                  <span className="font-bold text-red-600">
+                    {formatCurrency(summary.estimatedMonthlyRecurringExpenses)}
+                  </span>
+                </div>
+                <Progress
+                  value={
+                    summary.estimatedMonthlyRecurringExpenses > 0 ? 100 : 0
+                  }
+                  className="h-2 bg-red-100"
+                />
               </div>
-              <div className="border-t pt-4 flex items-center justify-between">
-                <span className="font-medium">Net Recurring</span>
-                <span
-                  className={`font-bold ${
+
+              <div className="rounded-lg bg-muted/50 p-4 mt-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Net Recurring</span>
+                  <span
+                    className={`text-lg font-bold ${
+                      summary.estimatedMonthlyRecurringIncome -
+                        summary.estimatedMonthlyRecurringExpenses >=
+                      0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {formatCurrency(
+                      summary.estimatedMonthlyRecurringIncome -
+                        summary.estimatedMonthlyRecurringExpenses
+                    )}
+                  </span>
+                </div>
+                <Progress
+                  value={50}
+                  className={`h-2 mt-2 ${
                     summary.estimatedMonthlyRecurringIncome -
                       summary.estimatedMonthlyRecurringExpenses >=
                     0
-                      ? "text-green-600"
-                      : "text-red-600"
+                      ? "bg-green-200"
+                      : "bg-red-200"
                   }`}
-                >
-                  {formatCurrency(
-                    summary.estimatedMonthlyRecurringIncome -
-                      summary.estimatedMonthlyRecurringExpenses
-                  )}
-                </span>
+                />
               </div>
             </div>
           </CardContent>

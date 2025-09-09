@@ -90,45 +90,48 @@ export default function StatisticsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-4 w-48 mt-2" />
           </div>
-          <div className="flex items-center space-x-2">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-10" />
+          <div className="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
+            <Skeleton className="h-10 w-full sm:w-[180px]" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-10" />
+              <Skeleton className="h-10 w-10" />
+            </div>
           </div>
         </div>
 
         {/* Key metrics skeleton */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
 
         {/* Income vs expenses skeleton */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
 
         {/* Charts skeleton */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-[400px]" />
-          <Skeleton className="h-[400px]" />
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+          <Skeleton className="h-[300px]" />
+          <Skeleton className="h-[300px]" />
         </div>
 
         {/* Financial health skeleton */}
         <Skeleton className="h-64" />
 
         {/* Bottom cards skeleton */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
         </div>
       </div>
     );
@@ -145,23 +148,23 @@ export default function StatisticsPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header with controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight font-headline">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline">
             Statistics
           </h1>
           <p className="text-muted-foreground">
             Comprehensive financial overview and insights
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             value={timePeriod}
             onValueChange={(value: TimePeriodFilter) => setTimePeriod(value)}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Select time period" />
             </SelectTrigger>
             <SelectContent>
@@ -173,23 +176,26 @@ export default function StatisticsPage() {
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
-          {summary && (
-            <ExportDialog
-              summary={summary}
-              transactions={transactions}
-              accounts={accounts}
-              recurringTransactions={recurringTransactions}
-            />
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshData}
-            disabled={loading}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+
+          <div className="flex gap-2">
+            {summary && (
+              <ExportDialog
+                summary={summary}
+                transactions={transactions}
+                accounts={accounts}
+                recurringTransactions={recurringTransactions}
+              />
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshData}
+              disabled={loading}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
