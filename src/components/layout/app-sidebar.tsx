@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   ArrowLeftRight,
   Settings,
+  Repeat,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/accounts", icon: Wallet, label: "Accounts" },
   { href: "/transactions", icon: ArrowLeftRight, label: "Transactions" },
+  { href: "/recurring", icon: Repeat, label: "Recurring" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
