@@ -15,11 +15,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { getTransactions, Transaction } from "@/lib/transactions";
 import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const { formatCurrency, currencySymbol } = useCurrencyFormatter();
 
   const refreshData = useCallback(async () => {
     if (user) {
@@ -90,7 +92,9 @@ export default function DashboardPage() {
             )}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${netIncome.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(netIncome)}
+            </div>
             <p className="text-xs text-muted-foreground">All time balance</p>
           </CardContent>
         </Card>
@@ -100,7 +104,9 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalIncome.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(totalIncome)}
+            </div>
             <p className="text-xs text-muted-foreground">All time income</p>
           </CardContent>
         </Card>
@@ -113,7 +119,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${totalExpenses.toFixed(2)}
+              {formatCurrency(totalExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">All time expenses</p>
           </CardContent>

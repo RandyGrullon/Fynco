@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { AppHeader } from '@/components/layout/app-header';
-import { AppSidebar } from '@/components/layout/app-sidebar';
-import { useRequireAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
+import { AppHeader } from "@/components/layout/app-header";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppProviders } from "@/contexts/app-providers";
+import { useRequireAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useRequireAuth();
@@ -35,21 +36,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     // This should be handled by the hook, but as a fallback
-    router.replace('/login');
+    router.replace("/login");
     return null;
   }
-  
+
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-muted/40 md:block">
-        <AppSidebar />
+    <AppProviders>
+      <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+        <div className="hidden border-r bg-muted/40 md:block">
+          <AppSidebar />
+        </div>
+        <div className="flex flex-col">
+          <AppHeader />
+          <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
+            {children}
+          </main>
+        </div>
       </div>
-      <div className="flex flex-col">
-        <AppHeader />
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
-          {children}
-        </main>
-      </div>
-    </div>
+    </AppProviders>
   );
 }

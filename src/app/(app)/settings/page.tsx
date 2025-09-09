@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { addDoc, collection } from "firebase/firestore";
+import { useCurrency } from "@/contexts/currency-context";
+import { availableCurrencies } from "@/lib/currency";
 
 const GmailIcon = () => (
   <svg
@@ -60,9 +62,11 @@ const OutlookIcon = () => (
 export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { currency, setCurrency, isLoading: currencyLoading } = useCurrency();
   const [name, setName] = useState(user?.displayName || "");
   const [loading, setLoading] = useState(false);
   const [salaryLoading, setSalaryLoading] = useState(false);
+  const [currencyUpdateLoading, setCurrencyUpdateLoading] = useState(false);
 
   // Campos para la configuración del salario
   const [salaryAmount, setSalaryAmount] = useState("");
@@ -268,6 +272,37 @@ export default function SettingsPage() {
     }
   };
 
+  // Actualizar la moneda
+  const handleCurrencyUpdate = async (currencyCode: string) => {
+    if (!user) return;
+    setCurrencyUpdateLoading(true);
+
+    try {
+      const selectedCurrency = availableCurrencies.find(
+        (c) => c.code === currencyCode
+      );
+      if (!selectedCurrency) {
+        throw new Error("Moneda no válida");
+      }
+
+      await setCurrency(selectedCurrency);
+
+      toast({
+        title: "Moneda Actualizada",
+        description: `Se ha configurado ${selectedCurrency.name} (${selectedCurrency.symbol}) como tu moneda predeterminada.`,
+        className: "bg-accent text-accent-foreground",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Error al actualizar la moneda: ${error.message}`,
+      });
+    } finally {
+      setCurrencyUpdateLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -311,6 +346,49 @@ export default function SettingsPage() {
               {loading ? "Saving..." : "Update Profile"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Nueva sección para la configuración de moneda */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Configuración de Moneda</CardTitle>
+          <CardDescription>
+            Selecciona la moneda predeterminada para todas las transacciones en
+            la aplicación.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currency">Moneda</Label>
+              <Select
+                value={currency.code}
+                onValueChange={handleCurrencyUpdate}
+                disabled={currencyUpdateLoading || currencyLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona moneda" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCurrencies.map((curr) => (
+                    <SelectItem key={curr.code} value={curr.code}>
+                      {curr.symbol} - {curr.name} ({curr.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="p-4 border rounded-lg bg-muted/50">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">{currency.symbol}</span>
+                <span className="text-muted-foreground">
+                  Todos los valores se mostrarán en {currency.name} (
+                  {currency.code})
+                </span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

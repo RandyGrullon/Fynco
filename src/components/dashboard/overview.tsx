@@ -1,34 +1,39 @@
-'use client';
+"use client";
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Transaction } from '@/lib/transactions';
-import { format } from 'date-fns';
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Transaction } from "@/lib/transactions";
+import { format } from "date-fns";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 
 interface OverviewProps {
   data: Transaction[];
 }
 
 export function Overview({ data }: OverviewProps) {
-    const monthlyData = data.reduce((acc, transaction) => {
-        const month = format(new Date(transaction.date), 'MMM');
-        if (!acc[month]) {
-            acc[month] = { name: month, income: 0, expense: 0 };
-        }
-        if (transaction.type === 'income') {
-            acc[month].income += transaction.amount;
-        } else {
-            acc[month].expense += transaction.amount;
-        }
-        return acc;
-    }, {} as Record<string, {name: string, income: number, expense: number}>);
+  const { currencySymbol } = useCurrencyFormatter();
+  const monthlyData = data.reduce((acc, transaction) => {
+    const month = format(new Date(transaction.date.toString()), "MMM");
+    if (!acc[month]) {
+      acc[month] = { name: month, income: 0, expense: 0 };
+    }
+    if (transaction.type === "income") {
+      acc[month].income += transaction.amount;
+    } else {
+      acc[month].expense += transaction.amount;
+    }
+    return acc;
+  }, {} as Record<string, { name: string; income: number; expense: number }>);
 
-    const chartData = Object.values(monthlyData).reverse();
+  const chartData = Object.values(monthlyData).reverse();
 
   return (
     <Card className="col-span-1 lg:col-span-2">
@@ -51,14 +56,14 @@ export function Overview({ data }: OverviewProps) {
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => `${currencySymbol}${value}`}
             />
             <Tooltip
-              cursor={{ fill: 'hsl(var(--muted))' }}
+              cursor={{ fill: "hsl(var(--muted))" }}
               contentStyle={{
-                backgroundColor: 'hsl(var(--background))',
-                borderColor: 'hsl(var(--border))',
-                borderRadius: 'var(--radius)',
+                backgroundColor: "hsl(var(--background))",
+                borderColor: "hsl(var(--border))",
+                borderRadius: "var(--radius)",
               }}
             />
             <Bar
@@ -67,7 +72,7 @@ export function Overview({ data }: OverviewProps) {
               radius={[4, 4, 0, 0]}
               name="Income"
             />
-             <Bar
+            <Bar
               dataKey="expense"
               fill="hsl(var(--chart-1))"
               radius={[4, 4, 0, 0]}
