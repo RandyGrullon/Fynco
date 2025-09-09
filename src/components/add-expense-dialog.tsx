@@ -43,6 +43,7 @@ import {
   Transaction,
 } from "@/lib/transactions";
 import { useAuth } from "@/hooks/use-auth";
+import { Account } from "@/lib/accounts";
 
 const expenseSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
@@ -51,6 +52,7 @@ const expenseSchema = z.object({
   currency: z.string().min(1, "Currency is required"), // Placeholder, not in DB schema
   method: z.string().min(1, "Payment method is required"),
   category: z.string().min(1, "Category is required"),
+  accountId: z.string().min(1, "Account is required"),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -60,6 +62,7 @@ interface AddExpenseDialogProps {
   transaction?: Transaction;
   open?: boolean;
   setOpen?: (open: boolean) => void;
+  accounts: Account[]; // Add accounts prop
 }
 
 export function AddExpenseDialog({
@@ -67,6 +70,7 @@ export function AddExpenseDialog({
   transaction,
   open: controlledOpen,
   setOpen: controlledSetOpen,
+  accounts,
 }: AddExpenseDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const { user } = useAuth();
@@ -87,6 +91,7 @@ export function AddExpenseDialog({
       currency: "USD",
       method: "Credit Card",
       category: "Food",
+      accountId: accounts.length > 0 ? accounts[0].id || "" : "",
     },
   });
 
@@ -100,6 +105,9 @@ export function AddExpenseDialog({
           method: transaction.method,
           category: transaction.category,
           currency: "USD", // Default or from settings
+          accountId:
+            transaction.accountId ||
+            (accounts.length > 0 ? accounts[0].id || "" : ""),
         });
       } else {
         form.reset({
@@ -109,11 +117,12 @@ export function AddExpenseDialog({
           currency: "USD",
           method: "Credit Card",
           category: "Food",
+          accountId: accounts.length > 0 ? accounts[0].id || "" : "",
         });
       }
       setActiveTab("manual");
     }
-  }, [open, isEditMode, transaction, form]);
+  }, [open, isEditMode, transaction, form, accounts]);
 
   const onSubmit = async (data: ExpenseFormValues) => {
     if (!user) {
@@ -132,6 +141,7 @@ export function AddExpenseDialog({
       method: data.method as Transaction["method"],
       category: data.category as Transaction["category"],
       type: "expense" as const,
+      accountId: data.accountId,
     };
 
     const result =
@@ -162,6 +172,10 @@ export function AddExpenseDialog({
     if (data.date) form.setValue("date", new Date(data.date));
     if (data.currency) form.setValue("currency", data.currency);
     if (data.method) form.setValue("method", data.method as any);
+    // Use first account as default for voice transactions
+    if (accounts.length > 0 && accounts[0].id) {
+      form.setValue("accountId", accounts[0].id);
+    }
 
     toast({
       title: "Transcription Complete",
@@ -241,6 +255,36 @@ export function AddExpenseDialog({
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="accountId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select account" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {accounts.map((account) => (
+                            <SelectItem
+                              key={account.id}
+                              value={account.id || ""}
+                            >
+                              {account.name} ({account.type})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="source"

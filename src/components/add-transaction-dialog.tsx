@@ -53,9 +53,12 @@ const transactionSchema = z.object({
   currency: z.string().min(1, "Currency is required"),
   method: z.string().min(1, "Payment method is required"),
   category: z.string().min(1, "Category is required"),
+  accountId: z.string().min(1, "Account is required"),
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
+
+import { Account } from "@/lib/accounts";
 
 interface AddTransactionDialogProps {
   onTransactionAdded: () => void;
@@ -63,6 +66,7 @@ interface AddTransactionDialogProps {
   open?: boolean;
   setOpen?: (open: boolean) => void;
   initialType?: "income" | "expense";
+  accounts: Account[]; // Add accounts prop
 }
 
 export function AddTransactionDialog({
@@ -71,6 +75,7 @@ export function AddTransactionDialog({
   open: controlledOpen,
   setOpen: controlledSetOpen,
   initialType = "expense",
+  accounts,
 }: AddTransactionDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const { user } = useAuth();
@@ -92,6 +97,7 @@ export function AddTransactionDialog({
       currency: "USD",
       method: initialType === "income" ? "Direct Deposit" : "Credit Card",
       category: initialType === "income" ? "Salary" : "Food",
+      accountId: accounts.length > 0 ? accounts[0].id || "" : "",
     },
   });
 
@@ -106,6 +112,9 @@ export function AddTransactionDialog({
           method: transaction.method,
           category: transaction.category,
           currency: "USD", // Default or from settings
+          accountId:
+            transaction.accountId ||
+            (accounts.length > 0 ? accounts[0].id || "" : ""),
         });
       } else {
         form.reset({
@@ -116,11 +125,12 @@ export function AddTransactionDialog({
           currency: "USD",
           method: initialType === "income" ? "Direct Deposit" : "Credit Card",
           category: initialType === "income" ? "Salary" : "Food",
+          accountId: accounts.length > 0 ? accounts[0].id || "" : "",
         });
       }
       setActiveTab("manual");
     }
-  }, [open, isEditMode, transaction, form, initialType]);
+  }, [open, isEditMode, transaction, form, initialType, accounts]);
 
   // Watch for type changes to update category defaults
   const currentType = form.watch("type");
@@ -171,6 +181,7 @@ export function AddTransactionDialog({
       method: data.method as Transaction["method"],
       category: data.category as Transaction["category"],
       type: data.type,
+      accountId: data.accountId,
     };
 
     const result =
@@ -203,6 +214,10 @@ export function AddTransactionDialog({
     if (data.date) form.setValue("date", new Date(data.date));
     if (data.currency) form.setValue("currency", data.currency);
     if (data.method) form.setValue("method", data.method as any);
+    // Use first account as default for voice transactions
+    if (accounts.length > 0 && accounts[0].id) {
+      form.setValue("accountId", accounts[0].id);
+    }
 
     toast({
       title: "Transcription Complete",
@@ -381,6 +396,37 @@ export function AddTransactionDialog({
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="accountId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select account" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {accounts.map((account) => (
+                            <SelectItem
+                              key={account.id}
+                              value={account.id || ""}
+                            >
+                              {account.name} ({account.type})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="source"

@@ -11,17 +11,26 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Transaction } from "@/lib/transactions";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { Account } from "@/lib/accounts";
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
   totalCount: number;
+  accounts?: Account[];
 }
 
 export function RecentTransactions({
   transactions,
   totalCount,
+  accounts = [],
 }: RecentTransactionsProps) {
   const { formatCurrency } = useCurrencyFormatter();
+
+  // Function to get account name by accountId
+  const getAccountName = (accountId: string) => {
+    const account = accounts.find((a) => a.id === accountId);
+    return account ? account.name : "Unknown Account";
+  };
 
   return (
     <Card>
@@ -51,6 +60,11 @@ export function RecentTransactions({
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(transaction.date as string), "PPP")}
+                    {transaction.accountId && (
+                      <span className="ml-2 text-xs bg-secondary/50 px-1.5 py-0.5 rounded-full">
+                        {getAccountName(transaction.accountId)}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className={cn("ml-auto font-medium")}>

@@ -13,6 +13,7 @@ import {
   updateDoc,
   deleteDoc,
   where,
+  getDoc,
 } from "firebase/firestore";
 
 export type Transaction = {
@@ -39,6 +40,7 @@ export type Transaction = {
     | "Cash"
     | "Bank Transfer"
     | "Direct Deposit";
+  accountId: string; // The account this transaction belongs to
 };
 
 function getTransactionsCollection(userId: string) {
@@ -71,6 +73,15 @@ export async function addTransaction(
       userId,
       date: dateToStore,
     });
+
+    // Update account balance based on transaction type
+    const amountChange =
+      transaction.type === "income" ? transaction.amount : -transaction.amount;
+
+    // Import and use the updateAccountBalance function from accounts.ts
+    const { updateAccountBalance } = require("./accounts");
+    await updateAccountBalance(userId, transaction.accountId, amountChange);
+
     return { success: true, id: docRef.id };
   } catch (error) {
     console.error("Error adding document: ", error);
@@ -97,6 +108,41 @@ export async function updateTransaction(
       // If it's already a Timestamp, leave it as is
     }
 
+    // Get the original transaction to calculate balance changes
+    const { updateAccountBalance } = require("./accounts");
+    const originalSnap = await getDoc(transactionRef);
+
+    if (originalSnap.exists()) {
+      const originalData = originalSnap.data() as Transaction;
+
+      // If amount or type has changed, we need to update account balances
+      if (
+        (transaction.amount && transaction.amount !== originalData.amount) ||
+        (transaction.type && transaction.type !== originalData.type) ||
+        (transaction.accountId &&
+          transaction.accountId !== originalData.accountId)
+      ) {
+        // First, reverse the original transaction's effect on the account
+        const originalAmountChange =
+          originalData.type === "income"
+            ? -originalData.amount
+            : originalData.amount;
+        await updateAccountBalance(
+          userId,
+          originalData.accountId,
+          originalAmountChange
+        );
+
+        // Then apply the new transaction's effect
+        const newAmount = transaction.amount || originalData.amount;
+        const newType = transaction.type || originalData.type;
+        const newAccountId = transaction.accountId || originalData.accountId;
+
+        const newAmountChange = newType === "income" ? newAmount : -newAmount;
+        await updateAccountBalance(userId, newAccountId, newAmountChange);
+      }
+    }
+
     await updateDoc(transactionRef, dataToUpdate);
     return { success: true };
   } catch (error) {
@@ -108,6 +154,25 @@ export async function updateTransaction(
 export async function deleteTransaction(id: string, userId: string) {
   try {
     const transactionRef = doc(db, "users", userId, "transactions", id);
+
+    // Get transaction details before deleting
+    const transactionSnap = await getDoc(transactionRef);
+    if (transactionSnap.exists()) {
+      const transactionData = transactionSnap.data() as Transaction;
+
+      // Reverse the effect of the transaction on the account balance
+      const { updateAccountBalance } = require("./accounts");
+      const amountChange =
+        transactionData.type === "income"
+          ? -transactionData.amount
+          : transactionData.amount;
+      await updateAccountBalance(
+        userId,
+        transactionData.accountId,
+        amountChange
+      );
+    }
+
     await deleteDoc(transactionRef);
     return { success: true };
   } catch (error) {

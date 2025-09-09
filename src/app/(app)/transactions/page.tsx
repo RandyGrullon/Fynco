@@ -1,6 +1,7 @@
 "use client";
 
 import { Transaction, getTransactions } from "@/lib/transactions";
+import { Account, getAccounts } from "@/lib/accounts";
 import { columns } from "@/components/transactions/columns";
 import { DataTable } from "@/components/transactions/data-table";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,13 +12,20 @@ import { AddTransactionDialog } from "@/components/add-transaction-dialog";
 export default function TransactionsPage() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refreshTransactions = useCallback(async () => {
     if (user) {
       setLoading(true);
-      const data = await getTransactions(user.uid);
-      setTransactions(data);
+      const [txData, accountsData] = await Promise.all([
+        getTransactions(user.uid),
+        getAccounts(user.uid),
+      ]);
+      // Filter out transactions without an account
+      const validTransactions = txData.filter((t) => t.accountId);
+      setTransactions(validTransactions);
+      setAccounts(accountsData);
       setLoading(false);
     }
   }, [user]);
@@ -52,7 +60,10 @@ export default function TransactionsPage() {
         <h2 className="text-3xl font-bold tracking-tight font-headline">
           Transactions
         </h2>
-        <AddTransactionDialog onTransactionAdded={refreshTransactions} />
+        <AddTransactionDialog
+          onTransactionAdded={refreshTransactions}
+          accounts={accounts}
+        />
       </div>
       <DataTable
         data={transactions}

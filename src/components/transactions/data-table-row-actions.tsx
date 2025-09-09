@@ -24,8 +24,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { deleteTransaction, Transaction } from "@/lib/transactions";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AddTransactionDialog } from "../add-transaction-dialog";
+import { Account, getAccounts } from "@/lib/accounts";
 
 interface DataTableRowActionsProps<TData extends Transaction> {
   row: Row<TData>;
@@ -39,6 +40,17 @@ export function DataTableRowActions<TData extends Transaction>({
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      const loadAccounts = async () => {
+        const accountsData = await getAccounts(user.uid);
+        setAccounts(accountsData);
+      };
+      loadAccounts();
+    }
+  }, [user]);
 
   const handleDelete = async () => {
     if (!user || !row.original.id) return;
@@ -68,6 +80,7 @@ export function DataTableRowActions<TData extends Transaction>({
         setOpen={setIsEditDialogOpen}
         onTransactionAdded={refreshData}
         transaction={transaction}
+        accounts={accounts}
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

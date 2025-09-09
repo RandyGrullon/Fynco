@@ -20,6 +20,7 @@ import { EditAccountDialog } from "@/components/edit-account-dialog";
 import { AccountTransactionDialog } from "@/components/account-transaction-dialog";
 import { ArrowUpDown, ArrowDown, ArrowUp, Edit } from "lucide-react";
 import { TransferDialog } from "@/components/transfer-dialog";
+import { AccountSwitcher } from "@/components/accounts/account-switcher";
 
 export default function AccountDetailPage() {
   const { accountId } = useParams();
@@ -114,9 +115,15 @@ export default function AccountDetailPage() {
         <h1 className="text-3xl font-bold tracking-tight font-headline">
           {account.name}
         </h1>
-        <Button variant="outline" onClick={() => router.push("/accounts")}>
-          Back to Accounts
-        </Button>
+        <div className="flex items-center space-x-2">
+          <AccountSwitcher
+            currentAccount={account}
+            otherAccounts={otherAccounts}
+          />
+          <Button variant="outline" onClick={() => router.push("/accounts")}>
+            Back to Accounts
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -165,6 +172,11 @@ export default function AccountDetailPage() {
                 <Edit className="mr-2 h-4 w-4" /> Edit
               </Button>
             </EditAccountDialog>
+
+            <AccountSwitcher
+              currentAccount={account}
+              otherAccounts={otherAccounts}
+            />
           </CardFooter>
         </Card>
 
