@@ -83,14 +83,16 @@ export function AccountsOverview({ accounts }: AccountsOverviewProps) {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+    <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
       <Card>
-        <CardHeader>
-          <CardTitle>Accounts Balance</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base sm:text-lg">
+            Accounts Balance
+          </CardTitle>
           <CardDescription>Distribution by account</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-60 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -98,11 +100,13 @@ export function AccountsOverview({ accounts }: AccountsOverviewProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  outerRadius={80}
+                  outerRadius={window.innerWidth < 640 ? 60 : 80}
                   fill="#8884d8"
                   dataKey="value"
                   label={({ name, percent }) =>
-                    `${name} (${(percent * 100).toFixed(0)}%)`
+                    window.innerWidth < 400
+                      ? `${(percent * 100).toFixed(0)}%`
+                      : `${name} (${(percent * 100).toFixed(0)}%)`
                   }
                 >
                   {chartData.map((entry, index) => (
@@ -121,12 +125,12 @@ export function AccountsOverview({ accounts }: AccountsOverviewProps) {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Account Types</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base sm:text-lg">Account Types</CardTitle>
           <CardDescription>Distribution by account type</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-80">
+          <div className="h-60 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -134,11 +138,13 @@ export function AccountsOverview({ accounts }: AccountsOverviewProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  outerRadius={80}
+                  outerRadius={window.innerWidth < 640 ? 60 : 80}
                   fill="#8884d8"
                   dataKey="value"
                   label={({ name, percent }) =>
-                    `${name} (${(percent * 100).toFixed(0)}%)`
+                    window.innerWidth < 400
+                      ? `${(percent * 100).toFixed(0)}%`
+                      : `${name} (${(percent * 100).toFixed(0)}%)`
                   }
                 >
                   {typeChartData.map((entry, index) => (

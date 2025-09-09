@@ -106,18 +106,18 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {accounts.map((account) => (
         <Card key={account.id} className="relative">
           {account.isDefault && (
             <Badge className="absolute top-2 right-2 bg-primary">Default</Badge>
           )}
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              {account.name}
+          <CardHeader className="pb-2">
+            <CardTitle className="flex justify-between items-center text-base sm:text-lg">
+              <span className="truncate pr-2">{account.name}</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -214,34 +214,35 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
               </Badge>
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold">
+          <CardContent className="relative pt-2 pb-10">
+            <div className="text-xl sm:text-2xl font-bold truncate">
               {new Intl.NumberFormat("en-US", {
                 style: "currency",
                 currency: account.currency,
               }).format(account.balance)}
             </div>
             {account.description && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2">
                 {account.description}
               </p>
             )}
             <Button
               variant="link"
-              className="absolute bottom-0 right-0 p-0 text-sm"
+              className="absolute bottom-0 right-0 p-0 text-xs sm:text-sm"
               onClick={() => (window.location.href = `/accounts/${account.id}`)}
             >
               View Transactions
             </Button>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex flex-wrap gap-2 justify-between">
             <AccountTransactionDialog
               account={account}
               transactionType="credit"
               onTransactionAdded={refreshAccounts}
             >
-              <Button variant="outline" size="sm">
-                <Banknote className="mr-2 h-4 w-4" /> Add Income
+              <Button variant="outline" size="sm" className="text-xs h-8">
+                <Banknote className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" /> Add
+                Income
               </Button>
             </AccountTransactionDialog>
             <AccountTransactionDialog
@@ -249,8 +250,9 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
               transactionType="debit"
               onTransactionAdded={refreshAccounts}
             >
-              <Button variant="outline" size="sm">
-                <Banknote className="mr-2 h-4 w-4" /> Add Expense
+              <Button variant="outline" size="sm" className="text-xs h-8">
+                <Banknote className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" /> Add
+                Expense
               </Button>
             </AccountTransactionDialog>
           </CardFooter>

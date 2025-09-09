@@ -47,11 +47,15 @@ export default function AccountsPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
           <Skeleton className="h-9 w-48" />
-          <Skeleton className="h-10 w-32" />
+          <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+            <Skeleton className="h-10 w-10" />
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32" />
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-32" />
           <Skeleton className="h-32" />
         </div>
@@ -64,17 +68,23 @@ export default function AccountsPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 mb-4">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
           Accounts
         </h2>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="icon" onClick={refreshData}>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={refreshData}
+            className="shrink-0"
+          >
             <RefreshCcw className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             onClick={() => (window.location.href = "/accounts/transactions")}
+            className="text-sm whitespace-nowrap"
           >
             View All Transactions
           </Button>
@@ -83,13 +93,17 @@ export default function AccountsPage() {
       </div>
 
       <Tabs defaultValue="list" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="list">Accounts List</TabsTrigger>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsList className="mb-4 w-full sm:w-auto">
+          <TabsTrigger value="list" className="flex-1 sm:flex-none">
+            Accounts List
+          </TabsTrigger>
+          <TabsTrigger value="overview" className="flex-1 sm:flex-none">
+            Overview
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -123,8 +137,8 @@ export default function AccountsPage() {
           <div className="mt-6">
             {accounts.length === 0 ? (
               <Card>
-                <CardContent className="flex flex-col items-center justify-center py-10">
-                  <p className="mb-4 text-center text-muted-foreground">
+                <CardContent className="flex flex-col items-center justify-center py-8 sm:py-10">
+                  <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
                     You don't have any accounts yet.
                   </p>
                   <AddAccountDialog onAccountAdded={refreshData}>
