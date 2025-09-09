@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Overview } from "@/components/dashboard/overview";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { StatisticsSummaryCard } from "@/components/dashboard/statistics-summary-card";
 import {
   DollarSign,
   CreditCard,
@@ -14,6 +15,11 @@ import { AddTransactionDialog } from "@/components/add-transaction-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { getTransactions, Transaction } from "@/lib/transactions";
 import { getAccounts, Account } from "@/lib/accounts";
+import {
+  getRecurringTransactions,
+  RecurringTransactionWithAccount,
+} from "@/lib/recurring-transactions";
+import { StatisticsService, StatisticsSummary } from "@/lib/statistics";
 import { useEffect, useState, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
@@ -35,19 +41,34 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<
+    RecurringTransactionWithAccount[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState<TimeFilterPeriod>("monthly");
+  const [statisticsSummary, setStatisticsSummary] = useState<StatisticsSummary | null>(null);
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
 
   const refreshData = useCallback(async () => {
     if (user) {
       setLoading(true);
-      const [fetchedTransactions, fetchedAccounts] = await Promise.all([
+      const [fetchedTransactions, fetchedAccounts, fetchedRecurringTransactions] = await Promise.all([
         getTransactions(user.uid),
         getAccounts(user.uid),
+        getRecurringTransactions(user.uid),
       ]);
       setTransactions(fetchedTransactions);
       setAccounts(fetchedAccounts);
+      setRecurringTransactions(fetchedRecurringTransactions);
+      
+      // Generate statistics summary
+      const summary = StatisticsService.generateSummary(
+        fetchedTransactions,
+        fetchedAccounts,
+        fetchedRecurringTransactions,
+        "all" // Use all time for dashboard summary
+      );
+      setStatisticsSummary(summary);
       setLoading(false);
     }
   }, [user]);
@@ -262,6 +283,12 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+      {/* Statistics Summary Card */}
+      {statisticsSummary && (
+        <div className="grid gap-4 md:grid-cols-1">
+          <StatisticsSummaryCard summary={statisticsSummary} />
+        </div>
+      )}
     </>
   );
 }

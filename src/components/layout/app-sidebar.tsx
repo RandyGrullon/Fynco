@@ -7,6 +7,7 @@ import {
   ArrowLeftRight,
   Settings,
   Repeat,
+  BarChart3,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ const navItems = [
   { href: "/accounts", icon: Wallet, label: "Accounts" },
   { href: "/transactions", icon: ArrowLeftRight, label: "Transactions" },
   { href: "/recurring", icon: Repeat, label: "Recurring" },
+  { href: "/statistics", icon: BarChart3, label: "Statistics" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
