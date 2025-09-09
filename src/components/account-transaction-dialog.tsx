@@ -80,14 +80,7 @@ export function AccountTransactionDialog({
       return;
     }
 
-    if (!description) {
-      toast({
-        title: "Error",
-        description: "Please enter a description",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Description is now optional
 
     setLoading(true);
     try {
@@ -207,14 +200,17 @@ export function AccountTransactionDialog({
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
                 Description
+                <span className="text-xs text-muted-foreground">
+                  {" "}
+                  (optional)
+                </span>
               </Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
-                placeholder="Transaction description"
-                required
+                placeholder="Transaction description (optional)"
               />
             </div>
           </div>

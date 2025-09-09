@@ -279,6 +279,13 @@ export async function addAccountTransaction(
 
     // Handle transfer between accounts
     if (transaction.type === "transfer" && transaction.toAccountId) {
+      // Get the source and destination account names
+      const sourceAccount = await getAccountById(userId, transaction.accountId);
+      const destAccount = await getAccountById(userId, transaction.toAccountId);
+
+      const sourceAccountName = sourceAccount?.name || transaction.accountId;
+      const destAccountName = destAccount?.name || transaction.toAccountId;
+
       // First create the debit (outgoing) transaction
       const debitTransactionData: any = {
         userId,
@@ -286,7 +293,7 @@ export async function addAccountTransaction(
         date: dateToStore,
         amount: transaction.amount,
         type: "debit",
-        description: `Transfer to ${transaction.toAccountId}: ${transaction.description}`,
+        description: `Transfer to ${destAccountName}: ${transaction.description}`,
       };
 
       // Only add category if it's defined
@@ -311,7 +318,7 @@ export async function addAccountTransaction(
         date: dateToStore,
         amount: transaction.amount,
         type: "credit",
-        description: `Transfer from ${transaction.accountId}: ${transaction.description}`,
+        description: `Transfer from ${sourceAccountName}: ${transaction.description}`,
         relatedTransactionId: debitDocRef.id,
       };
 

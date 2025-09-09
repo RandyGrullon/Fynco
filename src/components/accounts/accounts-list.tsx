@@ -62,15 +62,30 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
   const getAccountTypeColor = (type: string) => {
     switch (type) {
       case "checking":
-        return "bg-blue-100 text-blue-800";
+        return "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 dark:from-blue-950 dark:to-blue-900 dark:text-blue-200 dark:border-blue-700";
       case "savings":
-        return "bg-green-100 text-green-800";
+        return "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border-green-200 dark:from-green-950 dark:to-green-900 dark:text-green-200 dark:border-green-700";
       case "investment":
-        return "bg-purple-100 text-purple-800";
+        return "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border-purple-200 dark:from-purple-950 dark:to-purple-900 dark:text-purple-200 dark:border-purple-700";
       case "credit":
-        return "bg-red-100 text-red-800";
+        return "bg-gradient-to-r from-orange-50 to-orange-100 text-orange-800 border-orange-200 dark:from-orange-950 dark:to-orange-900 dark:text-orange-200 dark:border-orange-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-800 border-gray-200 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:border-gray-600";
+    }
+  };
+
+  const getAccountAccentColor = (type: string) => {
+    switch (type) {
+      case "checking":
+        return "bg-blue-500";
+      case "savings":
+        return "bg-green-500";
+      case "investment":
+        return "bg-purple-500";
+      case "credit":
+        return "bg-orange-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
@@ -106,22 +121,66 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
   };
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {accounts.map((account) => (
-        <Card key={account.id} className="relative">
+        <Card
+          key={account.id}
+          className="relative group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border border-gray-200 dark:border-gray-700 shadow-md bg-white dark:bg-gray-800 overflow-hidden"
+        >
+          {/* Accent stripe */}
+          <div
+            className={`absolute top-0 left-0 right-0 h-1 ${getAccountAccentColor(
+              account.type
+            )}`}
+          />
+          <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+            <div
+              className={`w-full h-full rounded-full ${getAccountAccentColor(
+                account.type
+              )} -translate-y-12 translate-x-12`}
+            />
+          </div>
+
           {account.isDefault && (
-            <Badge className="absolute top-2 right-2 bg-primary">Default</Badge>
+            <div className="absolute -top-2 -right-2 z-10">
+              <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg border-0 px-3 py-1">
+                ✨ Default
+              </Badge>
+            </div>
           )}
-          <CardHeader className="pb-2">
-            <CardTitle className="flex justify-between items-center text-base sm:text-lg">
-              <span className="truncate pr-2">{account.name}</span>
+
+          <CardHeader className="pb-4 relative">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-xl font-bold truncate mb-3 text-gray-900 dark:text-gray-100">
+                  {account.name}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={`${getAccountTypeColor(
+                      account.type
+                    )} text-xs font-semibold border`}
+                    variant="secondary"
+                  >
+                    {account.type.charAt(0).toUpperCase() +
+                      account.type.slice(1)}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {account.currency}
+                  </span>
+                </div>
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -207,54 +266,106 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                   </AlertDialog>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </CardTitle>
-            <CardDescription>
-              <Badge className={`${getAccountTypeColor(account.type)}`}>
-                {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-              </Badge>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="relative pt-2 pb-10">
-            <div className="text-xl sm:text-2xl font-bold truncate">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: account.currency,
-              }).format(account.balance)}
             </div>
-            {account.description && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2">
-                {account.description}
-              </p>
-            )}
-            <Button
-              variant="link"
-              className="absolute bottom-0 right-0 p-0 text-xs sm:text-sm"
-              onClick={() => (window.location.href = `/accounts/${account.id}`)}
-            >
-              View Transactions
-            </Button>
+          </CardHeader>
+
+          <CardContent className="pb-4 relative">
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: account.currency,
+                    }).format(account.balance)}
+                  </div>
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      account.balance > 0
+                        ? "bg-green-400 shadow-lg shadow-green-400/30"
+                        : account.balance === 0
+                        ? "bg-yellow-400 shadow-lg shadow-yellow-400/30"
+                        : "bg-red-400 shadow-lg shadow-red-400/30"
+                    }`}
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Current Balance
+                </div>
+              </div>
+
+              {account.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
+                  {account.description}
+                </p>
+              )}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 p-0 h-auto justify-start font-medium"
+                onClick={() =>
+                  (window.location.href = `/accounts/${account.id}`)
+                }
+              >
+                View All Transactions →
+              </Button>
+            </div>
           </CardContent>
-          <CardFooter className="flex flex-wrap gap-2 justify-between">
+
+          <CardFooter className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-0">
             <AccountTransactionDialog
               account={account}
               transactionType="credit"
               onTransactionAdded={refreshAccounts}
             >
-              <Button variant="outline" size="sm" className="text-xs h-8">
-                <Banknote className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" /> Add
-                Income
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 font-medium"
+              >
+                <Banknote className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Add </span>Income
               </Button>
             </AccountTransactionDialog>
+
             <AccountTransactionDialog
               account={account}
               transactionType="debit"
               onTransactionAdded={refreshAccounts}
             >
-              <Button variant="outline" size="sm" className="text-xs h-8">
-                <Banknote className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" /> Add
-                Expense
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200 font-medium"
+              >
+                <Banknote className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Add </span>Expense
               </Button>
             </AccountTransactionDialog>
+
+            <TransferDialog
+              fromAccount={account}
+              accounts={accounts.filter((a) => a.id !== account.id)}
+              onTransferCompleted={refreshAccounts}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 font-medium"
+                disabled={
+                  accounts.filter((a) => a.id !== account.id).length === 0
+                }
+                title={
+                  accounts.filter((a) => a.id !== account.id).length === 0
+                    ? "No other accounts available for transfer"
+                    : "Transfer money to another account"
+                }
+              >
+                <ArrowDownUp className="mr-2 h-4 w-4" />
+                Transfer
+              </Button>
+            </TransferDialog>
           </CardFooter>
         </Card>
       ))}

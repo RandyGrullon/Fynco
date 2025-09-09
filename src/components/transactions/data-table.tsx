@@ -27,6 +27,8 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
+import { MobileTransactionCard } from "./mobile-transaction-card";
+import type { Transaction } from "@/lib/transactions";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -74,7 +76,29 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       <DataTableToolbar table={table} onRefresh={onRefresh} />
-      <div className="rounded-md border bg-card">
+
+      {/* Mobile view */}
+      <div className="block md:hidden">
+        <div className="space-y-3">
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <MobileTransactionCard
+                key={row.id}
+                transaction={row.original as Transaction}
+                onEdit={() => {}} // TODO: Implement edit functionality
+                onDelete={() => {}} // TODO: Implement delete functionality
+              />
+            ))
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No transactions found.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden md:block rounded-md border bg-card">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -124,6 +148,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
+
       <DataTablePagination table={table} />
     </div>
   );

@@ -85,115 +85,202 @@ export default function AccountDetailPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
+      <div className="container mx-auto px-4 py-4 max-w-6xl space-y-4">
+        {/* Header skeleton */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-8 w-64" />
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-32" />
+            </div>
+          </div>
         </div>
-        <Skeleton className="h-96" />
+
+        {/* Balance and actions skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </div>
+          <div className="lg:col-span-1">
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </div>
+        </div>
+
+        {/* Transactions skeleton */}
+        <Skeleton className="h-96 w-full rounded-lg" />
       </div>
     );
   }
 
   if (!account) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-2">Account Not Found</h2>
-        <p className="text-muted-foreground mb-6">
-          The account you're looking for doesn't exist or you don't have access
-          to it.
-        </p>
-        <Button onClick={() => router.push("/accounts")}>Go to Accounts</Button>
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="text-center bg-white dark:bg-gray-800 rounded-xl p-8 lg:p-12 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+            <span className="text-2xl">🔍</span>
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
+            Account Not Found
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            The account you're looking for doesn't exist or you don't have
+            access to it.
+          </p>
+          <Button
+            onClick={() => router.push("/accounts")}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Go to Accounts
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight font-headline">
-          {account.name}
-        </h1>
-        <div className="flex items-center space-x-2">
-          <AccountSwitcher
-            currentAccount={account}
-            otherAccounts={otherAccounts}
-          />
-          <Button variant="outline" onClick={() => router.push("/accounts")}>
-            Back to Accounts
-          </Button>
+    <div className="mx-auto  max-w-2xl space-y-4">
+      {/* Header Section - Fully Responsive */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          {/* Left side - Account info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 dark:text-white font-headline truncate">
+                  {account.name}
+                </h1>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <Badge
+                    className={`${getAccountTypeColor(
+                      account.type
+                    )} text-xs font-medium`}
+                    variant="secondary"
+                  >
+                    {account.type.charAt(0).toUpperCase() +
+                      account.type.slice(1)}
+                  </Badge>
+                  {account.isDefault && (
+                    <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium">
+                      Default Account
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side - Actions */}
+          <div className="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
+            <div className="lg:hidden">
+              <AccountSwitcher
+                currentAccount={account}
+                otherAccounts={otherAccounts}
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/accounts")}
+              size="sm"
+              className="text-sm"
+            >
+              ← Back to Accounts
+            </Button>
+            <div className="hidden lg:block">
+              <AccountSwitcher
+                currentAccount={account}
+                otherAccounts={otherAccounts}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Details</CardTitle>
-            <CardDescription>
-              <Badge className={getAccountTypeColor(account.type)}>
-                {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-              </Badge>
-              {account.isDefault && (
-                <Badge className="ml-2 bg-primary">Default</Badge>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Balance
-                </h3>
-                <p className="text-3xl font-bold">
+      {/* Balance and Quick Actions Section - Two Column Layout on Large Screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Balance Card - Spans 2 columns on large screens */}
+        <div className="lg:col-span-2">
+          <Card className="h-full shadow-sm border-gray-200 dark:border-gray-700">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg text-gray-900 dark:text-white">
+                    Current Balance
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600 dark:text-gray-400">
+                    {account.currency} • Last updated now
+                  </CardDescription>
+                </div>
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    account.balance > 0
+                      ? "bg-green-400 shadow-lg shadow-green-400/30"
+                      : account.balance === 0
+                      ? "bg-yellow-400 shadow-lg shadow-yellow-400/30"
+                      : "bg-red-400 shadow-lg shadow-red-400/30"
+                  }`}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div
+                  className={`text-3xl lg:text-4xl font-bold ${
+                    account.balance > 0
+                      ? "text-green-600 dark:text-green-400"
+                      : account.balance === 0
+                      ? "text-yellow-600 dark:text-yellow-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: account.currency,
                   }).format(account.balance)}
-                </p>
-              </div>
-
-              {account.description && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Description
-                  </h3>
-                  <p>{account.description}</p>
                 </div>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-wrap gap-2">
-            <EditAccountDialog
-              account={account}
-              onAccountUpdated={refreshAccount}
-            >
-              <Button variant="outline" size="sm">
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </Button>
-            </EditAccountDialog>
 
-            <AccountSwitcher
-              currentAccount={account}
-              otherAccounts={otherAccounts}
-            />
-          </CardFooter>
-        </Card>
+                {account.description && (
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {account.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Manage your account transactions</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {/* Quick Actions Card */}
+        <div className="lg:col-span-1">
+          <Card className="h-full shadow-sm border-gray-200 dark:border-gray-700">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg text-gray-900 dark:text-white">
+                Quick Actions
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600 dark:text-gray-400">
+                Manage your transactions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <AccountTransactionDialog
                 account={account}
                 transactionType="credit"
                 onTransactionAdded={refreshAccount}
               >
-                <Button className="w-full" variant="outline">
-                  <ArrowUp className="mr-2 h-4 w-4 text-green-600" /> Add Income
+                <Button
+                  className="w-full justify-start text-green-700 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950"
+                  variant="outline"
+                  size="sm"
+                >
+                  <ArrowUp className="mr-2 h-4 w-4" />
+                  Add Income
                 </Button>
               </AccountTransactionDialog>
 
@@ -202,30 +289,56 @@ export default function AccountDetailPage() {
                 transactionType="debit"
                 onTransactionAdded={refreshAccount}
               >
-                <Button className="w-full" variant="outline">
-                  <ArrowDown className="mr-2 h-4 w-4 text-red-600" /> Add
-                  Expense
+                <Button
+                  className="w-full justify-start text-red-700 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
+                  variant="outline"
+                  size="sm"
+                >
+                  <ArrowDown className="mr-2 h-4 w-4" />
+                  Add Expense
                 </Button>
               </AccountTransactionDialog>
-            </div>
 
-            <TransferDialog
-              fromAccount={account}
-              accounts={otherAccounts}
-              onTransferCompleted={refreshAccount}
-            >
-              <Button className="w-full" variant="outline">
-                <ArrowUpDown className="mr-2 h-4 w-4 text-blue-600" /> Transfer
-                Money
-              </Button>
-            </TransferDialog>
-          </CardContent>
-        </Card>
+              <TransferDialog
+                fromAccount={account}
+                accounts={otherAccounts}
+                onTransferCompleted={refreshAccount}
+              >
+                <Button
+                  className="w-full justify-start text-blue-700 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-950"
+                  variant="outline"
+                  size="sm"
+                  disabled={otherAccounts.length === 0}
+                >
+                  <ArrowUpDown className="mr-2 h-4 w-4" />
+                  Transfer Funds
+                </Button>
+              </TransferDialog>
+
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <EditAccountDialog
+                  account={account}
+                  onAccountUpdated={refreshAccount}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-gray-600 dark:text-gray-400"
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Account
+                  </Button>
+                </EditAccountDialog>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="mt-6">
+      {/* Transactions Section */}
+      <div className="w-full">
         <AccountTransactionsList account={account} />
       </div>
-    </>
+    </div>
   );
 }
