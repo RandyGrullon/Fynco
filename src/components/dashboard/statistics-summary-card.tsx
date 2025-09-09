@@ -20,9 +20,7 @@ interface StatisticsSummaryCardProps {
   summary: StatisticsSummary;
 }
 
-export function StatisticsSummaryCard({
-  summary,
-}: StatisticsSummaryCardProps) {
+export function StatisticsSummaryCard({ summary }: StatisticsSummaryCardProps) {
   const { formatCurrency } = useCurrencyFormatter();
 
   const getFinancialHealthColor = (savingsRate: number) => {
@@ -40,7 +38,9 @@ export function StatisticsSummaryCard({
     return { text: "Critical", color: "text-red-600" };
   };
 
-  const expenseRatioStatus = getExpenseRatioStatus(summary.expenseToIncomeRatio);
+  const expenseRatioStatus = getExpenseRatioStatus(
+    summary.expenseToIncomeRatio
+  );
 
   return (
     <Card className="col-span-1 md:col-span-2">
@@ -67,7 +67,10 @@ export function StatisticsSummaryCard({
                 <PiggyBank className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Savings Rate</span>
               </div>
-              <Badge variant="outline" className={getFinancialHealthColor(summary.savingsRate)}>
+              <Badge
+                variant="outline"
+                className={getFinancialHealthColor(summary.savingsRate)}
+              >
                 {summary.savingsRate.toFixed(1)}%
               </Badge>
             </div>

@@ -137,9 +137,7 @@ export function StatisticsOverview({
             <div className="text-2xl font-bold">
               {formatCurrency(summary.netIncome)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Income - Expenses
-            </p>
+            <p className="text-xs text-muted-foreground">Income - Expenses</p>
           </CardContent>
         </Card>
 
@@ -318,7 +316,10 @@ export function StatisticsOverview({
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), "Amount"]}
+                  formatter={(value: number) => [
+                    formatCurrency(value),
+                    "Amount",
+                  ]}
                   contentStyle={{
                     backgroundColor: "hsl(var(--background))",
                     borderColor: "hsl(var(--border))",
@@ -405,11 +406,15 @@ export function StatisticsOverview({
           <CardContent>
             <div className="space-y-4">
               {summary.accountsByType.map((accountType) => (
-                <div key={accountType.type} className="flex items-center justify-between">
+                <div
+                  key={accountType.type}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex flex-col">
                     <span className="font-medium">{accountType.type}</span>
                     <span className="text-sm text-muted-foreground">
-                      {accountType.count} account{accountType.count !== 1 ? "s" : ""}
+                      {accountType.count} account
+                      {accountType.count !== 1 ? "s" : ""}
                     </span>
                   </div>
                   <div className="text-right">

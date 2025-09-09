@@ -46,13 +46,18 @@ export default function DashboardPage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState<TimeFilterPeriod>("monthly");
-  const [statisticsSummary, setStatisticsSummary] = useState<StatisticsSummary | null>(null);
+  const [statisticsSummary, setStatisticsSummary] =
+    useState<StatisticsSummary | null>(null);
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
 
   const refreshData = useCallback(async () => {
     if (user) {
       setLoading(true);
-      const [fetchedTransactions, fetchedAccounts, fetchedRecurringTransactions] = await Promise.all([
+      const [
+        fetchedTransactions,
+        fetchedAccounts,
+        fetchedRecurringTransactions,
+      ] = await Promise.all([
         getTransactions(user.uid),
         getAccounts(user.uid),
         getRecurringTransactions(user.uid),
@@ -60,7 +65,7 @@ export default function DashboardPage() {
       setTransactions(fetchedTransactions);
       setAccounts(fetchedAccounts);
       setRecurringTransactions(fetchedRecurringTransactions);
-      
+
       // Generate statistics summary
       const summary = StatisticsService.generateSummary(
         fetchedTransactions,

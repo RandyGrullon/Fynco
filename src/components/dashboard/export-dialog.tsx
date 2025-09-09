@@ -25,10 +25,7 @@ import { StatisticsSummary } from "@/lib/statistics";
 import { Transaction } from "@/lib/transactions";
 import { Account } from "@/lib/accounts";
 import { RecurringTransactionWithAccount } from "@/lib/recurring-transactions";
-import {
-  StatisticsExporter,
-  ExportOptions,
-} from "@/lib/statistics-exporter";
+import { StatisticsExporter, ExportOptions } from "@/lib/statistics-exporter";
 
 interface ExportDialogProps {
   summary: StatisticsSummary;
@@ -53,7 +50,7 @@ export function ExportDialog({
 
   const handleExport = async () => {
     setIsExporting(true);
-    
+
     try {
       const options: ExportOptions = {
         format,
@@ -70,7 +67,7 @@ export function ExportDialog({
         recurringTransactions,
         options
       );
-      
+
       setOpen(false);
     } catch (error) {
       console.error("Export failed:", error);
@@ -127,7 +124,9 @@ export function ExportDialog({
             <Label htmlFor="format">Export Format</Label>
             <Select
               value={format}
-              onValueChange={(value: "json" | "csv" | "txt") => setFormat(value)}
+              onValueChange={(value: "json" | "csv" | "txt") =>
+                setFormat(value)
+              }
             >
               <SelectTrigger>
                 <SelectValue>
@@ -166,7 +165,7 @@ export function ExportDialog({
           {/* Data Inclusion Options */}
           <div className="space-y-3">
             <Label>Include Data</Label>
-            
+
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -183,7 +182,9 @@ export function ExportDialog({
                 <Checkbox
                   id="transactions"
                   checked={includeTransactions}
-                  onCheckedChange={(checked) => setIncludeTransactions(!!checked)}
+                  onCheckedChange={(checked) =>
+                    setIncludeTransactions(!!checked)
+                  }
                 />
                 <Label htmlFor="transactions" className="text-sm font-normal">
                   All Transactions ({transactions.length} items)
