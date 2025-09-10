@@ -450,26 +450,36 @@ export function AddTransactionDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Account</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {accounts.map((account) => (
-                            <SelectItem
-                              key={account.id}
-                              value={account.id || ""}
-                            >
-                              {account.name} ({account.type})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center space-x-2">
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select account" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {localAccounts.map((account) => (
+                              <SelectItem
+                                key={account.id}
+                                value={account.id || ""}
+                              >
+                                {account.name} ({account.type})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {/* Inline add account button opens AddAccountDialog */}
+                        <AddAccountDialog onAccountAdded={handleAccountCreated}>
+                          <Button variant="outline" size="sm">
+                            <PlusCircle className="mr-1 h-4 w-4" />
+                            Add Account
+                          </Button>
+                        </AddAccountDialog>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

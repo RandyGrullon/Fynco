@@ -29,7 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddAccountDialogProps {
-  onAccountAdded?: () => void;
+  onAccountAdded?: (id?: string) => void;
   children?: React.ReactNode;
 }
 
@@ -87,7 +87,7 @@ export function AddAccountDialog({
         user.uid
       );
 
-      if (result.success) {
+  if (result.success) {
         toast({
           title: "Success",
           description: "Account added successfully",
@@ -101,7 +101,7 @@ export function AddAccountDialog({
         setIsDefault(false);
         setErrors({});
         if (onAccountAdded) {
-          onAccountAdded();
+          onAccountAdded(result.id);
         }
       } else {
         toast({

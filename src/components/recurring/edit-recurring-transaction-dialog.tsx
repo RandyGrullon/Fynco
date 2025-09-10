@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +44,8 @@ import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Account } from "@/lib/accounts";
+import { Account, getAccountById } from "@/lib/accounts";
+import { AddAccountDialog } from "../add-account-dialog";
 import {
   RecurringTransactionWithAccount,
   RecurrenceFrequency,
@@ -150,6 +152,35 @@ export function EditRecurringTransactionDialog({
   ];
 
   const selectedType = form.watch("type");
+
+  // Local accounts state so we can add inline and select new account
+  const [localAccounts, setLocalAccounts] = useState<Account[]>(accounts || []);
+
+  useEffect(() => {
+    setLocalAccounts(accounts || []);
+  }, [accounts]);
+
+  const handleAccountCreated = async (accountId?: string) => {
+    if (!accountId) return;
+    const existing = (accounts || []).find((a) => a.id === accountId);
+    if (existing) {
+      setLocalAccounts((s) => [existing, ...s.filter((a) => a.id !== accountId)]);
+      form.setValue("accountId", accountId);
+      return;
+    }
+
+    try {
+      const acct = await getAccountById((user && user.uid) || "", accountId);
+      if (acct) {
+        setLocalAccounts((s) => [acct, ...s.filter((a) => a.id !== acct.id)]);
+        form.setValue("accountId", acct.id || accountId);
+      } else {
+        form.setValue("accountId", accountId);
+      }
+    } catch (e) {
+      form.setValue("accountId", accountId);
+    }
+  };
 
   const handleSubmit = async (values: RecurringTransactionFormValues) => {
     if (!user || !transaction.id) {
@@ -294,23 +325,32 @@ export function EditRecurringTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Account</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {accounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id || ""}>
-                          {account.name} ({account.type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center space-x-2">
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select account" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {localAccounts.map((account) => (
+                          <SelectItem key={account.id} value={account.id || ""}>
+                            {account.name} ({account.type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <AddAccountDialog onAccountAdded={handleAccountCreated}>
+                      <Button variant="outline" size="sm">
+                        <PlusCircle className="mr-1 h-4 w-4" />
+                        Add Account
+                      </Button>
+                    </AddAccountDialog>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
