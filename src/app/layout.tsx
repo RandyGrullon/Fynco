@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import IOSInstallBanner from "../components/ios-install-banner";
 
 export const metadata: Metadata = {
   title: "Fynco",
@@ -38,7 +39,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
         <link
           rel="icon"
           type="image/png"
@@ -57,7 +62,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Fynco" />
         <meta name="theme-color" content="#000000" />
       </head>
-      <body className="font-body antialiased">{children}</body>
+      <body className="font-body antialiased">
+        {children}
+        {/* iOS doesn't show an install prompt; show a small helper for Safari users */}
+        <IOSInstallBanner />
+      </body>
     </html>
   );
 }
