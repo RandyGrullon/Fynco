@@ -59,6 +59,8 @@ const transactionSchema = z.object({
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
 import { Account } from "@/lib/accounts";
+import { AddAccountDialog } from "./add-account-dialog";
+import { getAccountById } from "@/lib/accounts";
 
 interface AddTransactionDialogProps {
   onTransactionAdded: () => void;
@@ -368,14 +370,14 @@ export function AddTransactionDialog({
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-              <FormLabel>Amount</FormLabel>
+                        <FormLabel>Amount</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="0.00"
                             {...field}
                             value={field.value ?? ""}
-                aria-invalid={!!form.formState.errors.amount}
+                            aria-invalid={!!form.formState.errors.amount}
                           />
                         </FormControl>
                         <FormMessage />

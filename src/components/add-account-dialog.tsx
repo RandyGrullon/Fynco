@@ -47,9 +47,7 @@ export function AddAccountDialog({
   const [currency, setCurrency] = useState("USD");
   const [description, setDescription] = useState("");
   const [isDefault, setIsDefault] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; balance?: string }>(
-    {}
-  );
+  const [errors, setErrors] = useState<{ name?: string; balance?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +64,8 @@ export function AddAccountDialog({
     const newErrors: typeof errors = {};
     if (!name) newErrors.name = "Account name is required";
     const numericBalance = parseFloat(balance);
-    if (isNaN(numericBalance)) newErrors.balance = "Balance must be a valid number";
+    if (isNaN(numericBalance))
+      newErrors.balance = "Balance must be a valid number";
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -74,7 +73,7 @@ export function AddAccountDialog({
 
     setLoading(true);
     try {
-  const numericBalance = parseFloat(balance);
+      const numericBalance = parseFloat(balance);
 
       const result = await addAccount(
         {
@@ -100,7 +99,7 @@ export function AddAccountDialog({
         setCurrency("USD");
         setDescription("");
         setIsDefault(false);
-  setErrors({});
+        setErrors({});
         if (onAccountAdded) {
           onAccountAdded();
         }
@@ -153,7 +152,9 @@ export function AddAccountDialog({
                     setName(e.target.value);
                     setErrors((s) => ({ ...s, name: undefined }));
                   }}
-                  className={`w-full ${errors.name ? "border-red-500 ring-1 ring-red-300" : ""}`}
+                  className={`w-full ${
+                    errors.name ? "border-red-500 ring-1 ring-red-300" : ""
+                  }`}
                   placeholder="Main Checking Account"
                   aria-invalid={!!errors.name}
                 />
@@ -177,7 +178,9 @@ export function AddAccountDialog({
                     setBalance(e.target.value);
                     setErrors((s) => ({ ...s, balance: undefined }));
                   }}
-                  className={`w-full ${errors.balance ? "border-red-500 ring-1 ring-red-300" : ""}`}
+                  className={`w-full ${
+                    errors.balance ? "border-red-500 ring-1 ring-red-300" : ""
+                  }`}
                   placeholder="0.00"
                   aria-invalid={!!errors.balance}
                 />

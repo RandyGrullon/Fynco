@@ -136,7 +136,8 @@ export function AddRecurringTransactionDialog({
         toast({
           variant: "destructive",
           title: "Account required",
-          description: "Please select an account before creating a recurring transaction.",
+          description:
+            "Please select an account before creating a recurring transaction.",
         });
         setIsSubmitting(false);
         return;
@@ -251,7 +252,7 @@ export function AddRecurringTransactionDialog({
               name="amount"
               render={({ field }) => (
                 <FormItem>
-          <FormLabel>Amount</FormLabel>
+                  <FormLabel>Amount</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -263,10 +264,10 @@ export function AddRecurringTransactionDialog({
                         field.onChange(parseFloat(value));
                       }}
                       value={field.value}
-            aria-invalid={!!form.formState.errors.amount}
+                      aria-invalid={!!form.formState.errors.amount}
                     />
                   </FormControl>
-          <FormMessage />
+                  <FormMessage />
                 </FormItem>
               )}
             />
