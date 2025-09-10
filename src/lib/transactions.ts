@@ -55,6 +55,10 @@ export async function addTransaction(
   userId: string
 ) {
   try {
+    // Validate that a target account is provided
+    if (!transaction.accountId) {
+      return { success: false, error: "Account is required for a transaction" };
+    }
     const transactionsCollection = getTransactionsCollection(userId);
 
     // Convert date to Timestamp properly

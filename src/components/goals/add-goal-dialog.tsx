@@ -71,6 +71,11 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
   const [newAccountBalance, setNewAccountBalance] = useState("0");
   const [newAccountType, setNewAccountType] = useState<AccountType>("savings");
   const [newAccountDescription, setNewAccountDescription] = useState("");
+  const [errors, setErrors] = useState<{
+    name?: string;
+    targetAmount?: string;
+    account?: string;
+  }>({});
 
   useEffect(() => {
     if (user && open) {
@@ -107,26 +112,25 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
     }
 
     if (!name) {
-      toast({
-        title: "Error",
-        description: "Goal name is required",
-        variant: "destructive",
-      });
-      return;
+  setErrors((s) => ({ ...s, name: "Goal name is required" }));
+  return;
     }
 
     if (!targetAmount || parseFloat(targetAmount) <= 0) {
-      toast({
-        title: "Error",
-        description: "Target amount must be greater than zero",
-        variant: "destructive",
-      });
-      return;
+  setErrors((s) => ({ ...s, targetAmount: "Target amount must be greater than zero" }));
+  return;
     }
 
     setLoading(true);
     try {
       const createNewAccount = accountOption === "new";
+
+      // Client-side guard: if using existing account option, ensure an account is selected
+      if (!createNewAccount && (!selectedAccountId || selectedAccountId === "")) {
+        setErrors((s) => ({ ...s, account: "Please select an account or create a new one." }));
+        setLoading(false);
+        return;
+      }
 
       // Prepare account data if creating a new account
       const accountData = createNewAccount
@@ -217,13 +221,21 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Goal Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., New Car, Vacation"
-                disabled={loading}
-              />
+              <div>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setErrors((s) => ({ ...s, name: undefined }));
+                  }}
+                  placeholder="e.g., New Car, Vacation"
+                  disabled={loading}
+                  aria-invalid={!!errors.name}
+                  className={errors.name ? "border-red-500 ring-1 ring-red-300" : ""}
+                />
+                {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -237,7 +249,10 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                   onChange={(e) => setTargetAmount(e.target.value)}
                   placeholder="5000"
                   disabled={loading}
+                  aria-invalid={!!errors.targetAmount}
+                  className={errors.targetAmount ? "border-red-500 ring-1 ring-red-300" : ""}
                 />
+                {errors.targetAmount && <p className="text-sm text-red-600 mt-1">{errors.targetAmount}</p>}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="currentAmount">Current Amount</Label>
@@ -345,6 +360,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                         ))}
                       </SelectContent>
                     </Select>
+                      {errors.account && <p className="text-sm text-red-600 mt-2">{errors.account}</p>}
                     {accounts.length === 0 && !loadingAccounts && (
                       <p className="text-sm text-muted-foreground">
                         No available accounts. All accounts are already

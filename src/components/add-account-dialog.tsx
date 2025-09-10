@@ -47,6 +47,9 @@ export function AddAccountDialog({
   const [currency, setCurrency] = useState("USD");
   const [description, setDescription] = useState("");
   const [isDefault, setIsDefault] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; balance?: string }>(
+    {}
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,21 +62,19 @@ export function AddAccountDialog({
       return;
     }
 
-    if (!name) {
-      toast({
-        title: "Error",
-        description: "Account name is required",
-        variant: "destructive",
-      });
+    // client-side validation with inline errors
+    const newErrors: typeof errors = {};
+    if (!name) newErrors.name = "Account name is required";
+    const numericBalance = parseFloat(balance);
+    if (isNaN(numericBalance)) newErrors.balance = "Balance must be a valid number";
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     setLoading(true);
     try {
-      const numericBalance = parseFloat(balance);
-      if (isNaN(numericBalance)) {
-        throw new Error("Invalid balance amount");
-      }
+  const numericBalance = parseFloat(balance);
 
       const result = await addAccount(
         {
@@ -99,6 +100,7 @@ export function AddAccountDialog({
         setCurrency("USD");
         setDescription("");
         setIsDefault(false);
+  setErrors({});
         if (onAccountAdded) {
           onAccountAdded();
         }
@@ -143,30 +145,46 @@ export function AddAccountDialog({
               <Label htmlFor="name" className="text-right">
                 Name
               </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="col-span-3"
-                placeholder="Main Checking Account"
-                required
-              />
+              <div className="col-span-3">
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setErrors((s) => ({ ...s, name: undefined }));
+                  }}
+                  className={`w-full ${errors.name ? "border-red-500 ring-1 ring-red-300" : ""}`}
+                  placeholder="Main Checking Account"
+                  aria-invalid={!!errors.name}
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="balance" className="text-right">
                 Balance
               </Label>
-              <Input
-                id="balance"
-                type="number"
-                step="0.01"
-                value={balance}
-                onChange={(e) => setBalance(e.target.value)}
-                className="col-span-3"
-                placeholder="0.00"
-                required
-              />
+              <div className="col-span-3">
+                <Input
+                  id="balance"
+                  type="number"
+                  step="0.01"
+                  value={balance}
+                  onChange={(e) => {
+                    setBalance(e.target.value);
+                    setErrors((s) => ({ ...s, balance: undefined }));
+                  }}
+                  className={`w-full ${errors.balance ? "border-red-500 ring-1 ring-red-300" : ""}`}
+                  placeholder="0.00"
+                  aria-invalid={!!errors.balance}
+                />
+                {errors.balance && (
+                  <p className="mt-1 text-sm text-red-600">{errors.balance}</p>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">

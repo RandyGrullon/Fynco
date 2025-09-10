@@ -61,6 +61,10 @@ export async function addRecurringTransaction(
   userId: string
 ) {
   try {
+    // Ensure account association exists
+    if (!transaction.accountId) {
+      return { success: false, error: "Account is required for recurring transactions" };
+    }
     const recurringTransactionsCollection =
       getRecurringTransactionsCollection(userId);
     const now = Timestamp.now();

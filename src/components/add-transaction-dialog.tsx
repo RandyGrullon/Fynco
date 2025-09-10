@@ -184,6 +184,16 @@ export function AddTransactionDialog({
       accountId: data.accountId,
     };
 
+    // Client-side guard: ensure account selected
+    if (!transactionData.accountId) {
+      toast({
+        variant: "destructive",
+        title: "Account required",
+        description: "Please select an account before creating a transaction.",
+      });
+      return;
+    }
+
     const result =
       isEditMode && transaction?.id
         ? await updateTransaction(transaction.id, transactionData, user.uid)
@@ -358,13 +368,14 @@ export function AddTransactionDialog({
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Amount</FormLabel>
+              <FormLabel>Amount</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             placeholder="0.00"
                             {...field}
                             value={field.value ?? ""}
+                aria-invalid={!!form.formState.errors.amount}
                           />
                         </FormControl>
                         <FormMessage />
@@ -391,6 +402,7 @@ export function AddTransactionDialog({
                             <SelectItem value="EUR">EUR</SelectItem>
                             <SelectItem value="GBP">GBP</SelectItem>
                           </SelectContent>
+                          <FormMessage />
                         </Select>
                       </FormItem>
                     )}
