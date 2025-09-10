@@ -14,6 +14,7 @@ import {
   deleteDoc,
   where,
   getDoc,
+  writeBatch,
 } from "firebase/firestore";
 
 export type AccountType =
@@ -34,6 +35,8 @@ export type Account = {
   updatedAt: Date | Timestamp | string;
   description?: string;
   isDefault?: boolean;
+  isGoalAccount?: boolean;
+  goalId?: string;
 };
 
 export type AccountTransaction = {
@@ -125,25 +128,165 @@ export async function updateAccount(
 
 export async function deleteAccount(id: string, userId: string) {
   try {
+    console.log(`Starting to delete account ${id} for user ${userId}`);
+
+    // Debug function to check the structure of goals
+    async function debugGoals() {
+      const goalsCollection = collection(db, "users", userId, "goals");
+      const allGoalsSnapshot = await getDocs(goalsCollection);
+
+      console.log(`User has ${allGoalsSnapshot.size} total goals`);
+
+      allGoalsSnapshot.forEach((goalDoc) => {
+        const goal = goalDoc.data();
+        console.log(
+          `Goal ${goalDoc.id}: ${goal.name}, accountId: ${
+            goal.accountId || "none"
+          }`
+        );
+      });
+    }
+
+    // Debug goals before deletion
+    await debugGoals();
+
     const accountRef = doc(db, "users", userId, "accounts", id);
 
     // Check if this is the default account
     const accountSnap = await getDoc(accountRef);
-    const accountData = accountSnap.data() as Account;
 
-    // Don't allow deleting the default account if it's the only one
+    if (!accountSnap.exists()) {
+      console.error(`Account ${id} not found for user ${userId}`);
+      throw new Error("Account not found");
+    }
+
+    const accountData = accountSnap.data() as Account;
+    console.log(
+      `Account found: ${accountData.name}, type: ${accountData.type}`
+    );
+
+    // If this is a default account and there are multiple accounts, set another one as default
     const accounts = await getAccounts(userId);
     if (accountData.isDefault && accounts.length > 1) {
       // Find another account to set as default
       const newDefaultAccount = accounts.find((acc) => acc.id !== id);
       if (newDefaultAccount?.id) {
         await updateAccount(newDefaultAccount.id, { isDefault: true }, userId);
+        console.log(
+          `Set account ${newDefaultAccount.id} as the new default account`
+        );
       }
-    } else if (accountData.isDefault && accounts.length === 1) {
-      throw new Error("Cannot delete the only account");
+    }
+    // Allow deleting the last account, even if it's default
+
+    // Helper function to delete documents in batches
+    async function deleteCollection(
+      collectionPath: string,
+      fieldName: string,
+      fieldValue: string
+    ) {
+      const q = query(
+        collection(db, collectionPath),
+        where(fieldName, "==", fieldValue)
+      );
+      const snapshot = await getDocs(q);
+
+      // Process in batches of 500 (Firestore limit)
+      const batchSize = 500;
+      const totalDocs = snapshot.size;
+      let processed = 0;
+
+      while (processed < totalDocs) {
+        const batch = writeBatch(db);
+        const docsToProcess = snapshot.docs.slice(
+          processed,
+          processed + batchSize
+        );
+
+        docsToProcess.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        processed += docsToProcess.length;
+      }
+
+      return totalDocs;
     }
 
+    // Delete all transactions associated with this account
+    const transactionsDeleted = await deleteCollection(
+      `users/${userId}/transactions`,
+      "accountId",
+      id
+    );
+    console.log(
+      `Deleted ${transactionsDeleted} transactions for account ${id}`
+    );
+
+    // Delete all recurring transactions associated with this account
+    const recurringTransactionsDeleted = await deleteCollection(
+      `users/${userId}/recurringTransactions`,
+      "accountId",
+      id
+    );
+    console.log(
+      `Deleted ${recurringTransactionsDeleted} recurring transactions for account ${id}`
+    );
+
+    // Handle goals associated with this account in two ways:
+
+    // 1. If this account is a special goal account (created specifically for a goal)
+    if (accountData.isGoalAccount && accountData.goalId) {
+      const goalRef = doc(db, "users", userId, "goals", accountData.goalId);
+      const goalSnap = await getDoc(goalRef);
+
+      if (goalSnap.exists()) {
+        // Delete the goal completely since its dedicated account is being deleted
+        await deleteDoc(goalRef);
+        console.log(
+          `Deleted goal ${accountData.goalId} because its dedicated account was deleted`
+        );
+      }
+    }
+
+    // 2. Find and delete any other goals that reference this account
+    try {
+      const goalsQuery = query(
+        collection(db, "users", userId, "goals"),
+        where("accountId", "==", id)
+      );
+
+      const goalsSnapshot = await getDocs(goalsQuery);
+      console.log(`Found ${goalsSnapshot.size} goals with accountId = ${id}`);
+
+      // If we have goals associated with this account, delete them
+      if (!goalsSnapshot.empty) {
+        const batch = writeBatch(db);
+        goalsSnapshot.forEach((goalDoc) => {
+          console.log(
+            `Deleting goal ${goalDoc.id} associated with account ${id}`
+          );
+          batch.delete(goalDoc.ref);
+        });
+        await batch.commit();
+        console.log(
+          `Deleted ${goalsSnapshot.size} goals associated with account ${id}`
+        );
+      } else {
+        console.log(`No goals found associated with account ${id}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting goals for account ${id}:`, error);
+    }
+
+    // Finally, delete the account
     await deleteDoc(accountRef);
+
+    // Debug goals after deletion to confirm they were removed
+    console.log("Goals after account deletion:");
+    await debugGoals();
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting account: ", error);

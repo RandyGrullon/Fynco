@@ -91,22 +91,33 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
 
   const handleDelete = async (accountId: string) => {
     if (!user) return;
+
+    setDeletingAccountId(accountId);
     setIsDeleting(true);
 
     try {
       const result = await deleteAccount(accountId, user.uid);
       if (result.success) {
-        toast({
-          title: "Account deleted",
-          description: "Your account was successfully deleted",
-        });
-        refreshAccounts();
+        // Mantener el estado de eliminación brevemente para mejor UX
+        setTimeout(() => {
+          setDeletingAccountId(null);
+          setIsDeleting(false);
+
+          toast({
+            title: "Account deleted",
+            description: "Your account was successfully deleted",
+          });
+
+          refreshAccounts();
+        }, 500);
       } else {
         toast({
           title: "Error",
           description: result.error || "Failed to delete account",
           variant: "destructive",
         });
+        setDeletingAccountId(null);
+        setIsDeleting(false);
       }
     } catch (error) {
       toast({
@@ -114,7 +125,6 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
         description: (error as Error).message || "An error occurred",
         variant: "destructive",
       });
-    } finally {
       setDeletingAccountId(null);
       setIsDeleting(false);
     }
@@ -122,255 +132,280 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
 
   return (
     <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-      {accounts.map((account) => (
-        <Card
-          key={account.id}
-          className="relative group hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border border-gray-200 dark:border-gray-700 shadow-md bg-white dark:bg-gray-800 overflow-hidden"
-        >
-          {/* Accent stripe */}
-          <div
-            className={`absolute top-0 left-0 right-0 h-1 ${getAccountAccentColor(
-              account.type
-            )}`}
-          />
-          <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
-            <div
-              className={`w-full h-full rounded-full ${getAccountAccentColor(
-                account.type
-              )} -translate-y-12 translate-x-12`}
-            />
-          </div>
+      {accounts.map((account) => {
+        const isDeletingThis = isDeleting && deletingAccountId === account.id;
 
-          {account.isDefault && (
-            <div className="absolute -top-2 -right-2 z-10">
-              <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg border-0 px-3 py-1">
-                ✨ Default
-              </Badge>
-            </div>
-          )}
-
-          <CardHeader className="pb-4 relative">
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-xl font-bold truncate mb-3 text-gray-900 dark:text-gray-100">
-                  {account.name}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    className={`${getAccountTypeColor(
-                      account.type
-                    )} text-xs font-semibold border`}
-                    variant="secondary"
-                  >
-                    {account.type.charAt(0).toUpperCase() +
-                      account.type.slice(1)}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {account.currency}
-                  </span>
+        return (
+          <Card
+            key={account.id}
+            className={`relative group transition-all duration-300 border border-gray-200 dark:border-gray-700 shadow-md bg-white dark:bg-gray-800 overflow-hidden ${
+              isDeletingThis
+                ? "opacity-60 pointer-events-none"
+                : "hover:shadow-xl hover:scale-[1.02]"
+            }`}
+          >
+            {isDeletingThis && (
+              <div className="absolute inset-0 flex items-center justify-center z-50 bg-background/50">
+                <div className="flex items-center space-x-2">
+                  <span className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full" />
+                  <span>Deleting...</span>
                 </div>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
+            )}
+            {/* Accent stripe */}
+            <div
+              className={`absolute top-0 left-0 right-0 h-1 ${getAccountAccentColor(
+                account.type
+              )}`}
+            />
+            <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+              <div
+                className={`w-full h-full rounded-full ${getAccountAccentColor(
+                  account.type
+                )} -translate-y-12 translate-x-12`}
+              />
+            </div>
+
+            {account.isDefault && (
+              <div className="absolute -top-2 -right-2 z-10">
+                <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg border-0 px-3 py-1">
+                  ✨ Default
+                </Badge>
+              </div>
+            )}
+
+            <CardHeader className="pb-4 relative">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-xl font-bold truncate mb-3 text-gray-900 dark:text-gray-100">
+                    {account.name}
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className={`${getAccountTypeColor(
+                        account.type
+                      )} text-xs font-semibold border`}
+                      variant="secondary"
+                    >
+                      {account.type.charAt(0).toUpperCase() +
+                        account.type.slice(1)}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {account.currency}
+                    </span>
+                    {account.isGoalAccount && (
+                      <Badge
+                        className="bg-amber-100 text-amber-700 text-xs font-semibold border"
+                        variant="secondary"
+                      >
+                        Goal
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     <EditAccountDialog
                       account={account}
                       onAccountUpdated={refreshAccounts}
                     >
-                      <button className="w-full flex items-center">
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <Edit className="mr-2 h-4 w-4" /> Edit Account
-                      </button>
+                      </DropdownMenuItem>
                     </EditAccountDialog>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <AccountTransactionDialog
                       account={account}
                       transactionType="credit"
                       onTransactionAdded={refreshAccounts}
                     >
-                      <button className="w-full flex items-center">
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <Banknote className="mr-2 h-4 w-4" /> Add Income
-                      </button>
+                      </DropdownMenuItem>
                     </AccountTransactionDialog>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <AccountTransactionDialog
                       account={account}
                       transactionType="debit"
                       onTransactionAdded={refreshAccounts}
                     >
-                      <button className="w-full flex items-center">
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <Banknote className="mr-2 h-4 w-4" /> Add Expense
-                      </button>
+                      </DropdownMenuItem>
                     </AccountTransactionDialog>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <TransferDialog
                       fromAccount={account}
                       accounts={accounts.filter((a) => a.id !== account.id)}
                       onTransferCompleted={refreshAccounts}
                     >
-                      <button className="w-full flex items-center">
-                        <ArrowDownUp className="mr-2 h-4 w-4" /> Transfer
-                      </button>
-                    </TransferDialog>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
                       <DropdownMenuItem
                         onSelect={(e) => e.preventDefault()}
-                        className="text-red-600 focus:text-red-600"
+                        disabled={
+                          accounts.filter((a) => a.id !== account.id).length ===
+                          0
+                        }
                       >
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+                        <ArrowDownUp className="mr-2 h-4 w-4" /> Transfer
                       </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Account</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this account? This
-                          action cannot be undone.
-                          {account.isDefault && (
-                            <p className="mt-2 font-bold text-red-600">
-                              This is your default account. Deleting it will set
-                              another account as default.
-                            </p>
-                          )}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => account.id && handleDelete(account.id)}
-                          disabled={isDeleting}
-                          className="bg-red-600 hover:bg-red-700"
+                    </TransferDialog>
+                    <DropdownMenuSeparator />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-red-600 focus:text-red-600"
                         >
-                          {isDeleting && deletingAccountId === account.id
-                            ? "Deleting..."
-                            : "Delete"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </CardHeader>
-
-          <CardContent className="pb-4 relative">
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: account.currency,
-                    }).format(account.balance)}
-                  </div>
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      account.balance > 0
-                        ? "bg-green-400 shadow-lg shadow-green-400/30"
-                        : account.balance === 0
-                        ? "bg-yellow-400 shadow-lg shadow-yellow-400/30"
-                        : "bg-red-400 shadow-lg shadow-red-400/30"
-                    }`}
-                  />
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Current Balance
-                </div>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this account? This
+                            action cannot be undone.
+                            {account.isDefault && (
+                              <p className="mt-2 font-bold text-red-600">
+                                This is your default account. Deleting it will
+                                set another account as default.
+                              </p>
+                            )}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() =>
+                              account.id && handleDelete(account.id)
+                            }
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {isDeleting && deletingAccountId === account.id
+                              ? "Deleting..."
+                              : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
+            </CardHeader>
 
-              {account.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
-                  {account.description}
-                </p>
-              )}
+            <CardContent className="pb-4 relative">
+              <div className="space-y-4">
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: account.currency,
+                      }).format(account.balance)}
+                    </div>
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        account.balance > 0
+                          ? "bg-green-400 shadow-lg shadow-green-400/30"
+                          : account.balance === 0
+                          ? "bg-yellow-400 shadow-lg shadow-yellow-400/30"
+                          : "bg-red-400 shadow-lg shadow-red-400/30"
+                      }`}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Current Balance
+                  </div>
+                </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 p-0 h-auto justify-start font-medium"
-                onClick={() =>
-                  (window.location.href = `/accounts/${account.id}`)
-                }
+                {account.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
+                    {account.description}
+                  </p>
+                )}
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 p-0 h-auto justify-start font-medium"
+                  onClick={() =>
+                    (window.location.href = `/accounts/${account.id}`)
+                  }
+                >
+                  View All Transactions →
+                </Button>
+              </div>
+            </CardContent>
+
+            <CardFooter className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-0">
+              <AccountTransactionDialog
+                account={account}
+                transactionType="credit"
+                onTransactionAdded={refreshAccounts}
               >
-                View All Transactions →
-              </Button>
-            </div>
-          </CardContent>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 font-medium"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <Banknote className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Add </span>Income
+                </Button>
+              </AccountTransactionDialog>
 
-          <CardFooter className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-0">
-            <AccountTransactionDialog
-              account={account}
-              transactionType="credit"
-              onTransactionAdded={refreshAccounts}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 font-medium"
+              <AccountTransactionDialog
+                account={account}
+                transactionType="debit"
+                onTransactionAdded={refreshAccounts}
               >
-                <Banknote className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Add </span>Income
-              </Button>
-            </AccountTransactionDialog>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200 font-medium"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <Banknote className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Add </span>Expense
+                </Button>
+              </AccountTransactionDialog>
 
-            <AccountTransactionDialog
-              account={account}
-              transactionType="debit"
-              onTransactionAdded={refreshAccounts}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200 font-medium"
+              <TransferDialog
+                fromAccount={account}
+                accounts={accounts.filter((a) => a.id !== account.id)}
+                onTransferCompleted={refreshAccounts}
               >
-                <Banknote className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Add </span>Expense
-              </Button>
-            </AccountTransactionDialog>
-
-            <TransferDialog
-              fromAccount={account}
-              accounts={accounts.filter((a) => a.id !== account.id)}
-              onTransferCompleted={refreshAccounts}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 font-medium"
-                disabled={
-                  accounts.filter((a) => a.id !== account.id).length === 0
-                }
-                title={
-                  accounts.filter((a) => a.id !== account.id).length === 0
-                    ? "No other accounts available for transfer"
-                    : "Transfer money to another account"
-                }
-              >
-                <ArrowDownUp className="mr-2 h-4 w-4" />
-                Transfer
-              </Button>
-            </TransferDialog>
-          </CardFooter>
-        </Card>
-      ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 font-medium"
+                  disabled={
+                    accounts.filter((a) => a.id !== account.id).length === 0
+                  }
+                  title={
+                    accounts.filter((a) => a.id !== account.id).length === 0
+                      ? "No other accounts available for transfer"
+                      : "Transfer money to another account"
+                  }
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <ArrowDownUp className="mr-2 h-4 w-4" />
+                  Transfer
+                </Button>
+              </TransferDialog>
+            </CardFooter>
+          </Card>
+        );
+      })}
     </div>
   );
 }
-
-export default AccountsList;

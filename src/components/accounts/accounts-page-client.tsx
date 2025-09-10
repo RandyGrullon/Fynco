@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { Account } from "@/lib/accounts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AccountsList } from "@/components/accounts/accounts-list";
 
 interface AccountsPageClientProps {
   accounts: Account[];
@@ -13,34 +14,11 @@ const AccountsPageClient: React.FC<AccountsPageClientProps> = ({
   accounts,
   refreshAccounts,
 }) => {
-  const [AccountsList, setAccountsList] =
-    React.useState<React.ComponentType<any> | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    const loadComponent = async () => {
-      try {
-        const module = await import("@/components/accounts/accounts-list");
-        setAccountsList(() => module.default);
-      } catch (error) {
-        console.error("Error loading AccountsList component:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadComponent();
-  }, []);
-
-  if (loading) {
-    return <Skeleton className="h-[500px]" />;
-  }
-
-  if (!AccountsList) {
-    return <div>Could not load accounts list component.</div>;
-  }
-
-  return <AccountsList accounts={accounts} refreshAccounts={refreshAccounts} />;
+  return (
+    <Suspense fallback={<Skeleton className="h-[500px]" />}>
+      <AccountsList accounts={accounts} refreshAccounts={refreshAccounts} />
+    </Suspense>
+  );
 };
 
 export default AccountsPageClient;

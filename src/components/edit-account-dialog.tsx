@@ -76,6 +76,9 @@ export function EditAccountDialog({
           type,
           description: description || undefined,
           isDefault,
+          // Preserve goal-related fields
+          isGoalAccount: account.isGoalAccount,
+          goalId: account.goalId,
         },
         user.uid
       );
@@ -132,6 +135,21 @@ export function EditAccountDialog({
                 required
               />
             </div>
+
+            {account.isGoalAccount && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Goal Status</Label>
+                <div className="col-span-3">
+                  <p className="text-sm font-medium flex items-center">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                    This account is linked to a goal
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Accounts linked to goals can only be edited, not deleted.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="balance" className="text-right">

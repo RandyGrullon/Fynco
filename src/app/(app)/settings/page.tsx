@@ -393,65 +393,6 @@ export default function SettingsPage() {
       </Card>
 
       {/* Nueva sección para la configuración de salario automático */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuración de Salario Automático</CardTitle>
-          <CardDescription>
-            Configura tu salario para que se agregue automáticamente a tus
-            ingresos en la fecha especificada.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSalarySettings} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="salary">Monto del Salario</Label>
-              <Input
-                id="salary"
-                type="number"
-                placeholder="0.00"
-                value={salaryAmount}
-                onChange={(e) => setSalaryAmount(e.target.value)}
-                disabled={salaryLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="depositDay">Día de Depósito (1-31)</Label>
-              <Input
-                id="depositDay"
-                type="number"
-                min="1"
-                max="31"
-                placeholder="15"
-                value={depositDay}
-                onChange={(e) => setDepositDay(e.target.value)}
-                disabled={salaryLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="frequency">Frecuencia</Label>
-              <Select
-                value={frequency}
-                onValueChange={(value: "weekly" | "biweekly" | "monthly") =>
-                  setFrequency(value)
-                }
-                disabled={salaryLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona frecuencia" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weekly">Semanal</SelectItem>
-                  <SelectItem value="biweekly">Quincenal</SelectItem>
-                  <SelectItem value="monthly">Mensual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" disabled={salaryLoading}>
-              {salaryLoading ? "Guardando..." : "Guardar Configuración"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>

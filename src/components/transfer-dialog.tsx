@@ -178,7 +178,7 @@ export function TransferDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.length === 0 ? (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-accounts" disabled>
                       No other accounts available
                     </SelectItem>
                   ) : (

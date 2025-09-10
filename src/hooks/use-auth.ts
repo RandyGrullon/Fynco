@@ -34,13 +34,13 @@ export function useRequireAuth(redirectUrl = "/login") {
   const { user, loading } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const locale = (params.locale as string) || "en";
+  const locale = params.locale as string;
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push(`/${locale}${redirectUrl}`);
+      router.push(`${redirectUrl}`);
     }
-  }, [user, loading, router, redirectUrl, locale]);
+  }, [user, loading, router, redirectUrl]);
 
   return { user, loading };
 }

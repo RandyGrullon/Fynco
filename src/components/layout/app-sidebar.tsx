@@ -8,15 +8,17 @@ import {
   Settings,
   Repeat,
   BarChart3,
+  Target,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+export const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/accounts", icon: Wallet, label: "Accounts" },
   { href: "/transactions", icon: ArrowLeftRight, label: "Transactions" },
   { href: "/recurring", icon: Repeat, label: "Recurring" },
+  { href: "/goals", icon: Target, label: "Goals" },
   { href: "/statistics", icon: BarChart3, label: "Statistics" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
@@ -38,9 +40,9 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
         <Link
           href="/"
           onClick={handleLinkClick}
-          className="flex items-center gap-3 font-headline font-semibold text-lg"
+          className="flex items-center gap-3  font-headline font-semibold text-lg"
         >
-          <Wallet className="h-7 w-7 text-primary" />
+          <img src="/logo.png" alt="Fynco" className="h-16  w-auto" />
           <span>Fynco</span>
         </Link>
       </div>

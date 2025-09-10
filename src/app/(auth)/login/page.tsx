@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wallet } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { auth, db } from "@/lib/firebase";
 import {
   signInWithEmailAndPassword,
@@ -232,7 +232,7 @@ export default function LoginPage() {
   return (
     <div className="w-full max-w-md">
       <div className="flex flex-col items-center text-center mb-8">
-        <Wallet className="h-10 w-10 mb-2 text-primary" />
+        <img src="/logo.png" alt="Fynco" className="h-16 w-auto mb-2" />
         <h1 className="text-3xl font-headline font-bold">
           Welcome back to Fynco
         </h1>
