@@ -50,7 +50,9 @@ export async function addGoal(
   try {
     // If not creating a new account and no existing accountId provided, reject
     if (!createAccount && !goalData.accountId) {
-      throw new Error("A Goal must be linked to an account or a new account must be created");
+      throw new Error(
+        "A Goal must be linked to an account or a new account must be created"
+      );
     }
     const goalsCollection = getGoalsCollection(userId);
 

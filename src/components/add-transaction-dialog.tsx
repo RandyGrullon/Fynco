@@ -134,6 +134,40 @@ export function AddTransactionDialog({
     }
   }, [open, isEditMode, transaction, form, initialType, accounts]);
 
+  // Local accounts state so we can add inline and select new account
+  const [localAccounts, setLocalAccounts] = useState<Account[]>(accounts || []);
+
+  useEffect(() => {
+    setLocalAccounts(accounts || []);
+  }, [accounts]);
+
+  const handleAccountCreated = async (accountId?: string) => {
+    if (!accountId) return;
+    // Try to find the newly created account in the provided accounts list
+    const existing = (accounts || []).find((a) => a.id === accountId);
+    if (existing) {
+      setLocalAccounts((s) => [
+        existing,
+        ...s.filter((a) => a.id !== accountId),
+      ]);
+      form.setValue("accountId", accountId);
+      return;
+    }
+
+    // Otherwise try to fetch it directly
+    try {
+      const acct = await getAccountById(user?.uid || "", accountId);
+      if (acct) {
+        setLocalAccounts((s) => [acct, ...s.filter((a) => a.id !== acct.id)]);
+        form.setValue("accountId", acct.id || accountId);
+      } else {
+        form.setValue("accountId", accountId);
+      }
+    } catch (e) {
+      form.setValue("accountId", accountId);
+    }
+  };
+
   // Watch for type changes to update category defaults
   const currentType = form.watch("type");
 

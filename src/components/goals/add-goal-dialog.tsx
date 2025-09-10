@@ -112,13 +112,16 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
     }
 
     if (!name) {
-  setErrors((s) => ({ ...s, name: "Goal name is required" }));
-  return;
+      setErrors((s) => ({ ...s, name: "Goal name is required" }));
+      return;
     }
 
     if (!targetAmount || parseFloat(targetAmount) <= 0) {
-  setErrors((s) => ({ ...s, targetAmount: "Target amount must be greater than zero" }));
-  return;
+      setErrors((s) => ({
+        ...s,
+        targetAmount: "Target amount must be greater than zero",
+      }));
+      return;
     }
 
     setLoading(true);
@@ -126,8 +129,14 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
       const createNewAccount = accountOption === "new";
 
       // Client-side guard: if using existing account option, ensure an account is selected
-      if (!createNewAccount && (!selectedAccountId || selectedAccountId === "")) {
-        setErrors((s) => ({ ...s, account: "Please select an account or create a new one." }));
+      if (
+        !createNewAccount &&
+        (!selectedAccountId || selectedAccountId === "")
+      ) {
+        setErrors((s) => ({
+          ...s,
+          account: "Please select an account or create a new one.",
+        }));
         setLoading(false);
         return;
       }
@@ -232,9 +241,13 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                   placeholder="e.g., New Car, Vacation"
                   disabled={loading}
                   aria-invalid={!!errors.name}
-                  className={errors.name ? "border-red-500 ring-1 ring-red-300" : ""}
+                  className={
+                    errors.name ? "border-red-500 ring-1 ring-red-300" : ""
+                  }
                 />
-                {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+                {errors.name && (
+                  <p className="text-sm text-red-600 mt-1">{errors.name}</p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -250,9 +263,17 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                   placeholder="5000"
                   disabled={loading}
                   aria-invalid={!!errors.targetAmount}
-                  className={errors.targetAmount ? "border-red-500 ring-1 ring-red-300" : ""}
+                  className={
+                    errors.targetAmount
+                      ? "border-red-500 ring-1 ring-red-300"
+                      : ""
+                  }
                 />
-                {errors.targetAmount && <p className="text-sm text-red-600 mt-1">{errors.targetAmount}</p>}
+                {errors.targetAmount && (
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.targetAmount}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="currentAmount">Current Amount</Label>
@@ -360,7 +381,11 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                      {errors.account && <p className="text-sm text-red-600 mt-2">{errors.account}</p>}
+                    {errors.account && (
+                      <p className="text-sm text-red-600 mt-2">
+                        {errors.account}
+                      </p>
+                    )}
                     {accounts.length === 0 && !loadingAccounts && (
                       <p className="text-sm text-muted-foreground">
                         No available accounts. All accounts are already
