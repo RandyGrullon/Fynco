@@ -164,7 +164,10 @@ export function EditRecurringTransactionDialog({
     if (!accountId) return;
     const existing = (accounts || []).find((a) => a.id === accountId);
     if (existing) {
-      setLocalAccounts((s) => [existing, ...s.filter((a) => a.id !== accountId)]);
+      setLocalAccounts((s) => [
+        existing,
+        ...s.filter((a) => a.id !== accountId),
+      ]);
       form.setValue("accountId", accountId);
       return;
     }

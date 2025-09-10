@@ -87,7 +87,7 @@ export function AddAccountDialog({
         user.uid
       );
 
-  if (result.success) {
+      if (result.success) {
         toast({
           title: "Success",
           description: "Account added successfully",
