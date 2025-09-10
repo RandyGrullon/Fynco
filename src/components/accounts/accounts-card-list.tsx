@@ -210,14 +210,14 @@ export function AccountsCardList({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {getAccountIcon(account.type)}
-                  <CardTitle className="text-xl font-bold">
+                  <CardTitle className="text-xl font-bold truncate max-w-[12rem]">
                     {account.name}
                   </CardTitle>
                 </div>
 
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 min-w-0">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -339,8 +339,8 @@ export function AccountsCardList({
               </div>
             </CardHeader>
 
-            <CardContent className="pt-0">
-              <div className="text-2xl font-bold mt-2">
+            <CardContent className="pt-0 min-w-0">
+              <div className="text-2xl font-bold mt-2 truncate min-w-0">
                 {formatCurrency(account.balance)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -353,9 +353,9 @@ export function AccountsCardList({
                 account={account}
                 onAccountUpdated={refreshAccounts}
               >
-                <Button size="sm" variant="outline" className="h-8">
+                <Button size="sm" variant="outline" className="h-8 min-w-0">
                   <Edit className="h-3.5 w-3.5 mr-1" />
-                  Edit
+                  <span className="truncate">Edit</span>
                 </Button>
               </EditAccountDialog>
 
@@ -364,7 +364,7 @@ export function AccountsCardList({
                 transactionType="debit"
                 onTransactionAdded={refreshAccounts}
               >
-                <Button size="sm" variant="outline" className="h-8">
+                <Button size="sm" variant="outline" className="h-8 min-w-0">
                   <svg
                     className="h-3.5 w-3.5 mr-1"
                     width="15"
@@ -380,7 +380,7 @@ export function AccountsCardList({
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Add
+                  <span className="truncate">Add</span>
                 </Button>
               </AccountTransactionDialog>
 
@@ -389,7 +389,7 @@ export function AccountsCardList({
                 accounts={accounts.filter((a) => a.id !== account.id)}
                 onTransferCompleted={refreshAccounts}
               >
-                <Button size="sm" variant="outline" className="h-8">
+                <Button size="sm" variant="outline" className="h-8 min-w-0">
                   <svg
                     className="h-3.5 w-3.5 mr-1"
                     width="15"
@@ -405,7 +405,7 @@ export function AccountsCardList({
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  Transfer
+                  <span className="truncate">Transfer</span>
                 </Button>
               </TransferDialog>
             </CardFooter>

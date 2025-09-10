@@ -210,9 +210,29 @@ export async function updateGoal(
     const oldAccountId = currentGoal.accountId;
     const newAccountId = updates.accountId;
 
+    // Sanitize updates: remove undefined fields and convert Date to Timestamp
+    const sanitizedUpdates: Record<string, any> = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      // Skip undefined values - Firestore rejects fields with undefined
+      if (value === undefined) return;
+
+      // Convert Date to Timestamp for deadline field
+      if (key === "deadline") {
+        if (value instanceof Date) {
+          sanitizedUpdates.deadline = Timestamp.fromDate(value);
+          return;
+        }
+        // If it's already a Firestore Timestamp keep it, if it's a string keep it
+        sanitizedUpdates.deadline = value;
+        return;
+      }
+
+      sanitizedUpdates[key] = value;
+    });
+
     // Update the goal
     await updateDoc(goalRef, {
-      ...updates,
+      ...sanitizedUpdates,
       updatedAt: Timestamp.now(),
     });
 

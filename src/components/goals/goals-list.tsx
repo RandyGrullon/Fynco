@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +63,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const formatter = useCurrencyFormatter();
+  const router = useRouter();
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -129,6 +131,26 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
     }
   };
 
+  const handleCardClick = (
+    e: React.MouseEvent,
+    goal: Goal
+  ) => {
+    // Only navigate on mobile (under md breakpoint)
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 768) return;
+
+    // Don't navigate if there's no linked account
+    if (!goal.accountId) return;
+
+    // If the click originated from an interactive element (link/button/menu), ignore
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest("a,button,[data-no-nav]")) return;
+
+    // Navigate to the linked account
+    router.push(`/accounts?id=${goal.accountId}`);
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {goals.map((goal) => {
@@ -138,13 +160,19 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
         );
 
         return (
-          <Card key={goal.id} className="flex flex-col h-full">
+          <Card
+            key={goal.id}
+            className="flex flex-col h-full overflow-hidden cursor-pointer"
+            onClick={(e) => handleCardClick(e, goal)}
+          >
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
-                <CardTitle className="text-xl">{goal.name}</CardTitle>
-                <DropdownMenu>
+                <CardTitle className="text-xl overflow-hidden truncate max-w-[70%]">
+                  {goal.name}
+                </CardTitle>
+        <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" data-no-nav>
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="sr-only">More options</span>
                     </Button>
@@ -187,10 +215,12 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                 )}
               </div>
               {goal.description && (
-                <CardDescription>{goal.description}</CardDescription>
+                <CardDescription className="overflow-hidden text-sm text-muted-foreground break-words line-clamp-3" data-no-nav>
+                  {goal.description}
+                </CardDescription>
               )}
             </CardHeader>
-            <CardContent className="pb-2 flex-grow">
+            <CardContent className="pb-2 flex-grow overflow-hidden">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -214,11 +244,12 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                   </div>
                 </div>
                 {goal.accountId && (
-                  <div className="flex items-center gap-2 text-sm mt-4">
+                  <div className="flex items-center gap-2 text-sm mt-4" data-no-nav>
                     <Wallet className="h-4 w-4 text-muted-foreground" />
                     <Link
                       href={`/accounts?id=${goal.accountId}`}
                       className="text-primary hover:underline"
+                      data-no-nav
                     >
                       Linked Account
                     </Link>
@@ -234,7 +265,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                       goal={goal}
                       onFundsAdded={refreshGoals}
                     >
-                      <Button variant="default" className="w-full">
+                      <Button variant="default" className="w-full" data-no-nav>
                         <PiggyBank className="mr-2 h-4 w-4" />
                         Añadir fondos
                       </Button>
@@ -247,6 +278,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                           ? `/accounts?id=${goal.accountId}`
                           : "/accounts"
                       }
+                      data-no-nav
                     >
                       <Target className="mr-2 h-4 w-4" />
                       {goal.accountId ? "Ver cuenta" : "Añadir cuenta"}

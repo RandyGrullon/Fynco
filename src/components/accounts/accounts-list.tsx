@@ -346,7 +346,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
               </div>
             </CardContent>
 
-            <CardFooter className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-0">
+            <CardFooter className="grid grid-cols-1 gap-2 sm:grid-cols-2 pt-0">
               <AccountTransactionDialog
                 account={account}
                 transactionType="credit"
@@ -387,7 +387,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 font-medium"
+                  className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 font-medium mx-auto"
                   disabled={
                     accounts.filter((a) => a.id !== account.id).length === 0
                   }
