@@ -14,6 +14,7 @@ import {
   deleteDoc,
   where,
   getDoc,
+  startAfter,
 } from "firebase/firestore";
 
 export type Transaction = {
@@ -195,9 +196,13 @@ export async function getTransactions(
   }
   try {
     const transactionsCollection = getTransactionsCollection(userId);
-    const q = count
-      ? query(transactionsCollection, orderBy("date", "desc"), limit(count))
-      : query(transactionsCollection, orderBy("date", "desc"));
+    // Default to limiting to 100 transactions for better performance
+    const defaultLimit = count || 100;
+    const q = query(
+      transactionsCollection, 
+      orderBy("date", "desc"), 
+      limit(defaultLimit)
+    );
 
     const querySnapshot = await getDocs(q);
     const transactions = querySnapshot.docs.map((doc) => {
@@ -212,5 +217,59 @@ export async function getTransactions(
   } catch (error) {
     console.error("Error getting documents for user", userId, error);
     return [];
+  }
+}
+
+// New function for paginated transactions
+export async function getTransactionsPaginated(
+  userId: string,
+  pageSize: number = 50,
+  lastDoc?: any
+): Promise<{ transactions: Transaction[]; lastDoc: any; hasMore: boolean }> {
+  if (!userId) {
+    console.error("No user ID provided to getTransactionsPaginated");
+    return { transactions: [], lastDoc: null, hasMore: false };
+  }
+
+  try {
+    const transactionsCollection = getTransactionsCollection(userId);
+    
+    let q = query(
+      transactionsCollection,
+      orderBy("date", "desc"),
+      limit(pageSize + 1) // Get one extra to check if there are more
+    );
+
+    if (lastDoc) {
+      q = query(
+        transactionsCollection,
+        orderBy("date", "desc"),
+        startAfter(lastDoc),
+        limit(pageSize + 1)
+      );
+    }
+
+    const querySnapshot = await getDocs(q);
+    const docs = querySnapshot.docs;
+    const hasMore = docs.length > pageSize;
+    
+    // Remove the extra document if present
+    const transactionDocs = hasMore ? docs.slice(0, -1) : docs;
+    
+    const transactions = transactionDocs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        date: (data.date as Timestamp).toDate().toISOString(),
+      } as Transaction;
+    });
+
+    const newLastDoc = transactionDocs.length > 0 ? transactionDocs[transactionDocs.length - 1] : null;
+
+    return { transactions, lastDoc: newLastDoc, hasMore };
+  } catch (error) {
+    console.error("Error getting paginated transactions for user", userId, error);
+    return { transactions: [], lastDoc: null, hasMore: false };
   }
 }

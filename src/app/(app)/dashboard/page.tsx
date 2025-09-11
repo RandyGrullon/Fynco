@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import { AddTransactionDialog } from "@/components/add-transaction-dialog";
 import { useAuth } from "@/hooks/use-auth";
-import { getTransactions, Transaction } from "@/lib/transactions";
-import { getAccounts, Account } from "@/lib/accounts";
-import { useEffect, useState, useCallback } from "react";
+import { Transaction } from "@/lib/transactions";
+import { Account } from "@/lib/accounts";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import Link from "next/link";
@@ -33,31 +33,19 @@ import {
   subYears,
 } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { useData } from "@/contexts/data-context";
+import { OptimizedLoading } from "@/components/ui/optimized-loading";
+import { useFilteredTransactions, useTransactionStats } from "@/hooks/use-filtered-transactions";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { transactions, accounts, isLoading, refreshData } = useData();
   const [timePeriod, setTimePeriod] = useState<TimeFilterPeriod>("monthly");
   const { formatCurrency } = useCurrencyFormatter();
-
-  const refreshData = useCallback(async () => {
-    if (user) {
-      setLoading(true);
-      const [fetchedTransactions, fetchedAccounts] = await Promise.all([
-        getTransactions(user.uid),
-        getAccounts(user.uid),
-      ]);
-      setTransactions(fetchedTransactions);
-      setAccounts(fetchedAccounts);
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+  
+  // Use optimized filtered transactions and stats
+  const filteredTransactions = useFilteredTransactions(transactions, timePeriod);
+  const transactionStats = useTransactionStats(filteredTransactions);
 
   // Filter transactions based on time period
   const filterTransactionsByPeriod = (transactions: Transaction[]) => {
@@ -121,29 +109,8 @@ export default function DashboardPage() {
   const netIncome = accounts.reduce((sum, account) => sum + account.balance, 0);
   const totalTransactions = validTransactions.length;
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-9 w-48" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <div className="col-span-1 lg:col-span-5">
-            <Skeleton className="h-[420px]" />
-          </div>
-          <div className="col-span-1 lg:col-span-2">
-            <Skeleton className="h-[420px]" />
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <OptimizedLoading type="dashboard" />;
   }
 
   return (

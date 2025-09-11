@@ -1,8 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
-import { useState, useEffect, useCallback } from "react";
-import { Account, getAccounts } from "@/lib/accounts";
+import { Account } from "@/lib/accounts";
 import {
   Card,
   CardContent,
@@ -19,24 +18,11 @@ import { useRouter } from "next/navigation";
 import AccountsPageClient from "@/components/accounts/accounts-page-client";
 import { AddAccountDialog } from "@/components/add-account-dialog";
 import AccountsOverview from "@/components/accounts/accounts-overview";
+import { useData } from "@/contexts/data-context";
 
 export default function AccountsPage() {
   const { user } = useAuth();
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refreshData = useCallback(async () => {
-    if (user) {
-      setLoading(true);
-      const fetchedAccounts = await getAccounts(user.uid);
-      setAccounts(fetchedAccounts);
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+  const { accounts, isLoading, refreshAccounts } = useData();
 
   // Calculate total balance across all accounts
   const totalBalance = accounts.reduce(
@@ -44,7 +30,7 @@ export default function AccountsPage() {
     0
   );
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
@@ -76,7 +62,7 @@ export default function AccountsPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={refreshData}
+            onClick={refreshAccounts}
             className="shrink-0"
           >
             <RefreshCcw className="h-4 w-4" />
@@ -88,7 +74,7 @@ export default function AccountsPage() {
           >
             View All Transactions
           </Button>
-          <AddAccountDialog onAccountAdded={refreshData} />
+          <AddAccountDialog onAccountAdded={refreshAccounts} />
         </div>
       </div>
 
@@ -141,7 +127,7 @@ export default function AccountsPage() {
                   <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
                     You don't have any accounts yet.
                   </p>
-                  <AddAccountDialog onAccountAdded={refreshData}>
+                  <AddAccountDialog onAccountAdded={refreshAccounts}>
                     <Button>
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Create your first account
@@ -153,7 +139,7 @@ export default function AccountsPage() {
               <div>
                 <AccountsPageClient
                   accounts={accounts}
-                  refreshAccounts={refreshData}
+                  refreshAccounts={refreshAccounts}
                 />
               </div>
             )}

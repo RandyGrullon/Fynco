@@ -632,16 +632,22 @@ export async function getAllAccountTransactions(
   }
 
   try {
+    // Get accounts and their transactions in parallel
     const accounts = await getAccounts(userId);
-    let allTransactions: AccountTransaction[] = [];
-
-    // Get transactions from each account
-    for (const account of accounts) {
-      if (account.id) {
-        const transactions = await getAccountTransactions(userId, account.id);
-        allTransactions = [...allTransactions, ...transactions];
-      }
+    
+    if (accounts.length === 0) {
+      return [];
     }
+
+    // Use Promise.all to fetch all account transactions in parallel
+    const transactionPromises = accounts
+      .filter(account => account.id)
+      .map(account => getAccountTransactions(userId, account.id!));
+
+    const transactionArrays = await Promise.all(transactionPromises);
+    
+    // Flatten all transactions into a single array
+    const allTransactions = transactionArrays.flat();
 
     // Sort by date descending
     allTransactions.sort((a, b) => {
@@ -662,7 +668,7 @@ export async function getAllAccountTransactions(
 
     // Apply limit if provided
     if (count && count > 0) {
-      allTransactions = allTransactions.slice(0, count);
+      return allTransactions.slice(0, count);
     }
 
     return allTransactions;
