@@ -3,6 +3,7 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppProviders } from "@/contexts/app-providers";
+import { FinancialChatBot } from "@/components/financial-chat-bot";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -77,6 +78,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
+        {/* Financial Chat Bot - Only show when user is authenticated */}
+        <FinancialChatBot />
       </div>
     </AppProviders>
   );
