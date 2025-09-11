@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   Wallet,
   LayoutDashboard,
-  ArrowLeftRight,
   Settings,
   Repeat,
   BarChart3,
@@ -17,7 +16,6 @@ import { cn } from "@/lib/utils";
 export const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/accounts", icon: Wallet, label: "Accounts" },
-  { href: "/transactions", icon: ArrowLeftRight, label: "Transactions" },
   { href: "/recurring", icon: Repeat, label: "Recurring" },
   { href: "/goals", icon: Target, label: "Goals" },
   { href: "/activity", icon: Activity, label: "Activity" },

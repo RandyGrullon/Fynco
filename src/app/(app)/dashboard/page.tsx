@@ -12,7 +12,6 @@ import {
   BarChart3,
   ExternalLink,
 } from "lucide-react";
-import { AddTransactionDialog } from "@/components/add-transaction-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Transaction } from "@/lib/transactions";
 import { Account } from "@/lib/accounts";
@@ -124,10 +123,7 @@ export default function DashboardPage() {
             selectedPeriod={timePeriod}
             onPeriodChange={(period) => setTimePeriod(period)}
           />
-          <AddTransactionDialog
-            onTransactionAdded={refreshData}
-            accounts={accounts}
-          />
+          {/* Add transaction UI removed */}
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

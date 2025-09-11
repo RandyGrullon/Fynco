@@ -1,20 +1,69 @@
-// Firestore Security Rules
+// Firestore Security Rules - Enhanced Security for Fynco
 // Copy this content to your Firebase Console -> Firestore Database -> Rules
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read and write their own user document
+    
+    // Helper function to ensure authenticated user owns the document
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function validateUserData() {
+      return resource.data.userId == request.auth.uid;
+    }
+    
+    // Users collection - users can only access their own data
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
       
-      // Allow users to read and write their own transactions
+      // Accounts subcollection - strict ownership validation
+      match /accounts/{accountId} {
+        allow read, write: if isOwner(userId) && 
+          (request.method == 'get' || validateUserData());
+        allow create: if isOwner(userId) && 
+          request.resource.data.userId == userId;
+      }
+      
+      // Transactions subcollection - strict ownership validation
       match /transactions/{transactionId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if isOwner(userId) && 
+          (request.method == 'get' || validateUserData());
+        allow create: if isOwner(userId) && 
+          request.resource.data.userId == userId;
+      }
+      
+      // Goals subcollection
+      match /goals/{goalId} {
+        allow read, write: if isOwner(userId) && 
+          (request.method == 'get' || validateUserData());
+        allow create: if isOwner(userId) && 
+          request.resource.data.userId == userId;
+      }
+      
+      // Recurring transactions subcollection
+      match /recurring-transactions/{recurringId} {
+        allow read, write: if isOwner(userId) && 
+          (request.method == 'get' || validateUserData());
+        allow create: if isOwner(userId) && 
+          request.resource.data.userId == userId;
+      }
+      
+      // Movements/Activity subcollection
+      match /movements/{movementId} {
+        allow read, write: if isOwner(userId) && 
+          (request.method == 'get' || validateUserData());
+        allow create: if isOwner(userId) && 
+          request.resource.data.userId == userId;
       }
     }
     
-    // Deny all other access
+    // Deny all other access explicitly
     match /{document=**} {
       allow read, write: if false;
     }

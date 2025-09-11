@@ -78,12 +78,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   const refreshAccounts = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      console.warn('Security: Attempted to refresh accounts without valid user ID');
+      return;
+    }
     
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const accounts = await getAccounts(user.uid);
-      dispatch({ type: 'SET_ACCOUNTS', payload: accounts });
+      
+      // Verificación adicional: asegurar que todas las cuentas pertenecen al usuario
+      const validAccounts = accounts.filter(account => 
+        account.userId === user.uid
+      );
+      
+      if (validAccounts.length !== accounts.length) {
+        console.warn('Security: Some accounts were filtered out due to ownership mismatch');
+      }
+      
+      dispatch({ type: 'SET_ACCOUNTS', payload: validAccounts });
     } catch (error) {
       console.error('Error fetching accounts:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load accounts' });

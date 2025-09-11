@@ -32,6 +32,7 @@ export default function FirestoreTest() {
         method: "Credit Card" as const,
         category: "Food" as const,
         type: "expense" as const,
+        accountId: "test-account-id", // Required for transaction
       };
 
       const result = await addTransaction(testTransaction, user.uid);

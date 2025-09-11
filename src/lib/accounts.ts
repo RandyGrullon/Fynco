@@ -18,6 +18,18 @@ import {
 } from "firebase/firestore";
 import { recordAccountCreation, recordTransfer, recordTransactionCreation } from "@/lib/movements";
 
+/**
+ * Verifica que el userId proporcionado sea válido y no esté vacío
+ * Esto previene acceso no autorizado a datos de otros usuarios
+ */
+function validateUserId(userId: string, operationName: string): boolean {
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    console.error(`Security: Invalid userId provided to ${operationName}`);
+    throw new Error("Unauthorized access: Invalid user ID");
+  }
+  return true;
+}
+
 export type AccountType =
   | "savings"
   | "checking"
@@ -310,24 +322,31 @@ export async function deleteAccount(id: string, userId: string) {
 }
 
 export async function getAccounts(userId: string): Promise<Account[]> {
-  if (!userId) {
-    console.error("No user ID provided to getAccounts");
-    return [];
-  }
   try {
+    // Validar que el userId es válido (previene acceso no autorizado)
+    validateUserId(userId, "getAccounts");
+    
     const accountsCollection = getAccountsCollection(userId);
     const q = query(accountsCollection, orderBy("createdAt", "desc"));
 
     const querySnapshot = await getDocs(q);
     const accounts = querySnapshot.docs.map((doc) => {
       const data = doc.data();
+      
+      // Verificación adicional: asegurar que los datos pertenecen al usuario correcto
+      if (data.userId && data.userId !== userId) {
+        console.error(`Security: Account ${doc.id} does not belong to user ${userId}`);
+        return null;
+      }
+      
       return {
         id: doc.id,
         ...data,
         createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
         updatedAt: (data.updatedAt as Timestamp).toDate().toISOString(),
       } as Account;
-    });
+    }).filter(account => account !== null); // Filtrar cuentas nulas por seguridad
+    
     return accounts;
   } catch (error) {
     console.error("Error getting accounts for user", userId, error);

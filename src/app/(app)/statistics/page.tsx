@@ -44,7 +44,6 @@ import {
   ArrowLeftRight,
 } from "lucide-react";
 import { AccountsList } from "@/components/accounts/accounts-list";
-import { TransactionsCardList } from "@/components/transactions/transactions-card-list";
 import { RecurringTransactionsList } from "@/components/recurring/recurring-transactions-list";
 import { GoalsList } from "@/components/goals/goals-list";
 import { TransferCardList } from "@/components/transfers/transfer-card-list";
@@ -260,13 +259,7 @@ export default function StatisticsPage() {
               <Wallet className="h-4 w-4" />
               <span>Accounts</span>
             </button>
-            <button
-              onClick={() => scrollTo(transactionsRef)}
-              className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <FileDown className="h-4 w-4" />
-              <span>Transactions</span>
-            </button>
+            {/* Transactions section removed from UI (kept in logic) */}
             <button
               onClick={() => scrollTo(transfersRef)}
               className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -382,12 +375,10 @@ export default function StatisticsPage() {
               </div>
 
               {!collapsedSections["transactions"] && (
-                <TransactionsCardList
-                  transactions={transactions}
-                  accounts={accounts}
-                  limit={50}
-                  showViewAll={false}
-                />
+                <div className="p-4 text-sm text-muted-foreground">
+                  Transactions UI has been removed. Transaction data is still
+                  available for statistics and background logic.
+                </div>
               )}
             </div>
           </div>

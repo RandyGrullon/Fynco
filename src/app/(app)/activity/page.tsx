@@ -1,7 +1,5 @@
 "use client";
 
-import { ActivityList } from "@/components/activity/activity-list";
-import { ActivityInfoModal } from "@/components/activity/activity-info-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
@@ -10,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { RotateCcw, Database, Activity } from "lucide-react";
 import { migrateAllExistingData } from "@/lib/migration";
 import { useToast } from "@/hooks/use-toast";
+import { ActivityInfoModal } from "@/components/activity/activity-info-modal";
+import { ActivityList } from "@/components/activity/activity-list";
 
 export default function ActivityPage() {
   const { user } = useAuth();
@@ -161,7 +161,7 @@ export default function ActivityPage() {
         </div>
       </div>
 
-      <ActivityList 
+      <ActivityList
         activities={activities} 
         onRefresh={loadActivities}
       />

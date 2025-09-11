@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, usePathname } from "next/navigation";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -33,14 +33,17 @@ export function useAuth() {
 export function useRequireAuth(redirectUrl = "/login") {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const locale = params.locale as string;
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push(`${redirectUrl}`);
+      // Preservar la URL actual para redirección después del login
+      const loginUrl = `${redirectUrl}?redirect=${encodeURIComponent(pathname)}`;
+      router.push(loginUrl);
     }
-  }, [user, loading, router, redirectUrl]);
+  }, [user, loading, router, redirectUrl, pathname]);
 
   return { user, loading };
 }

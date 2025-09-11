@@ -78,14 +78,15 @@ const recordExpenseFlow = ai.defineFlow(
   async input => {
     // Convert audio to text using a TTS model.
     const transcribedText = await transcribePrompt({audio: input.audioDataUri});
+    const textContent = transcribedText.text || "";
 
     const {output} = await extractionPrompt({
-      rawText: transcribedText,
+      rawText: textContent,
     });
     
     // Ensure rawText is passed through.
     if(output) {
-        output.rawText = transcribedText;
+        output.rawText = textContent;
     }
     
     return output!;

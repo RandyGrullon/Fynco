@@ -21,7 +21,7 @@ import {
   AuthErrorCodes,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 
@@ -39,10 +39,14 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // Obtener la URL de redirección de los parámetros de búsqueda
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   // Test Firebase connection on component mount
   useEffect(() => {
@@ -119,7 +123,7 @@ export default function LoginPage() {
         description: "You have been signed in successfully",
       });
 
-      router.push("/dashboard");
+      router.push(redirectUrl);
     } catch (error: any) {
       let errorMessage = "An error occurred during sign in";
 
@@ -197,7 +201,7 @@ export default function LoginPage() {
         description: "You have been signed in with Google successfully",
       });
 
-      router.push("/dashboard");
+      router.push(redirectUrl);
     } catch (error: any) {
       let errorMessage = "An error occurred during Google sign in";
 
