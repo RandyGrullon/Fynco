@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +16,7 @@ export function AppHeader() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="sm:max-w-xs p-0">
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
           <AppSidebar />
         </SheetContent>
       </Sheet>

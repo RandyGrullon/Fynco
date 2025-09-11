@@ -221,7 +221,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                       onAccountUpdated={refreshAccounts}
                     >
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit Account
+                        <Edit className="h-4 w-4" /> Edit Account
                       </DropdownMenuItem>
                     </EditAccountDialog>
                     <AccountTransactionDialog
@@ -230,7 +230,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                       onTransactionAdded={refreshAccounts}
                     >
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Banknote className="mr-2 h-4 w-4" /> Add Income
+                        <Banknote className="h-4 w-4" /> Add Income
                       </DropdownMenuItem>
                     </AccountTransactionDialog>
                     <AccountTransactionDialog
@@ -239,7 +239,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                       onTransactionAdded={refreshAccounts}
                     >
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Banknote className="mr-2 h-4 w-4" /> Add Expense
+                        <Banknote className="h-4 w-4" /> Add Expense
                       </DropdownMenuItem>
                     </AccountTransactionDialog>
                     <TransferDialog
@@ -254,7 +254,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                           0
                         }
                       >
-                        <ArrowDownUp className="mr-2 h-4 w-4" /> Transfer
+                        <ArrowDownUp className="h-4 w-4" /> Transfer
                       </DropdownMenuItem>
                     </TransferDialog>
                     <DropdownMenuSeparator />
@@ -264,7 +264,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                           onSelect={(e) => e.preventDefault()}
                           className="text-red-600 focus:text-red-600"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+                          <Trash2 className="h-4 w-4" /> Delete Account
                         </DropdownMenuItem>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -346,7 +346,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
               </div>
             </CardContent>
 
-            <CardFooter className="grid grid-cols-1 gap-2 sm:grid-cols-2 pt-0">
+            <CardFooter className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-0">
               <AccountTransactionDialog
                 account={account}
                 transactionType="credit"
@@ -358,7 +358,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                   className="h-9 text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 font-medium"
                   onClick={(e) => e.preventDefault()}
                 >
-                  <Banknote className="mr-2 h-4 w-4" />
+                  <Banknote className="h-4 w-4" />
                   <span className="hidden sm:inline">Add </span>Income
                 </Button>
               </AccountTransactionDialog>
@@ -374,7 +374,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                   className="h-9 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200 font-medium"
                   onClick={(e) => e.preventDefault()}
                 >
-                  <Banknote className="mr-2 h-4 w-4" />
+                  <Banknote className="h-4 w-4" />
                   <span className="hidden sm:inline">Add </span>Expense
                 </Button>
               </AccountTransactionDialog>
@@ -387,7 +387,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 font-medium mx-auto"
+                  className="h-9 text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 font-medium"
                   disabled={
                     accounts.filter((a) => a.id !== account.id).length === 0
                   }
@@ -398,7 +398,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                   }
                   onClick={(e) => e.preventDefault()}
                 >
-                  <ArrowDownUp className="mr-2 h-4 w-4" />
+                  <ArrowDownUp className="h-4 w-4" />
                   Transfer
                 </Button>
               </TransferDialog>
