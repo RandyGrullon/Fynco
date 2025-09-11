@@ -27,8 +27,8 @@ import { useState } from "react";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
-  role="img"
-  aria-label="Google"
+    role="img"
+    aria-label="Google"
     viewBox="0 0 24 24"
     xmlns="http://www.w3.org/2000/svg"
     {...props}
