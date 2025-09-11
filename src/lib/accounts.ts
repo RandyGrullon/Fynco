@@ -16,6 +16,7 @@ import {
   getDoc,
   writeBatch,
 } from "firebase/firestore";
+import { recordAccountCreation, recordTransfer, recordTransactionCreation } from "@/lib/movements";
 
 export type AccountType =
   | "savings"
@@ -91,6 +92,20 @@ export async function addAccount(
     // If this is set as default, unset other defaults
     if (isDefault) {
       await updateDefaultAccount(userId, docRef.id);
+    }
+
+    // Registrar el movimiento de creación de cuenta
+    try {
+      await recordAccountCreation(
+        userId,
+        docRef.id,
+        account.name,
+        account.type,
+        account.balance,
+        account.currency
+      );
+    } catch (error) {
+      console.error("Error recording account creation movement:", error);
     }
 
     return { success: true, id: docRef.id };
@@ -521,6 +536,22 @@ export async function addAccountTransaction(
         userId,
       });
 
+      // Registrar el movimiento de transferencia
+      try {
+        await recordTransfer(
+          userId,
+          transaction.accountId,
+          transaction.toAccountId,
+          transaction.amount,
+          sourceAccount?.currency || "USD",
+          sourceAccountName,
+          destAccountName,
+          debitDocRef.id
+        );
+      } catch (error) {
+        console.error("Error recording transfer movement:", error);
+      }
+
       return { success: true, id: debitDocRef.id, relatedId: creditDocRef.id };
     } else {
       // Regular debit or credit transaction
@@ -556,6 +587,30 @@ export async function addAccountTransaction(
         transaction.type === "debit" ? -transaction.amount : transaction.amount;
 
       await updateAccountBalance(userId, transaction.accountId, amountChange);
+
+      // Registrar el movimiento de transacción de cuenta directamente
+      try {
+        const account = await getAccountById(userId, transaction.accountId);
+        const mainTransactionType = transaction.type === "credit" ? "income" : "expense";
+        const defaultCategory = transaction.category || 
+          (transaction.type === "credit" ? "Other" : "Other");
+        const description = transaction.description || 
+          (transaction.type === "credit" ? "Account Credit" : "Account Debit");
+
+        await recordTransactionCreation(
+          userId,
+          docRef.id, // usar el ID de la transacción de cuenta
+          mainTransactionType,
+          transaction.amount,
+          defaultCategory,
+          description,
+          transaction.accountId,
+          account?.name || "Cuenta Desconocida",
+          account?.currency || "USD"
+        );
+      } catch (error) {
+        console.error("Error recording account transaction movement:", error);
+      }
 
       // Also create a transaction in the main transactions collection
       // so it appears in the general transactions page

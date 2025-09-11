@@ -16,6 +16,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { Account, updateAccount } from "@/lib/accounts";
+import { recordGoalCreation, recordGoalFundsAdded } from "@/lib/movements";
 
 export type GoalStatus = "active" | "completed" | "canceled";
 
@@ -115,6 +116,19 @@ export async function addGoal(
         goalId: docRef.id,
         updatedAt: Timestamp.now(),
       });
+    }
+
+    // Registrar el movimiento de creación de meta
+    try {
+      await recordGoalCreation(
+        userId,
+        docRef.id,
+        newGoal.name,
+        newGoal.targetAmount,
+        newGoal.currency
+      );
+    } catch (error) {
+      console.error("Error recording goal creation movement:", error);
     }
 
     return { goalId: docRef.id, accountId: newAccountId || goalData.accountId };

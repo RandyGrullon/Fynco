@@ -229,15 +229,12 @@ export function RecurringTransactionsList({
                     )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <DropdownMenuItem
-                        onSelect={(e) => e.preventDefault()}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Transaction
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Transaction
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>

@@ -1,3 +1,9 @@
+import { db } from "@/lib/firebase";
+import { doc, getDoc, updateDoc, addDoc, collection, Timestamp } from "firebase/firestore";
+import { Goal } from "@/lib/goals";
+import { Account } from "@/lib/accounts";
+import { recordGoalFundsAdded } from "@/lib/movements";
+
 export async function addFundsToGoalFromAccount(
   userId: string,
   goalId: string,
@@ -71,6 +77,20 @@ export async function addFundsToGoalFromAccount(
       date: Timestamp.now(),
       category: "Goal",
     });
+
+    // Registrar el movimiento de fondos agregados a la meta
+    try {
+      await recordGoalFundsAdded(
+        userId,
+        goalId,
+        goalData.name,
+        amount,
+        goalData.currency,
+        accountData.name
+      );
+    } catch (error) {
+      console.error("Error recording goal funds added movement:", error);
+    }
 
     return {
       success: true,

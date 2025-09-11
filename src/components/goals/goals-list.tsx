@@ -181,7 +181,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                       goal={goal}
                       onGoalEdited={() => refreshGoals()}
                     >
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <DropdownMenuItem>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Goal
                       </DropdownMenuItem>

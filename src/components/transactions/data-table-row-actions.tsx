@@ -99,10 +99,7 @@ export function DataTableRowActions<TData extends Transaction>({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem
-              className="text-destructive"
-              onSelect={(e) => e.preventDefault()}
-            >
+            <DropdownMenuItem className="text-destructive">
               <Trash className="mr-2 h-3.5 w-3.5 text-destructive/70" />
               Delete
             </DropdownMenuItem>

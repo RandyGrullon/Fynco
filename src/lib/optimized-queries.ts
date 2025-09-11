@@ -47,8 +47,7 @@ export async function getOptimizedTransactions({
     // Build query constraints
     const constraints: any[] = [];
     
-    // Always filter by userId (security)
-    constraints.push(where("userId", "==", userId));
+    // Note: No need to filter by userId since we're already in users/{userId}/transactions subcollection
     
     // Add optional filters
     if (accountId) {
@@ -157,15 +156,14 @@ export async function getAccountsSummary(userId: string): Promise<{
 // Function to get recent transactions efficiently
 export async function getRecentTransactions(
   userId: string, 
-  limit: number = 10
+  limitCount: number = 10
 ): Promise<Transaction[]> {
   try {
     const transactionsRef = collection(db, "users", userId, "transactions");
     const q = query(
       transactionsRef,
-      where("userId", "==", userId),
       orderBy("date", "desc"),
-      limit(limit as number)
+      limit(limitCount)
     );
     
     const querySnapshot = await getDocs(q);

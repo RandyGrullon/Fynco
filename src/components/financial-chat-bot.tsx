@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { FormattedMessage } from "@/components/ui/formatted-message";
 import { getAccounts } from "@/lib/accounts";
 import { getGoals } from "@/lib/goals";
 import { getTransactions } from "@/lib/transactions";
@@ -203,7 +204,7 @@ export function FinancialChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 z-50 w-96 h-[500px] shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+        <Card className="fixed bottom-24 right-6 z-50 w-[420px] h-[550px] shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
             <div className="flex items-center gap-2">
@@ -246,7 +247,7 @@ export function FinancialChatBot() {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4 h-[380px]">
+          <ScrollArea className="flex-1 p-4 h-[420px]">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -264,16 +265,20 @@ export function FinancialChatBot() {
 
                   <div
                     className={cn(
-                      "rounded-2xl px-4 py-2 max-w-[280px] break-words",
+                      "rounded-2xl px-4 py-3 max-w-[320px] break-words",
                       message.sender === "user"
                         ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                        : "bg-gray-100 text-gray-900"
+                        : "bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg border border-blue-100/50 dark:from-blue-950/30 dark:to-indigo-950/30 dark:border-blue-800/30"
                     )}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    {message.sender === "user" ? (
+                      <p className="text-sm leading-relaxed text-white">{message.content}</p>
+                    ) : (
+                      <FormattedMessage content={message.content} />
+                    )}
                     <p
                       className={cn(
-                        "text-xs mt-1 opacity-70",
+                        "text-xs mt-2 opacity-70",
                         message.sender === "user"
                           ? "text-white/70"
                           : "text-gray-500"

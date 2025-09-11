@@ -9,6 +9,7 @@ import {
   Repeat,
   BarChart3,
   Target,
+  Activity,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ export const navItems = [
   { href: "/transactions", icon: ArrowLeftRight, label: "Transactions" },
   { href: "/recurring", icon: Repeat, label: "Recurring" },
   { href: "/goals", icon: Target, label: "Goals" },
+  { href: "/activity", icon: Activity, label: "Activity" },
   { href: "/statistics", icon: BarChart3, label: "Statistics" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];

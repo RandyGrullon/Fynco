@@ -16,6 +16,7 @@ import {
   getDoc,
   startAfter,
 } from "firebase/firestore";
+import { recordTransactionCreation } from "@/lib/movements";
 
 export type Transaction = {
   id?: string;
@@ -84,8 +85,26 @@ export async function addTransaction(
       transaction.type === "income" ? transaction.amount : -transaction.amount;
 
     // Import and use the updateAccountBalance function from accounts.ts
-    const { updateAccountBalance } = require("./accounts");
+    const { updateAccountBalance, getAccountById } = require("./accounts");
     await updateAccountBalance(userId, transaction.accountId, amountChange);
+
+    // Registrar el movimiento de transacción
+    try {
+      const account = await getAccountById(userId, transaction.accountId);
+      await recordTransactionCreation(
+        userId,
+        docRef.id,
+        transaction.type,
+        transaction.amount,
+        transaction.category,
+        transaction.source,
+        transaction.accountId,
+        account?.name || "Cuenta Desconocida",
+        account?.currency || "USD"
+      );
+    } catch (error) {
+      console.error("Error recording transaction movement:", error);
+    }
 
     return { success: true, id: docRef.id };
   } catch (error) {

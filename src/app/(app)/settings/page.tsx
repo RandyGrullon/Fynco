@@ -196,15 +196,27 @@ export default function SettingsPage() {
     if (!user) return;
 
     try {
-      const transactionsRef = collection(db, "users", user.uid, "transactions");
-      await addDoc(transactionsRef, {
+      // Usar addTransaction en lugar de addDoc directamente para registrar movimientos
+      const { addTransaction } = await import('@/lib/transactions');
+      
+      // Necesitamos una cuenta para la transacción - usar la primera cuenta disponible
+      const { getAccounts } = await import('@/lib/accounts');
+      const accounts = await getAccounts(user.uid);
+      
+      if (accounts.length === 0) {
+        console.error("No accounts available for salary transaction");
+        return;
+      }
+
+      await addTransaction({
         amount: amount,
         source: "Salario",
-        date: new Date().toISOString(),
+        date: new Date(),
         category: "Salary",
         type: "income",
         method: "Direct Deposit",
-      });
+        accountId: accounts[0].id || "", // usar la primera cuenta
+      }, user.uid);
     } catch (error) {
       console.error("Error adding salary transaction:", error);
     }

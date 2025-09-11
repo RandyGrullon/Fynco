@@ -232,7 +232,7 @@ export function AccountsCardList({
                       account={account}
                       onAccountUpdated={refreshAccounts}
                     >
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <DropdownMenuItem>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
@@ -242,7 +242,7 @@ export function AccountsCardList({
                       accounts={accounts.filter((a) => a.id !== account.id)}
                       onTransferCompleted={refreshAccounts}
                     >
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <DropdownMenuItem>
                         <svg
                           className="mr-2 h-4 w-4"
                           width="15"
@@ -266,7 +266,7 @@ export function AccountsCardList({
                       transactionType="debit"
                       onTransactionAdded={refreshAccounts}
                     >
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <DropdownMenuItem>
                         <svg
                           className="mr-2 h-4 w-4"
                           width="15"
@@ -287,10 +287,7 @@ export function AccountsCardList({
                     </AccountTransactionDialog>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <DropdownMenuItem
-                          onSelect={(e) => e.preventDefault()}
-                          className="text-destructive focus:text-destructive"
-                        >
+                        <DropdownMenuItem className="text-destructive focus:text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>

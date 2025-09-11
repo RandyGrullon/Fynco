@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,34 @@ export function TransferDialog({
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [toAccountId, setToAccountId] = useState("");
+  const [sourceAccountId, setSourceAccountId] = useState(
+    fromAccount.id || ""
+  );
+
+  // Keep sourceAccountId in sync when the dialog opens or when the prop changes
+  useEffect(() => {
+    setSourceAccountId(fromAccount.id || "");
+  }, [fromAccount.id, open]);
+
+  // Helper to swap source and destination accounts
+  const handleSwapAccounts = () => {
+    // If no destination is selected, swap with the original fromAccount
+    if (!toAccountId) {
+      if (sourceAccountId !== fromAccount.id) {
+        // If current source is not the original fromAccount, swap with original
+        setToAccountId(sourceAccountId);
+        setSourceAccountId(fromAccount.id || "");
+      }
+      return;
+    }
+
+    // Normal swap when both accounts are selected
+    const prevSource = sourceAccountId;
+    const prevDest = toAccountId;
+
+    setSourceAccountId(prevDest);
+    setToAccountId(prevSource);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +95,15 @@ export function TransferDialog({
       return;
     }
 
+    if (toAccountId === sourceAccountId) {
+      toast({
+        title: "Error",
+        description: "Source and destination accounts must be different",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!amount || parseFloat(amount) <= 0) {
       toast({
         title: "Error",
@@ -76,18 +113,15 @@ export function TransferDialog({
       return;
     }
 
-    if (!description) {
-      toast({
-        title: "Error",
-        description: "Please enter a description",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Description is optional for transfers
 
-    // Check if there's enough balance for the transfer
+  // Check if there's enough balance for the transfer
     const transferAmount = parseFloat(amount);
-    if (fromAccount.balance < transferAmount) {
+    // lookup source account balance
+    const allAccounts = [fromAccount, ...accounts];
+    const sourceAcc = allAccounts.find((a) => a.id === sourceAccountId) ||
+      fromAccount;
+    if (sourceAcc.balance < transferAmount) {
       toast({
         title: "Error",
         description: "Insufficient balance for this transfer",
@@ -98,9 +132,9 @@ export function TransferDialog({
 
     setLoading(true);
     try {
-      const result = await addAccountTransaction(
+    const result = await addAccountTransaction(
         {
-          accountId: fromAccount.id,
+      accountId: sourceAccountId,
           amount: transferAmount,
           description,
           type: "transfer",
@@ -119,6 +153,7 @@ export function TransferDialog({
         setAmount("");
         setDescription("");
         setToAccountId("");
+  setSourceAccountId(fromAccount.id || "");
         if (onTransferCompleted) {
           onTransferCompleted();
         }
@@ -157,39 +192,68 @@ export function TransferDialog({
                 From
               </Label>
               <div className="col-span-3">
-                <p className="text-sm font-medium">{fromAccount.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  Balance:{" "}
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: fromAccount.currency,
-                  }).format(fromAccount.balance)}
-                </p>
+                {(() => {
+                  const allAccounts = [fromAccount, ...accounts];
+                  const currentSourceAccount = allAccounts.find((a) => a.id === sourceAccountId) || fromAccount;
+                  return (
+                    <>
+                      <p className="text-sm font-medium">{currentSourceAccount.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Balance:{" "}
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: currentSourceAccount.currency,
+                        }).format(currentSourceAccount.balance)}
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
             </div>
-
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="toAccount" className="text-right">
                 To
               </Label>
-              <Select value={toAccountId} onValueChange={setToAccountId}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select destination account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.length === 0 ? (
-                    <SelectItem value="no-accounts" disabled>
-                      No other accounts available
-                    </SelectItem>
-                  ) : (
-                    accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.id || ""}>
-                        {account.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <div className="col-span-3 grid grid-cols-12 gap-2 items-center">
+                <div className="col-span-10">
+                  <Select value={toAccountId} onValueChange={setToAccountId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select destination account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.length === 0 ? (
+                        <SelectItem value="no-accounts" disabled>
+                          No other accounts available
+                        </SelectItem>
+                      ) : (
+                        // Include all accounts but remove duplicates and exclude the current sourceAccountId
+                        [fromAccount, ...accounts]
+                          .filter((account, index, arr) => 
+                            account.id !== sourceAccountId &&
+                            arr.findIndex(a => a.id === account.id) === index
+                          )
+                          .map((account) => (
+                            <SelectItem key={account.id} value={account.id || ""}>
+                              {account.name}
+                            </SelectItem>
+                          ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={handleSwapAccounts}
+                    disabled={!toAccountId && sourceAccountId === fromAccount.id}
+                    title="Swap From/To accounts"
+                  >
+                    ⇄
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
@@ -217,8 +281,7 @@ export function TransferDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
-                placeholder="Transfer description"
-                required
+                placeholder="Transfer description (optional)"
               />
             </div>
           </div>
