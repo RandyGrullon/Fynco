@@ -24,7 +24,8 @@ export function FinancialChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      content: "¡Hola! Soy tu asistente financiero personal de Fynco. Puedo ayudarte con consejos sobre tus finanzas, crear metas de ahorro, gestionar cuentas, transferencias y mucho más. ¿En qué puedo ayudarte hoy?",
+      content:
+        "¡Hola! Soy tu asistente financiero personal de Fynco. Puedo ayudarte con consejos sobre tus finanzas, crear metas de ahorro, gestionar cuentas, transferencias y mucho más. ¿En qué puedo ayudarte hoy?",
       sender: "assistant",
       timestamp: new Date(),
     },
@@ -44,7 +45,7 @@ export function FinancialChatBot() {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!inputMessage.trim() || isLoading) return;
 
     const messageContent = inputMessage.trim();
@@ -57,14 +58,17 @@ export function FinancialChatBot() {
 
     // Clear input and add user message immediately
     setInputMessage("");
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
-      console.log('Preparing user context and sending message to API');
+      console.log("Preparing user context and sending message to API");
 
       // Gather user context client-side to provide Gemini full view of user data
-      let userContextPayload: any = { userId: user?.uid || null, email: user?.email || null };
+      let userContextPayload: any = {
+        userId: user?.uid || null,
+        email: user?.email || null,
+      };
       try {
         const uid = user?.uid;
         if (uid) {
@@ -82,20 +86,26 @@ export function FinancialChatBot() {
           };
         }
       } catch (ctxErr) {
-        console.warn('Could not load full user context, sending minimal context', ctxErr);
-        userContextPayload = { userId: user?.uid || null, email: user?.email || null };
+        console.warn(
+          "Could not load full user context, sending minimal context",
+          ctxErr
+        );
+        userContextPayload = {
+          userId: user?.uid || null,
+          email: user?.email || null,
+        };
       }
 
-      const response = await fetch('/api/financial-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/financial-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: messageContent,
           userContext: userContextPayload,
         }),
       });
 
-      console.log('API Response status:', response.status);
+      console.log("API Response status:", response.status);
 
       // Try to parse body safely
       let parsed: any = null;
@@ -104,7 +114,7 @@ export function FinancialChatBot() {
         parsed = text ? JSON.parse(text) : null;
       } catch (e) {
         // If parsing fails, keep parsed=null and handle accordingly
-        console.warn('Failed to parse response body as JSON');
+        console.warn("Failed to parse response body as JSON");
       }
 
       if (!response.ok) {
@@ -112,45 +122,48 @@ export function FinancialChatBot() {
         const serverErrorMessage: Message = {
           id: `server-error-${Date.now()}`,
           content: `El asistente no está disponible: ${serverMessage}`,
-          sender: 'assistant',
+          sender: "assistant",
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, serverErrorMessage]);
+        setMessages((prev) => [...prev, serverErrorMessage]);
         return;
       }
 
       const data = parsed || {};
-      const assistantText = data.message ?? data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const assistantText =
+        data.message ?? data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-      if (!assistantText || typeof assistantText !== 'string') {
+      if (!assistantText || typeof assistantText !== "string") {
         const noDataMessage: Message = {
           id: `nodata-${Date.now()}`,
-          content: "El asistente no devolvió una respuesta válida en este momento.",
-          sender: 'assistant',
+          content:
+            "El asistente no devolvió una respuesta válida en este momento.",
+          sender: "assistant",
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, noDataMessage]);
+        setMessages((prev) => [...prev, noDataMessage]);
         return;
       }
 
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         content: assistantText,
-        sender: 'assistant',
+        sender: "assistant",
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       // Any unexpected error ends up here but we do NOT rethrow
-      console.error('Error in sendMessage:', error);
+      console.error("Error in sendMessage:", error);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
-        content: 'Lo siento, hubo un error de comunicación. Por favor, inténtalo de nuevo.',
-        sender: 'assistant',
+        content:
+          "Lo siento, hubo un error de comunicación. Por favor, inténtalo de nuevo.",
+        sender: "assistant",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -160,7 +173,8 @@ export function FinancialChatBot() {
     setMessages([
       {
         id: "welcome",
-        content: "¡Hola! Soy tu asistente financiero personal de Fynco. Puedo ayudarte con consejos sobre tus finanzas, crear metas de ahorro, gestionar cuentas, transferencias y mucho más. ¿En qué puedo ayudarte hoy?",
+        content:
+          "¡Hola! Soy tu asistente financiero personal de Fynco. Puedo ayudarte con consejos sobre tus finanzas, crear metas de ahorro, gestionar cuentas, transferencias y mucho más. ¿En qué puedo ayudarte hoy?",
         sender: "assistant",
         timestamp: new Date(),
       },
@@ -206,8 +220,18 @@ export function FinancialChatBot() {
                 onClick={clearChat}
                 className="h-8 w-8 p-0 text-white hover:bg-white/20"
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
                 </svg>
               </Button>
               <Button
@@ -237,7 +261,7 @@ export function FinancialChatBot() {
                       <Bot className="h-4 w-4 text-white" />
                     </div>
                   )}
-                  
+
                   <div
                     className={cn(
                       "rounded-2xl px-4 py-2 max-w-[280px] break-words",
@@ -247,13 +271,17 @@ export function FinancialChatBot() {
                     )}
                   >
                     <p className="text-sm leading-relaxed">{message.content}</p>
-                    <p className={cn(
-                      "text-xs mt-1 opacity-70",
-                      message.sender === "user" ? "text-white/70" : "text-gray-500"
-                    )}>
-                      {message.timestamp.toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
+                    <p
+                      className={cn(
+                        "text-xs mt-1 opacity-70",
+                        message.sender === "user"
+                          ? "text-white/70"
+                          : "text-gray-500"
+                      )}
+                    >
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </p>
                   </div>
@@ -279,7 +307,7 @@ export function FinancialChatBot() {
                   </div>
                 </div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
