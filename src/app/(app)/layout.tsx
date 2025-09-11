@@ -10,6 +10,11 @@ import { useEffect } from "react";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useRequireAuth();
   const router = useRouter();
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
 
   if (loading) {
     return (
@@ -36,12 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    // Use useEffect to handle redirects instead of doing it during render
-    useEffect(() => {
-      router.replace("/login");
-    }, [router]);
-
-    // Return a loading state instead of null
+  // Return a loading state while redirecting
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
