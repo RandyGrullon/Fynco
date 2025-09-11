@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Transaction } from "@/lib/transactions";
+import { Transaction, deleteTransaction } from "@/lib/transactions";
 import { Account } from "@/lib/accounts";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -29,6 +31,17 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowUp,
   ArrowDown,
   Search,
@@ -36,6 +49,7 @@ import {
   SortAsc,
   SortDesc,
   Download,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
@@ -47,6 +61,7 @@ interface TransactionsListProps {
   title?: string;
   limit?: number;
   showViewAll?: boolean;
+  onTransactionDeleted?: () => void;
 }
 
 export function TransactionsList({
@@ -55,17 +70,56 @@ export function TransactionsList({
   title = "Transactions",
   limit = Infinity,
   showViewAll = false,
+  onTransactionDeleted,
 }: TransactionsListProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { formatCurrency } = useCurrencyFormatter();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [deletingTransactionId, setDeletingTransactionId] = useState<string | null>(null);
 
   // Find account name by ID
   const getAccountName = (accountId: string): string => {
     const account = accounts.find((a) => a.id === accountId);
     return account ? account.name : "Unknown Account";
+  };
+
+  // Function to delete a transaction
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!user) return;
+
+    setDeletingTransactionId(transactionId);
+    try {
+      const result = await deleteTransaction(transactionId, user.uid);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Transaction deleted successfully",
+        });
+        // Call the callback to refresh the transaction list
+        if (onTransactionDeleted) {
+          onTransactionDeleted();
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete transaction",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingTransactionId(null);
+    }
   };
 
   // Helper to convert various date formats to JavaScript Date
@@ -211,6 +265,7 @@ export function TransactionsList({
               <TableHead>Account</TableHead>
               <TableHead>Type</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -263,11 +318,47 @@ export function TransactionsList({
                       {formatCurrency(transaction.amount)}
                     </span>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          disabled={deletingTransactionId === transaction.id || !transaction.id}
+                        >
+                          {deletingTransactionId === transaction.id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this transaction? This action cannot be undone.
+                            The account balance will be updated to reflect this change.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => transaction.id && handleDeleteTransaction(transaction.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            Delete Transaction
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   No transactions found.
                 </TableCell>
               </TableRow>

@@ -305,6 +305,7 @@ export function AddTransactionDialog({
           <SelectItem value="Investment">Investment Returns</SelectItem>
           <SelectItem value="Gift">Gift / Donation</SelectItem>
           <SelectItem value="Refund">Refund / Reimbursement</SelectItem>
+          <SelectItem value="Transfer">Transfer In</SelectItem>
           <SelectItem value="Other">Other Income</SelectItem>
         </>
       );
@@ -316,6 +317,7 @@ export function AddTransactionDialog({
           <SelectItem value="Shopping">Shopping & Retail</SelectItem>
           <SelectItem value="Utilities">Bills & Utilities</SelectItem>
           <SelectItem value="Entertainment">Entertainment & Leisure</SelectItem>
+          <SelectItem value="Transfer">Transfer Out</SelectItem>
           <SelectItem value="Other">Other Expenses</SelectItem>
         </>
       );

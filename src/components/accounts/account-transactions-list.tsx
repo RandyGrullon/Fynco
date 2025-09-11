@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Account,
   AccountTransaction,
   getAccountTransactions,
+  deleteAccountTransaction,
 } from "@/lib/accounts";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -34,6 +36,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowUp,
   ArrowDown,
   Repeat,
@@ -46,39 +59,93 @@ import {
   Download,
   SortAsc,
   SortDesc,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 
 interface AccountTransactionsListProps {
   account: Account;
+  onTransactionChange?: () => void;
 }
 
 export function AccountTransactionsList({
   account,
+  onTransactionChange,
 }: AccountTransactionsListProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [transactions, setTransactions] = useState<AccountTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [deletingTransactionId, setDeletingTransactionId] = useState<string | null>(null);
+
+  const refreshTransactions = useCallback(async () => {
+    if (user && account.id) {
+      setLoading(true);
+      const fetchedTransactions = await getAccountTransactions(
+        user.uid,
+        account.id
+      );
+      setTransactions(fetchedTransactions);
+      setLoading(false);
+    }
+  }, [user, account.id]);
+
+  const handleTransactionChange = useCallback(() => {
+    // Refresh local transactions
+    refreshTransactions();
+    // Call parent callback to refresh account balance and other data
+    if (onTransactionChange) {
+      onTransactionChange();
+    }
+  }, [refreshTransactions, onTransactionChange]);
 
   useEffect(() => {
-    async function fetchTransactions() {
-      if (user && account.id) {
-        setLoading(true);
-        const fetchedTransactions = await getAccountTransactions(
-          user.uid,
-          account.id
-        );
-        setTransactions(fetchedTransactions);
-        setLoading(false);
-      }
-    }
+    refreshTransactions();
+  }, [refreshTransactions]);
 
-    fetchTransactions();
-  }, [user, account.id]);
+  // Function to delete a transaction
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!user || !account.id) return;
+
+    setDeletingTransactionId(transactionId);
+    try {
+      const result = await deleteAccountTransaction(
+        user.uid,
+        account.id,
+        transactionId
+      );
+
+      if (result.success) {
+        // Remove the transaction from local state
+        setTransactions(prev => prev.filter(t => t.id !== transactionId));
+        toast({
+          title: "Success",
+          description: "Transaction deleted successfully",
+        });
+        
+        // Call the handler to refresh both local and parent data
+        handleTransactionChange();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete transaction",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingTransactionId(null);
+    }
+  };
 
   // Filter and sort transactions
   const filteredAndSortedTransactions = useMemo(() => {
@@ -495,8 +562,8 @@ export function AccountTransactionsList({
                               </div>
                             </div>
 
-                            {/* Right - Amount */}
-                            <div className="sm:text-right">
+                            {/* Right - Amount and Actions */}
+                            <div className="sm:text-right flex flex-col sm:flex-row items-end sm:items-center gap-2">
                               <div
                                 className={`font-semibold text-lg ${
                                   transaction.type === "credit"
@@ -518,6 +585,42 @@ export function AccountTransactionsList({
                                   maximumFractionDigits: 2,
                                 }).format(transaction.amount)}
                               </div>
+                              
+                              {/* Delete Button with Confirmation */}
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                    disabled={deletingTransactionId === transaction.id || !transaction.id}
+                                  >
+                                    {deletingTransactionId === transaction.id ? (
+                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this transaction? This action cannot be undone.
+                                      The account balance will be updated to reflect this change.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => transaction.id && handleDeleteTransaction(transaction.id)}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      Delete Transaction
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                         </div>

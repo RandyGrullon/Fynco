@@ -492,6 +492,35 @@ export async function addAccountTransaction(
         transaction.amount
       );
 
+      // Also create transactions in the main transactions collection
+      // so transfers appear in the general transactions page
+      // We create them manually to avoid double balance updates
+      const transactionsCollection = collection(db, "users", userId, "transactions");
+      
+      // Create expense transaction for source account
+      await addDoc(transactionsCollection, {
+        type: "expense",
+        amount: transaction.amount,
+        source: `Transfer to ${destAccountName}: ${transaction.description}`,
+        date: dateToStore,
+        method: "Bank Transfer",
+        category: "Transfer",
+        accountId: transaction.accountId,
+        userId,
+      });
+
+      // Create income transaction for destination account
+      await addDoc(transactionsCollection, {
+        type: "income",
+        amount: transaction.amount,
+        source: `Transfer from ${sourceAccountName}: ${transaction.description}`,
+        date: dateToStore,
+        method: "Bank Transfer", 
+        category: "Transfer",
+        accountId: transaction.toAccountId,
+        userId,
+      });
+
       return { success: true, id: debitDocRef.id, relatedId: creditDocRef.id };
     } else {
       // Regular debit or credit transaction
@@ -527,6 +556,29 @@ export async function addAccountTransaction(
         transaction.type === "debit" ? -transaction.amount : transaction.amount;
 
       await updateAccountBalance(userId, transaction.accountId, amountChange);
+
+      // Also create a transaction in the main transactions collection
+      // so it appears in the general transactions page
+      // We create it manually to avoid double balance updates
+      const transactionsCollection = collection(db, "users", userId, "transactions");
+      const mainTransactionType = transaction.type === "credit" ? "income" : "expense";
+      
+      // Use better default categories and descriptions for account transactions
+      const defaultCategory = transaction.category || 
+        (transaction.type === "credit" ? "Other" : "Other");
+      const description = transaction.description || 
+        (transaction.type === "credit" ? "Account Credit" : "Account Debit");
+      
+      await addDoc(transactionsCollection, {
+        type: mainTransactionType,
+        amount: transaction.amount,
+        source: description,
+        date: dateToStore,
+        method: transaction.type === "credit" ? "Direct Deposit" : "Cash",
+        category: defaultCategory,
+        accountId: transaction.accountId,
+        userId,
+      });
 
       return { success: true, id: docRef.id };
     }
@@ -644,6 +696,95 @@ export async function updateAccountBalance(
     return { success: true, newBalance };
   } catch (error) {
     console.error("Error updating account balance: ", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function deleteAccountTransaction(
+  userId: string,
+  accountId: string,
+  transactionId: string
+) {
+  try {
+    // Get the transaction first to know the amount and type for balance reversal
+    const transactionRef = doc(
+      db,
+      "users",
+      userId,
+      "accounts",
+      accountId,
+      "transactions",
+      transactionId
+    );
+    const transactionSnap = await getDoc(transactionRef);
+
+    if (!transactionSnap.exists()) {
+      throw new Error("Transaction not found");
+    }
+
+    const transactionData = transactionSnap.data() as AccountTransaction;
+
+    // Calculate the amount to reverse from the account balance
+    const amountChange =
+      transactionData.type === "credit"
+        ? -transactionData.amount
+        : transactionData.amount;
+
+    // If it's a transfer, handle the related transaction
+    if (transactionData.type === "transfer" && transactionData.relatedTransactionId) {
+      // Find and delete the related transaction in the other account
+      if (transactionData.toAccountId) {
+        const relatedTransactionRef = doc(
+          db,
+          "users",
+          userId,
+          "accounts",
+          transactionData.toAccountId,
+          "transactions",
+          transactionData.relatedTransactionId
+        );
+        
+        const relatedTransactionSnap = await getDoc(relatedTransactionRef);
+        if (relatedTransactionSnap.exists()) {
+          // Reverse balance in the target account
+          const relatedTransactionData = relatedTransactionSnap.data() as AccountTransaction;
+          const relatedAmountChange = 
+            relatedTransactionData.type === "credit"
+              ? -relatedTransactionData.amount
+              : relatedTransactionData.amount;
+          
+          await updateAccountBalance(userId, transactionData.toAccountId, relatedAmountChange);
+          await deleteDoc(relatedTransactionRef);
+        }
+      }
+    }
+
+    // Delete the main transaction
+    await deleteDoc(transactionRef);
+
+    // Update the account balance
+    await updateAccountBalance(userId, accountId, amountChange);
+
+    // Also try to find and delete the corresponding transaction in the main transactions collection
+    try {
+      const mainTransactionsQuery = query(
+        collection(db, "users", userId, "transactions"),
+        where("accountId", "==", accountId),
+        where("amount", "==", transactionData.amount),
+        where("source", "==", transactionData.description)
+      );
+      
+      const mainTransactionsSnap = await getDocs(mainTransactionsQuery);
+      mainTransactionsSnap.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+    } catch (error) {
+      console.warn("Could not delete corresponding main transaction:", error);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting account transaction: ", error);
     return { success: false, error: (error as Error).message };
   }
 }

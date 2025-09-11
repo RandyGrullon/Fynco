@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Account, getAccountById } from "@/lib/accounts";
 import { useParams, useRouter } from "next/navigation";
@@ -56,7 +56,7 @@ export default function AccountDetailPage() {
     fetchAccountData();
   }, [user, accountId, router]);
 
-  const refreshAccount = async () => {
+  const refreshAccount = useCallback(async () => {
     if (user && accountId) {
       const fetchedAccount = await getAccountById(
         user.uid,
@@ -64,9 +64,19 @@ export default function AccountDetailPage() {
       );
       if (fetchedAccount) {
         setAccount(fetchedAccount);
+        
+        // Also refresh other accounts in case of transfers
+        const { getAccounts } = await import("@/lib/accounts");
+        const allAccounts = await getAccounts(user.uid);
+        setOtherAccounts(allAccounts.filter((acc) => acc.id !== accountId));
       }
     }
-  };
+  }, [user, accountId]);
+
+  // Create a stable refresh function that doesn't cause loops
+  const handleAccountChange = useCallback(async () => {
+    await refreshAccount();
+  }, [refreshAccount]);
 
   const getAccountTypeColor = (type: string) => {
     switch (type) {
@@ -272,7 +282,7 @@ export default function AccountDetailPage() {
               <AccountTransactionDialog
                 account={account}
                 transactionType="credit"
-                onTransactionAdded={refreshAccount}
+                onTransactionAdded={handleAccountChange}
               >
                 <Button
                   className="w-full justify-start text-green-700 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950"
@@ -287,7 +297,7 @@ export default function AccountDetailPage() {
               <AccountTransactionDialog
                 account={account}
                 transactionType="debit"
-                onTransactionAdded={refreshAccount}
+                onTransactionAdded={handleAccountChange}
               >
                 <Button
                   className="w-full justify-start text-red-700 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
@@ -302,7 +312,7 @@ export default function AccountDetailPage() {
               <TransferDialog
                 fromAccount={account}
                 accounts={otherAccounts}
-                onTransferCompleted={refreshAccount}
+                onTransferCompleted={handleAccountChange}
               >
                 <Button
                   className="w-full justify-start text-blue-700 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-950"
@@ -318,7 +328,7 @@ export default function AccountDetailPage() {
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                 <EditAccountDialog
                   account={account}
-                  onAccountUpdated={refreshAccount}
+                  onAccountUpdated={handleAccountChange}
                 >
                   <Button
                     variant="ghost"
@@ -337,7 +347,10 @@ export default function AccountDetailPage() {
 
       {/* Transactions Section */}
       <div className="w-full">
-        <AccountTransactionsList account={account} />
+        <AccountTransactionsList 
+          account={account} 
+          onTransactionChange={handleAccountChange}
+        />
       </div>
     </div>
   );
