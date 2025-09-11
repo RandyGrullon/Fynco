@@ -131,10 +131,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
     }
   };
 
-  const handleCardClick = (
-    e: React.MouseEvent,
-    goal: Goal
-  ) => {
+  const handleCardClick = (e: React.MouseEvent, goal: Goal) => {
     // Only navigate on mobile (under md breakpoint)
     if (typeof window === "undefined") return;
     if (window.innerWidth >= 768) return;
@@ -170,9 +167,9 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                 <CardTitle className="text-xl overflow-hidden truncate max-w-[70%]">
                   {goal.name}
                 </CardTitle>
-        <DropdownMenu>
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" data-no-nav>
+                    <Button variant="ghost" size="icon" data-no-nav>
                       <MoreHorizontal className="h-5 w-5" />
                       <span className="sr-only">More options</span>
                     </Button>
@@ -215,7 +212,10 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                 )}
               </div>
               {goal.description && (
-                <CardDescription className="overflow-hidden text-sm text-muted-foreground break-words line-clamp-3" data-no-nav>
+                <CardDescription
+                  className="overflow-hidden text-sm text-muted-foreground break-words line-clamp-3"
+                  data-no-nav
+                >
                   {goal.description}
                 </CardDescription>
               )}
@@ -244,7 +244,10 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                   </div>
                 </div>
                 {goal.accountId && (
-                  <div className="flex items-center gap-2 text-sm mt-4" data-no-nav>
+                  <div
+                    className="flex items-center gap-2 text-sm mt-4"
+                    data-no-nav
+                  >
                     <Wallet className="h-4 w-4 text-muted-foreground" />
                     <Link
                       href={`/accounts?id=${goal.accountId}`}
