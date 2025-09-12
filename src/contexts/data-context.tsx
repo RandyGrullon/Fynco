@@ -4,6 +4,7 @@ import React, { createContext, useContext, useReducer, useCallback, useEffect } 
 import { useAuth } from '@/hooks/use-auth';
 import { Account, getAccounts } from '@/lib/accounts';
 import { Transaction, getTransactions } from '@/lib/transactions';
+import { verifyUserExistsInFirestore } from '@/lib/user-validation';
 
 interface DataState {
   accounts: Account[];
@@ -84,6 +85,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
     
     try {
+      // Verificar que el usuario aún existe en Firestore antes de hacer consultas
+      const userExists = await verifyUserExistsInFirestore(user.uid);
+      if (!userExists) {
+        console.error('DataContext: User no longer exists in Firestore, cannot fetch accounts');
+        dispatch({ type: 'SET_ERROR', payload: 'Usuario no válido' });
+        return;
+      }
+
       dispatch({ type: 'SET_LOADING', payload: true });
       const accounts = await getAccounts(user.uid);
       
@@ -107,9 +116,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (!user?.uid) return;
     
     try {
+      // Verificar que el usuario aún existe en Firestore antes de hacer consultas
+      const userExists = await verifyUserExistsInFirestore(user.uid);
+      if (!userExists) {
+        console.error('DataContext: User no longer exists in Firestore, cannot fetch transactions');
+        dispatch({ type: 'SET_ERROR', payload: 'Usuario no válido' });
+        return;
+      }
+
       dispatch({ type: 'SET_LOADING', payload: true });
       const transactions = await getTransactions(user.uid);
-      dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
+      
+      // Verificación adicional: asegurar que todas las transacciones pertenecen al usuario
+      const validTransactions = transactions.filter(transaction => 
+        transaction.userId === user.uid
+      );
+      
+      if (validTransactions.length !== transactions.length) {
+        console.warn('Security: Some transactions were filtered out due to ownership mismatch');
+      }
+      
+      dispatch({ type: 'SET_TRANSACTIONS', payload: validTransactions });
     } catch (error) {
       console.error('Error fetching transactions:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load transactions' });

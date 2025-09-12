@@ -17,12 +17,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 
 export function UserNav() {
-  const { user, auth } = useAuth();
+  const { user, forceLogout } = useAuth();
   const router = useRouter();
   
   const handleSignOut = async () => {
-    await auth.signOut();
-    router.push('/login');
+    console.log('User manually logging out');
+    await forceLogout();
   }
 
   if (!user) {

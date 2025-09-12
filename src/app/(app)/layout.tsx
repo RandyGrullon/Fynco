@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppProviders } from "@/contexts/app-providers";
 import { FinancialChatBot } from "@/components/financial-chat-bot";
 import { RouteGuard } from "@/components/security/route-guard";
+import { AuthMonitor } from "@/components/security/auth-monitor";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -12,8 +13,12 @@ import { useEffect } from "react";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useRequireAuth();
   const router = useRouter();
+
   useEffect(() => {
+    console.log('AppLayout - Auth state:', { loading, hasUser: !!user });
+    
     if (!loading && !user) {
+      console.warn('AppLayout - No user detected, redirecting to login');
       router.replace("/login");
     }
   }, [loading, user, router]);
@@ -36,14 +41,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
-          <p className="text-muted-foreground">Loading your session...</p>
+          <p className="text-muted-foreground">Cargando tu sesión...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    // Return a loading state while redirecting
+    // Return a more explicit message while redirecting
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -61,7 +66,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
-          <p className="text-muted-foreground">Redirecting to login...</p>
+          <p className="text-muted-foreground">Sesión no válida. Redirigiendo al login...</p>
         </div>
       </div>
     );
@@ -69,6 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <AppProviders>
+      <AuthMonitor />
       <RouteGuard>
         <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
           <div className="hidden border-r bg-muted/40 md:block">
