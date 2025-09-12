@@ -26,6 +26,8 @@ import {
 import { addDoc, collection } from "firebase/firestore";
 import { useCurrency } from "@/contexts/currency-context";
 import { availableCurrencies } from "@/lib/currency";
+import { useTheme } from "@/contexts/theme-context";
+import { Monitor, Moon, Sun } from "lucide-react";
 
 const GmailIcon = () => (
   <svg
@@ -44,6 +46,72 @@ const GmailIcon = () => (
     <path d="M22 6l-10 7L2 6"></path>
   </svg>
 );
+
+const ThemeSection = () => {
+  const { theme, setTheme } = useTheme();
+
+  const themeOptions = [
+    {
+      value: "light" as const,
+      label: "Light",
+      description: "Light theme for bright environments",
+      icon: Sun,
+    },
+    {
+      value: "dark" as const,
+      label: "Dark",
+      description: "Dark theme for low light environments",
+      icon: Moon,
+    },
+    {
+      value: "system" as const,
+      label: "System",
+      description: "Follows your system's theme preference",
+      icon: Monitor,
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Appearance</CardTitle>
+        <CardDescription>
+          Choose your preferred theme. The system option will automatically switch between light and dark modes based on your device settings.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {themeOptions.map(({ value, label, description, icon: Icon }) => (
+            <div
+              key={value}
+              className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+                theme === value ? "border-primary bg-primary/5" : ""
+              }`}
+              onClick={() => setTheme(value)}
+            >
+              <div className="flex-shrink-0">
+                <Icon className={`h-5 w-5 ${theme === value ? "text-primary" : "text-muted-foreground"}`} />
+              </div>
+              <div className="flex-1">
+                <div className={`font-medium ${theme === value ? "text-primary" : ""}`}>
+                  {label}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {description}
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                {theme === value && (
+                  <div className="h-2 w-2 rounded-full bg-primary"></div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const OutlookIcon = () => (
   <svg
@@ -403,6 +471,9 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Nueva sección para la configuración de tema */}
+      <ThemeSection />
 
       {/* Nueva sección para la configuración de salario automático */}
 

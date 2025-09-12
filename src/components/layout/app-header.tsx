@@ -10,6 +10,7 @@ import { Menu, Wallet } from "lucide-react";
 import Link from "next/link";
 import { AppSidebar } from "./app-sidebar";
 import { UserNav } from "../user-nav";
+import { ThemeToggle } from "../theme-toggle";
 
 export function AppHeader() {
   const [open, setOpen] = useState(false);
@@ -31,7 +32,10 @@ export function AppHeader() {
       <div className="flex-1">
         {/* Can add breadcrumbs or page title here */}
       </div>
-      <UserNav />
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <UserNav />
+      </div>
     </header>
   );
 }
