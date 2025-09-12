@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslations } from "next-intl";
 import { Transaction } from "@/lib/transactions";
 import { Account } from "@/lib/accounts";
 import { useState } from "react";
@@ -41,6 +42,7 @@ export default function DashboardPage() {
   const { transactions, accounts, isLoading, refreshData } = useData();
   const [timePeriod, setTimePeriod] = useState<TimeFilterPeriod>("monthly");
   const { formatCurrency } = useCurrencyFormatter();
+  const t = useTranslations();
   
   // Use optimized filtered transactions and stats
   const filteredTransactions = useFilteredTransactions(transactions, timePeriod);
@@ -116,7 +118,7 @@ export default function DashboardPage() {
     <>
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Dashboard
+          {t('dashboard.title')}
         </h2>
         <div className="flex items-center space-x-2">
           <TimeFilter
@@ -129,7 +131,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('financial.totalBalance')}</CardTitle>
             {netIncome >= 0 ? (
               <ArrowUp className="h-4 w-4 text-green-500" />
             ) : (
@@ -141,13 +143,13 @@ export default function DashboardPage() {
               {formatCurrency(netIncome)}
             </div>
             <p className="text-xs text-muted-foreground">
-              All accounts combined
+              {t('financial.allAccountsCombined')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('financial.totalIncome')}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -156,23 +158,23 @@ export default function DashboardPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {timePeriod === "all"
-                ? "All time income"
+                ? t('financial.allTimeIncome')
                 : timePeriod === "daily"
-                ? "Last 30 days"
+                ? t('financial.last30Days')
                 : timePeriod === "weekly"
-                ? "Last 12 weeks"
+                ? t('financial.last12Weeks')
                 : timePeriod === "monthly"
-                ? "Last 12 months"
+                ? t('financial.last12Months')
                 : timePeriod === "quarterly"
-                ? "Last 4 quarters"
-                : "Last 3 years"}
+                ? t('financial.last4Quarters')
+                : t('financial.last3Years')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Expenses
+              {t('financial.totalExpenses')}
             </CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -182,32 +184,32 @@ export default function DashboardPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {timePeriod === "all"
-                ? "All time expenses"
+                ? t('financial.allTimeExpenses')
                 : timePeriod === "daily"
-                ? "Last 30 days"
+                ? t('financial.last30Days')
                 : timePeriod === "weekly"
-                ? "Last 12 weeks"
+                ? t('financial.last12Weeks')
                 : timePeriod === "monthly"
-                ? "Last 12 months"
+                ? t('financial.last12Months')
                 : timePeriod === "quarterly"
-                ? "Last 4 quarters"
-                : "Last 3 years"}
+                ? t('financial.last4Quarters')
+                : t('financial.last3Years')}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Financial Hub</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('financial.financialHub')}</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-sm">
               <p className="text-muted-foreground mb-2">
-                For comprehensive reports
+                {t('financial.comprehensiveReports')}
               </p>
               <Link href="/statistics">
                 <Button variant="outline" size="sm" className="w-full">
-                  Go to Statistics
+                  {t('financial.goToStatistics')}
                   <ExternalLink className="ml-2 h-3 w-3" />
                 </Button>
               </Link>

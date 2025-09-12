@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Account, addAccountTransaction } from "@/lib/accounts";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -41,6 +42,8 @@ export function TransferDialog({
 }: TransferDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations('forms');
+  const tCommon = useTranslations('common');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
@@ -258,7 +261,7 @@ export function TransferDialog({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">
-                Amount
+                {t('amount')}
               </Label>
               <Input
                 id="amount"
@@ -274,25 +277,25 @@ export function TransferDialog({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
-                Description
+                {t('description')}
               </Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
-                placeholder="Transfer description (optional)"
+                placeholder={t('transferDescription')}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">
-                Cancel
+                {tCommon('cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={loading || accounts.length === 0}>
-              {loading ? "Processing..." : "Transfer"}
+              {loading ? tCommon('processing') : tCommon('transfer')}
             </Button>
           </DialogFooter>
         </form>

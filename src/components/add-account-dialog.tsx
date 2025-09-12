@@ -32,6 +32,7 @@ interface AddAccountDialogProps {
   onAccountAdded?: (id?: string) => void;
   children?: React.ReactNode;
 }
+import { useTranslations } from "next-intl";
 
 export function AddAccountDialog({
   onAccountAdded,
@@ -39,6 +40,7 @@ export function AddAccountDialog({
 }: AddAccountDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations('accounts');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -127,22 +129,22 @@ export function AddAccountDialog({
         {children || (
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Account
+            {t('addAccountTrigger')}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add New Account</DialogTitle>
+            <DialogTitle>{t('dialog.title')}</DialogTitle>
             <DialogDescription>
-              Create a new account to track your finances.
+              {t('dialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                Name
+                {t('form.name')}
               </Label>
               <div className="col-span-3">
                 <Input
@@ -166,7 +168,7 @@ export function AddAccountDialog({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="balance" className="text-right">
-                Balance
+                {t('form.balance')}
               </Label>
               <div className="col-span-3">
                 <Input
@@ -192,61 +194,61 @@ export function AddAccountDialog({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="type" className="text-right">
-                Type
+                {t('form.type')}
               </Label>
               <Select
                 value={type}
                 onValueChange={(value) => setType(value as AccountType)}
               >
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select account type" />
+                  <SelectValue placeholder={t('form.selectAccountType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="checking">Checking</SelectItem>
-                  <SelectItem value="savings">Savings</SelectItem>
-                  <SelectItem value="investment">Investment</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="checking">{t('accountTypes.checking')}</SelectItem>
+                  <SelectItem value="savings">{t('accountTypes.savings')}</SelectItem>
+                  <SelectItem value="investment">{t('accountTypes.investment')}</SelectItem>
+                  <SelectItem value="credit">{t('accountTypes.credit')}</SelectItem>
+                  <SelectItem value="other">{t('accountTypes.other')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="currency" className="text-right">
-                Currency
+                {t('form.currency')}
               </Label>
               <Select
                 value={currency}
                 onValueChange={(value) => setCurrency(value)}
               >
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select currency" />
+                  <SelectValue placeholder={t('form.selectCurrency')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USD">USD ($)</SelectItem>
-                  <SelectItem value="EUR">EUR (€)</SelectItem>
-                  <SelectItem value="GBP">GBP (£)</SelectItem>
-                  <SelectItem value="DOP">DOP (RD$)</SelectItem>
+                  <SelectItem value="USD">{t('currency.usd')}</SelectItem>
+                  <SelectItem value="EUR">{t('currency.eur')}</SelectItem>
+                  <SelectItem value="GBP">{t('currency.gbp')}</SelectItem>
+                  <SelectItem value="DOP">{t('currency.dop')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
-                Description
+                {t('form.description')}
               </Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
-                placeholder="Optional description"
+                placeholder={t('form.descriptionPlaceholder')}
               />
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="default" className="text-right">
-                Default
+                {t('form.default')}
               </Label>
               <div className="flex items-center space-x-2 col-span-3">
                 <Checkbox
@@ -257,7 +259,7 @@ export function AddAccountDialog({
                   }}
                 />
                 <Label htmlFor="default" className="font-normal">
-                  Set as default account
+                  {t('form.setAsDefault')}
                 </Label>
               </div>
             </div>
@@ -265,11 +267,11 @@ export function AddAccountDialog({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">
-                Cancel
+                {t('common.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Account"}
+              {loading ? t('adding') : t('addAccountButton')}
             </Button>
           </DialogFooter>
         </form>

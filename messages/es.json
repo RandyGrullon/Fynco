@@ -1,0 +1,689 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",    "currency": "Moneda",
+    "descriptionOptional": "Descripción (Opcional)",
+    "targetDateOptional": "Fecha objetivo (Opcional)",
+    "account": "Cuenta",
+    "status": "Estado",
+    "targetDate": "Fecha objetivo",
+    "progress": "Progreso",
+    "saveChanges": "Guardar cambios",
+    "selectCurrency": "Seleccionar moneda",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "loading": "Cargando...",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "clear": "Limpiar",
+    "submit": "Enviar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "yes": "Sí",
+    "no": "No",
+    "processing": "Procesando...",
+    "tryAgain": "Intentar de nuevo",
+    "understood": "Entendido",
+  "areYouSure": "¿Estás seguro?",
+    "permissionDenied": "Permiso denegado",
+    "startRecording": "Iniciar grabación",
+    "stopRecording": "Detener grabación",
+    "transcribing": "Transcribiendo...",
+    "deleting": "Eliminando...",
+    "transfer": "Transferir",
+    "default": "Predeterminado",
+    "goalAccount": "Cuenta meta",
+    "toggleTheme": "Cambiar tema",
+    "toggleMenu": "Alternar menú",
+    "navigation": "Navegación",
+    "app": { "title": "Fynco" }
+  },
+  "navigation": {
+    "dashboard": "Panel de control",
+    "accounts": "Cuentas",
+    "transactions": "Transacciones",
+    "goals": "Metas",
+    "statistics": "Estadísticas",
+    "settings": "Configuración",
+    "activity": "Actividad",
+    "movements": "Movimientos",
+    "recurring": "Recurrentes"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "logout": "Cerrar sesión",
+    "settings": "Configuración",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "rememberMe": "Recordarme",
+    "signInWith": "Iniciar sesión con",
+    "signUpWith": "Registrarse con",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "createAccount": "Crear cuenta"
+  },
+  "dashboard": {
+    "title": "Panel de control",
+    "totalBalance": "Balance total",
+    "monthlyIncome": "Ingresos mensuales",
+    "monthlyExpenses": "Gastos mensuales",
+    "recentTransactions": "Transacciones recientes",
+    "accountsOverview": "Resumen de cuentas",
+    "quickActions": "Acciones rápidas"
+  },
+  "accounts": {
+    "title": "Cuentas",
+    "addAccount": "Agregar cuenta",
+    "editAccount": "Editar cuenta",
+    "accountName": "Nombre de la cuenta",
+    "accountType": "Tipo de cuenta",
+    "initialBalance": "Balance inicial",
+    "currentBalance": "Balance actual",
+    "viewAllTransactions": "Ver todas las transacciones",
+    "accountsList": "Lista de cuentas",
+    "overview": "Resumen",
+    "acrossAllAccounts": "En todas las cuentas",
+    "activeAccounts": "Cuentas activas",
+    "noAccountsYet": "Aún no tienes ninguna cuenta.",
+    "createFirstAccount": "Crea tu primera cuenta",
+    "addAccountTrigger": "Agregar cuenta",
+    "dialog": {
+      "title": "Agregar nueva cuenta",
+      "description": "Crea una nueva cuenta para seguir tus finanzas."
+    },
+    "addAccountButton": "Agregar cuenta",
+    "adding": "Agregando...",
+    "form": {
+      "name": "Nombre",
+      "namePlaceholder": "Cuenta corriente principal",
+      "balance": "Balance",
+      "type": "Tipo",
+      "selectAccountType": "Seleccionar tipo de cuenta",
+      "currency": "Moneda",
+      "selectCurrency": "Seleccionar moneda",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Descripción opcional",
+      "default": "Predeterminado",
+      "setAsDefault": "Establecer como cuenta predeterminada"
+    },
+    "accountTypes": {
+      "checking": "Corriente",
+      "savings": "Ahorros",
+      "credit": "Tarjeta de Crédito",
+      "investment": "Inversión",
+      "cash": "Efectivo",
+      "other": "Otro"
+    }
+  },
+  "transactions": {
+    "title": "Transacciones",
+    "addTransaction": "Agregar transacción",
+    "editTransaction": "Editar transacción",
+    "amount": "Monto",
+    "description": "Descripción",
+    "date": "Fecha",
+    "category": "Categoría",
+    "account": "Cuenta",
+    "type": "Tipo",
+    "income": "Ingreso",
+    "expense": "Gasto",
+    "transfer": "Transferencia"
+  },
+  "goals": {
+    "title": "Metas",
+    "description": "Establece y sigue tus metas financieras",
+    "addGoal": "Agregar meta",
+    "addDescription": "Crea una nueva meta financiera para ayudarte a alcanzar tus objetivos.",
+    "editGoal": "Editar meta",
+    "editDescription": "Actualiza la información de tu meta financiera.",
+    "goalName": "Nombre de la meta",
+    "targetAmount": "Monto objetivo",
+    "currentAmount": "Monto actual",
+    "currency": "Moneda",
+    "descriptionOptional": "Descripción (Opcional)",
+    "targetDateOptional": "Fecha objetivo (Opcional)",
+    "account": "Cuenta",
+    "targetDate": "Fecha objetivo",
+    "progress": "Progreso",
+    "selectCurrency": "Seleccionar moneda",
+    "status": "Estado",
+    "saveChanges": "Guardar cambios",
+    "placeholders": {
+      "name": "p.ej., Auto nuevo, Vacaciones",
+      "description": "Describe tu meta...",
+      "pickDate": "Seleccionar fecha",
+      "selectStatus": "Seleccionar estado"
+    },
+    "accounts": {
+      "useExisting": "Usar cuenta existente",
+      "createNew": "Crear nueva cuenta",
+      "selectAccountPlaceholder": "Seleccionar una cuenta",
+      "noAccount": "Sin cuenta",
+      "noAvailableAccounts": "No hay cuentas disponibles. Todas las cuentas ya están asociadas con metas o aún no tienes cuentas.",
+      "noAvailableAccountsEdit": "No hay cuentas disponibles. Todas las cuentas ya están asociadas con metas.",
+      "accountName": "Nombre de la cuenta",
+      "initialBalance": "Balance inicial",
+      "accountType": "Tipo de cuenta",
+      "descriptionOptional": "Descripción (Opcional)",
+      "newAccountPlaceholder": "Cuenta de la meta",
+      "newAccountDescriptionPlaceholder": "Cuenta para esta meta...",
+      "accountTypes": {
+        "savings": "Ahorros",
+        "checking": "Corriente",
+        "investment": "Inversión",
+        "credit": "Crédito",
+        "other": "Otro"
+      }
+    },
+    "empty": {
+      "title": "Aún no tienes metas",
+      "description": "Comienza a establecer metas financieras para alcanzar tus sueños"
+    },
+    "actions": { "label": "Acciones de la meta" },
+    "deleteConfirmation": "Esto eliminará permanentemente esta meta. Si la meta tiene una cuenta vinculada, la cuenta permanecerá pero ya no estará asociada con esta meta.",
+    "linkedAccount": "Cuenta vinculada",
+    "addFunds": "Añadir fondos",
+    "addFundsTitle": "Añadir fondos a la meta",
+    "addFundsDescription": "Añade fondos desde la cuenta vinculada \"{account}\" a tu meta \"{goal}\".",
+    "loadingAccount": "Cargando información de la cuenta...",
+    "labels": {
+      "availableBalance": "Saldo disponible",
+      "amountToAdd": "Monto a añadir",
+      "remainingToTarget": "Restante para la meta:",
+      "currentStatus": "Estado actual",
+      "current": "Actual",
+      "target": "Meta",
+      "newAccountBalance": "Nuevo saldo de la cuenta:",
+      "goalProgress": "Progreso de la meta:"
+    },
+    "errors": {
+      "loginRequired": "Debes iniciar sesión para realizar esta acción",
+      "nameRequired": "El nombre de la meta es requerido",
+      "targetAmountInvalid": "El monto objetivo debe ser mayor que cero",
+      "accountRequired": "Debe seleccionar una cuenta o crear una nueva",
+      "amountGreaterThanZero": "El monto debe ser mayor que cero",
+      "loadAccount": "No se pudo cargar la información de la cuenta",
+      "addFundsFailed": "Error al añadir fondos"
+    },
+    "toasts": {
+      "completedTitle": "¡Meta completada!",
+      "completedDescription": "¡Felicidades! Has alcanzado tu meta",
+      "fundsAddedTitle": "Fondos añadidos",
+      "fundsAddedDescription": "Fondos añadidos exitosamente a tu meta"
+    },
+    "updateSuccessTitle": "Meta actualizada",
+    "updateSuccessDescription": "Tu meta ha sido actualizada exitosamente",
+    "statuses": { "active": "Activo", "completed": "Completada", "canceled": "Cancelada" },
+    "current": "Actual",
+    "target": "Meta",
+    "viewAccount": "Ver cuenta",
+    "addAccount": "Añadir cuenta",
+    "delete": "Eliminar",
+    "deleting": "Eliminando...",
+    "edit": "Editar"
+  },
+  "settings": {
+    "title": "Configuración",
+    "description": "Administra la configuración de tu cuenta e integraciones.",
+    "profile": {
+      "title": "Perfil",
+      "description": "Actualiza tu información personal. Esta se mostrará en toda la aplicación.",
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "updateProfile": "Actualizar perfil",
+      "saving": "Guardando...",
+      "updated": "Perfil actualizado exitosamente"
+    },
+    "currency": {
+      "title": "Configuración de Moneda",
+      "description": "Selecciona la moneda predeterminada para todas las transacciones en la aplicación.",
+      "label": "Moneda",
+      "placeholder": "Seleccionar moneda",
+      "preview": "Todos los valores se mostrarán en {name} ({code})",
+      "updated": "Moneda Actualizada",
+      "updatedDescription": "Se ha configurado {name} ({symbol}) como tu moneda predeterminada."
+    },
+    "theme": {
+      "title": "Apariencia",
+      "description": "Elige tu tema preferido. La opción sistema cambiará automáticamente entre modos claro y oscuro según la configuración de tu dispositivo.",
+      "light": {
+        "title": "Claro",
+        "description": "Tema claro para entornos brillantes"
+      },
+      "dark": {
+        "title": "Oscuro",
+        "description": "Tema oscuro para entornos de poca luz"
+      },
+      "system": {
+        "title": "Sistema",
+        "description": "Sigue la preferencia de tema de tu sistema"
+      }
+    },
+    "emailSync": {
+      "title": "Sincronización de Email",
+      "description": "Conecta tus cuentas de email para importar automáticamente gastos desde recibos (Función próximamente).",
+      "connect": "Conectar"
+    }
+  },
+  "activity": {
+    "title": "Actividad Financiera",
+    "description": "Registro completo de todas tus actividades financieras",
+    "refresh": "Actualizar",
+    "migrateData": "Migrar Datos",
+    "processing": "Procesando...",
+    "migrationStarted": "Migración iniciada",
+    "migrationStartedDescription": "Procesando datos existentes...",
+    "migrationCompleted": "Migración completada",
+    "migrationCompletedDescription": "Todos los datos han sido procesados exitosamente.",
+    "migrationError": "Error en la migración",
+    "migrationErrorDescription": "Hubo un problema al procesar los datos. Inténtalo de nuevo.",
+    "infoModal": {
+      "title": "Actividad Financiera - Registro Completo",
+      "description": "Este módulo registra automáticamente todas las acciones que realizas en la aplicación para mantener un historial completo de tu actividad financiera.",
+      "sections": {
+        "accounts": {
+          "title": "Gestión de Cuentas",
+          "items": {
+            "creation": "Creación de nuevas cuentas",
+            "modification": "Modificación de cuentas existentes",
+            "deletion": "Eliminación de cuentas"
+          }
+        },
+        "transactions": {
+          "title": "Transacciones",
+          "items": {
+            "creation": "Registro de nuevas transacciones",
+            "editing": "Edición de transacciones",
+            "deletion": "Eliminación de transacciones",
+            "transfers": "Transferencias entre cuentas"
+          }
+        },
+        "goals": {
+          "title": "Metas Financieras",
+          "items": {
+            "creation": "Creación de nuevas metas",
+            "progress": "Actualizaciones de progreso de metas",
+            "completion": "Finalización de metas",
+            "fundsAdded": "Fondos añadidos a metas"
+          }
+        },
+        "recurring": {
+          "title": "Transacciones Recurrentes",
+          "items": {
+            "setup": "Configuración de transacciones recurrentes",
+            "execution": "Ejecución automática de transacciones recurrentes",
+            "modification": "Modificación de transacciones recurrentes"
+          }
+        }
+      },
+      "benefits": {
+        "title": "Beneficios del Seguimiento de Actividad",
+        "items": {
+          "auditTrail": "Rastro de auditoría completo de todos los movimientos financieros",
+          "transparency": "Transparencia total en la gestión financiera",
+          "analysis": "Análisis detallado de tu comportamiento financiero",
+          "compliance": "Cumplimiento normativo y control financiero",
+          "recovery": "Fácil recuperación de información en caso de errores",
+          "insights": "Perspectivas valiosas sobre tus patrones financieros"
+        }
+      },
+      "privacy": {
+        "title": "Privacidad y Seguridad",
+        "description": "Todos los datos de actividad se almacenan de forma segura y solo son accesibles por ti. No compartimos tu información financiera con terceros."
+      }
+    },
+    "filters": {
+      "search": "Buscar actividades...",
+      "type": "Filtrar por tipo",
+      "dateFrom": "Fecha desde",
+      "dateTo": "Fecha hasta", 
+      "allTypes": "Todos los tipos",
+      "clear": "Limpiar filtros"
+    },
+    "types": {
+      "account_created": "Cuenta Creada",
+      "account_updated": "Cuenta Actualizada",
+      "account_deleted": "Cuenta Eliminada", 
+      "transaction_created": "Transacción Creada",
+      "transaction_updated": "Transacción Actualizada",
+      "transaction_deleted": "Transacción Eliminada",
+      "transfer_created": "Transferencia Creada",
+      "goal_created": "Meta Creada",
+      "goal_updated": "Meta Actualizada",
+      "goal_deleted": "Meta Eliminada",
+      "goal_funds_added": "Fondos Añadidos a Meta",
+      "recurring_transaction_created": "Transacción Recurrente Creada",
+      "recurring_transaction_updated": "Transacción Recurrente Actualizada",
+      "recurring_transaction_deleted": "Transacción Recurrente Eliminada"
+    },
+    "noResults": "No se encontraron actividades",
+    "noResultsDescription": "Intenta ajustar tus criterios de búsqueda o filtros."
+  },
+  "theme": { "light": "Claro", "dark": "Oscuro", "system": "Sistema" },
+  "currency": {
+    "usd": "Dólar estadounidense (USD)",
+    "eur": "Euro (EUR)",
+    "gbp": "Libra esterlina (GBP)",
+    "dop": "Peso dominicano (DOP)"
+  },
+  "errors": {
+    "somethingWentWrong": "Algo salió mal",
+    "pleaseVerifyInformation": "Por favor verifica tu información",
+    "requiredField": "Este campo es requerido",
+    "invalidEmail": "Dirección de correo inválida",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+    "passwordsDontMatch": "Las contraseñas no coinciden"
+  },
+  "success": {
+    "accountCreated": "Cuenta creada exitosamente",
+    "accountUpdated": "Cuenta actualizada exitosamente",
+    "accountDeleted": "Cuenta eliminada exitosamente",
+    "transactionCreated": "Transacción creada exitosamente",
+    "transactionUpdated": "Transacción actualizada exitosamente",
+    "transactionDeleted": "Transacción eliminada exitosamente",
+    "goalCreated": "Meta creada exitosamente",
+    "goalUpdated": "Meta actualizada exitosamente",
+    "goalDeleted": "Meta eliminada exitosamente"
+  },
+  "voiceRecording": {
+    "transcriptionFailed": "Fallo en la transcripción",
+    "transcriptionFailedDescription": "No se pudo procesar el audio. Por favor intenta de nuevo.",
+    "microphoneAccessDenied": "Acceso al micrófono denegado",
+    "microphoneAccessDeniedDescription": "Por favor habilita los permisos del micrófono en la configuración de tu navegador."
+  },
+  "iosInstall": {
+    "title": "Instalar Fynco en iPhone",
+    "instructions": "Toca el botón Compartir (el cuadrado con una flecha) en Safari y selecciona \"Añadir a pantalla de inicio\"."
+  },
+  "financial": {
+    "totalBalance": "Balance total",
+    "totalIncome": "Ingresos totales",
+    "totalExpenses": "Gastos totales",
+    "financialHub": "Centro financiero",
+    "monthlyIncome": "Ingresos mensuales",
+    "monthlyExpenses": "Gastos mensuales",
+    "recentTransactions": "Transacciones recientes",
+    "accountsOverview": "Resumen de cuentas",
+    "quickActions": "Acciones rápidas",
+    "allAccountsCombined": "Todas las cuentas combinadas",
+    "comprehensiveReports": "Para reportes completos",
+    "goToStatistics": "Ir a estadísticas",
+    "allTimeIncome": "Ingresos de todos los tiempos",
+    "allTimeExpenses": "Gastos de todos los tiempos",
+    "last30Days": "Últimos 30 días",
+    "last12Weeks": "Últimas 12 semanas",
+    "last12Months": "Últimos 12 meses",
+    "last4Quarters": "Últimos 4 trimestres",
+    "last3Years": "Últimos 3 años"
+  },
+  "overview": {
+    "daily": "Resumen diario",
+    "weekly": "Resumen semanal",
+    "monthly": "Resumen mensual",
+    "quarterly": "Resumen trimestral",
+    "yearly": "Resumen anual",
+    "all": "Resumen de todos los tiempos",
+    "income": "Ingreso",
+    "expense": "Gasto"
+  },
+  "recentTransactions": {
+    "title": "Transacciones recientes",
+    "summary": "Has realizado {count} transacciones en total.",
+    "empty": "No se encontraron transacciones recientes. ¡Agrega una para comenzar!",
+    "unknownAccount": "Cuenta desconocida"
+  },
+  "timeFilter": {
+    "daily": "Diario",
+    "weekly": "Semanal",
+    "monthly": "Mensual",
+    "quarterly": "Trimestral",
+    "yearly": "Anual",
+    "all": "Todos los tiempos"
+  },
+  "forms": {
+    "amount": "Monto",
+    "description": "Descripción",
+    "transferDescription": "Descripción de transferencia (opcional)",
+    "swapAccounts": "Intercambiar cuentas De/Para",
+    "from": "De",
+    "to": "Para",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de fin (Opcional)",
+    "pickDate": "Seleccionar fecha",
+    "noEndDate": "Sin fecha de fin",
+    "whenStart": "Cuándo debe comenzar esta transacción recurrente",
+    "placeholder": "0.00"
+  },
+  "recurring": {
+    "title": "Agregar transacción recurrente",
+    "description": "Configura una nueva transacción recurrente que se procesará automáticamente.",
+    "editTitle": "Editar transacción recurrente",
+    "editDescription": "Actualiza la configuración de tu transacción recurrente.",
+    "transactionType": "Tipo de transacción",
+    "income": "Ingreso",
+    "expense": "Gasto",
+    "amount": "Monto",
+    "descriptionPlaceholder": "p.ej., Renta mensual",
+    "account": "Cuenta",
+    "selectAccountPlaceholder": "Seleccionar cuenta",
+    "addAccount": "Agregar cuenta",
+    "category": "Categoría",
+    "selectCategoryPlaceholder": "Seleccionar categoría",
+    "frequency": "Frecuencia",
+    "selectFrequencyPlaceholder": "Seleccionar frecuencia",
+    "frequencies": {"daily": "Diario","weekly": "Semanal","biweekly": "Cada 2 semanas","monthly": "Mensual","quarterly": "Trimestral","yearly": "Anual"},
+    "frequencyDescription": "Con qué frecuencia debe repetirse esta transacción",
+    "startDate": "Fecha de inicio",
+    "pickDate": "Seleccionar fecha",
+    "startDateDescription": "Cuándo debe comenzar esta transacción recurrente",
+    "endDate": "Fecha de fin (Opcional)",
+    "noEndDate": "Sin fecha de fin",
+    "endDateDescription": "Dejar en blanco para transacciones que continúen indefinidamente",
+    "activeDescription": "Alternar para habilitar o deshabilitar esta transacción recurrente",
+    "cancel": "Cancelar",
+    "adding": "Agregando...",
+    "addButton": "Agregar transacción recurrente",
+    "updating": "Actualizando...",
+    "updateButton": "Actualizar transacción",
+    "toast": {
+      "errorTitle": "Error",
+      "successTitle": "Éxito",
+      "loginRequired": "Debes iniciar sesión para realizar esta acción",
+      "accountRequired": "Por favor selecciona una cuenta antes de crear una transacción recurrente.",
+      "added": "Transacción recurrente agregada exitosamente",
+      "addFailed": "Error al agregar la transacción recurrente",
+      "deleted": "Transacción recurrente eliminada exitosamente",
+      "deleteFailed": "Error al eliminar la transacción recurrente",
+      "activated": "Transacción recurrente activada exitosamente",
+      "deactivated": "Transacción recurrente desactivada exitosamente",
+      "updated": "Transacción recurrente actualizada exitosamente",
+      "updateFailed": "Error al actualizar la transacción recurrente",
+      "genericError": "Ocurrió un error"
+    },
+    "actions": {"label": "Acciones de la transacción","deleteTitle": "Eliminar transacción recurrente","deleteDescription": "¿Estás seguro que deseas eliminar esta transacción recurrente? Esta acción no se puede deshacer."},
+    "deleting": "Eliminando...",
+    "delete": "Eliminar",
+    "labels": {"account": "Cuenta:","nextDate": "Siguiente fecha:","category": "Categoría:","started": "Iniciada:","unknownAccount": "Cuenta desconocida"},
+    "n_a": "N/A",
+    "statusActive": "Activo",
+    "inactive": "Inactivo",
+    "addRecurringIncome": "Agregar ingreso recurrente",
+    "addRecurringExpense": "Agregar gasto recurrente",
+    "pageTitle": "Transacciones recurrentes",
+    "cards": {"active": "Recurrentes activas","activeDescription": "Transacciones recurrentes activas","monthlyIncome": "Ingresos mensuales","monthlyIncomeDescription": "Ingresos recurrentes mensuales esperados","monthlyExpenses": "Gastos mensuales","monthlyExpensesDescription": "Gastos recurrentes mensuales esperados"},
+    "tabs": {"all": "Todas","income": "Ingresos","expense": "Gastos"},
+    "empty": {"noTransactions": "Aún no tienes transacciones recurrentes.","createFirst": "Crea tu primera transacción recurrente","noIncome": "Aún no tienes ingresos recurrentes.","noExpenses": "Aún no tienes gastos recurrentes.","addIncome": "Agregar ingreso recurrente","addExpense": "Agregar gasto recurrente"}
+  },
+  "statistics": {
+    "title": "Estadísticas Financieras",
+    "description": "Vista integral de tus datos financieros e información detallada",
+    "timePeriods": {
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "quarterly": "Trimestral",
+      "yearly": "Anual",
+      "allTime": "Todo el tiempo"
+    },
+    "overview": {
+      "title": "Estadísticas Financieras",
+      "totalBalance": "Balance Total",
+      "totalIncome": "Ingresos Totales",
+      "totalExpenses": "Gastos Totales",
+      "netIncome": "Ingreso Neto",
+      "savingsRate": "Tasa de Ahorro",
+      "totalTransactions": "Total de Transacciones",
+      "averageTransaction": "Transacción Promedio",
+      "transactionCount": "Total de Transacciones",
+      "accountCount": "Cuentas Activas",
+      "goalProgress": "Progreso de Metas",
+      "acrossAccounts": "En {count} cuentas",
+      "incomeMinusExpenses": "Ingresos - Gastos",
+      "thisMonth": "Este mes",
+      "thisWeek": "Esta semana",
+      "thisYear": "Este año",
+      "allTime": "Todo el tiempo",
+      "accountDistribution": "Distribución de Cuentas",
+      "expenseBreakdown": "Desglose de Gastos",
+      "incomeVsExpenses": "Tendencia de Ingresos vs Gastos",
+      "noDataAvailable": "No hay datos disponibles para el período seleccionado",
+      "comprehensiveOverview": "Resumen completo para {period}",
+      "activeOutOfTotal": "{active} activas de {total} en total",
+      "monthlyTrends": "Tendencias Mensuales",
+      "topExpenseCategories": "Principales Categorías de Gastos",
+      "financialHealthIndicators": "Indicadores de Salud Financiera",
+      "expenseToIncomeRatio": "Relación Gastos-Ingresos",
+      "healthy": "Saludable",
+      "moderate": "Moderado",
+      "highRisk": "Alto Riesgo",
+      "fromLastMonth": "del mes pasado",
+      "recurringTransactions": "Transacciones Recurrentes",
+      "estimatedMonthlyRecurring": "Recurrencia Mensual Estimada",
+      "recurringIncome": "Ingresos Recurrentes",
+      "recurringExpenses": "Gastos Recurrentes",
+      "netRecurring": "Neto Recurrente",
+      "accountBalanceStatus": "Estado de Saldo de Cuentas",
+      "positiveAccounts": "Cuentas positivas",
+      "highest": "Más alto",
+      "accounts": "cuentas",
+      "account": "cuenta"
+    },
+    "accounts": {
+      "title": "Resumen de Cuentas",
+      "description": "Resumen de todas tus cuentas financieras",
+      "totalAccounts": "Total de Cuentas",
+      "totalBalance": "Balance Total",
+      "highestBalance": "Balance Más Alto",
+      "lowestBalance": "Balance Más Bajo",
+      "averageBalance": "Balance Promedio",
+      "byType": "Por Tipo de Cuenta",
+      "byCurrency": "Por Moneda"
+    },
+    "transactions": {
+      "title": "Historial de Transacciones",
+      "description": "Todas las transacciones de todas tus cuentas",
+      "removedMessage": "La interfaz de transacciones ha sido eliminada. Los datos de transacciones siguen disponibles para estadísticas y lógica de fondo.",
+      "totalTransactions": "Total de Transacciones",
+      "totalVolume": "Volumen Total",
+      "averageAmount": "Monto Promedio",
+      "incomeVsExpenses": "Ingresos vs Gastos",
+      "byCategory": "Por Categoría",
+      "byMonth": "Tendencia Mensual",
+      "topCategories": "Principales Categorías",
+      "recentActivity": "Actividad Reciente"
+    },
+    "transfers": {
+      "title": "Transferencias entre Cuentas",
+      "description": "Mueve fondos entre tus cuentas"
+    },
+    "goals": {
+      "title": "Metas Financieras",
+      "description": "Seguimiento del progreso de tus metas de ahorro",
+      "totalGoals": "Total de Metas",
+      "completed": "Completadas",
+      "active": "Activas",
+      "totalTarget": "Monto Total Objetivo",
+      "totalSaved": "Total Ahorrado",
+      "averageProgress": "Progreso Promedio",
+      "progressDistribution": "Distribución de Progreso",
+      "completionRate": "Tasa de Finalización"
+    },
+    "recurring": {
+      "title": "Transacciones Recurrentes",
+      "description": "Todos tus pagos e ingresos recurrentes programados",
+      "totalRecurring": "Total Recurrentes",
+      "monthlyIncome": "Ingresos Mensuales",
+      "monthlyExpenses": "Gastos Mensuales",
+      "netMonthlyFlow": "Flujo Mensual Neto",
+      "byFrequency": "Por Frecuencia",
+      "nextPayments": "Próximos Pagos"
+    },
+    "export": {
+      "title": "Exportar Datos",
+      "description": "Exporta tus datos financieros para análisis externo",
+      "selectPeriod": "Seleccionar Período",
+      "selectFormat": "Seleccionar Formato",
+      "formats": {
+        "csv": "CSV (Hoja de cálculo)",
+        "json": "JSON (Datos)",
+        "pdf": "PDF (Reporte)"
+      },
+      "includeData": "Incluir Datos",
+      "transactions": "Transacciones",
+      "accounts": "Cuentas",
+      "goals": "Metas",
+      "recurring": "Transacciones Recurrentes",
+      "exportButton": "Exportar Datos",
+      "exporting": "Exportando...",
+      "success": "Exportación completada exitosamente",
+      "error": "Falló la exportación de datos"
+    },
+    "filters": {
+      "timePeriod": "Período de Tiempo",
+      "accountType": "Tipo de Cuenta",
+      "category": "Categoría",
+      "transactionType": "Tipo de Transacción",
+      "all": "Todos",
+      "reset": "Restablecer Filtros"
+    },
+    "charts": {
+      "loading": "Cargando datos del gráfico...",
+      "noData": "No hay datos disponibles para el período seleccionado",
+      "income": "Ingresos",
+      "expenses": "Gastos",
+      "balance": "Balance",
+      "trend": "Tendencia"
+    },
+    "navigation": {
+      "overview": "Resumen",
+      "accounts": "Cuentas",
+      "transactions": "Transacciones",
+      "transfers": "Transferencias",
+      "goals": "Metas",
+      "recurring": "Recurrentes",
+      "export": "Exportar"
+    },
+    "actions": {
+      "refresh": "Actualizar Datos",
+      "export": "Exportar",
+      "viewDetails": "Ver Detalles",
+      "expand": "Expandir",
+      "collapse": "Contraer"
+    },
+    "empty": {
+      "noData": "No hay datos disponibles",
+      "noTransactions": "No se encontraron transacciones para el período seleccionado",
+      "noAccounts": "No hay cuentas disponibles",
+      "noGoals": "Aún no se han creado metas",
+      "noRecurring": "No se han configurado transacciones recurrentes"
+    }
+  },
+  "alerts": {"areYouSure": "¿Estás seguro?","deleteAccountWarning": "Esta acción no se puede deshacer. Esto eliminará permanentemente tu cuenta y removerá tus datos de nuestros servidores.","continueAction": "Continuar"},
+  "app": {"title": "Fynco","description": "Seguimiento de finanzas personales hecho fácil"}
+}

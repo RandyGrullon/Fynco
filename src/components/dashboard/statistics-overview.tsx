@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatisticsSummary, TimePeriodFilter } from "@/lib/statistics";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useTranslations } from "next-intl";
 import {
   TrendingUp,
   TrendingDown,
@@ -50,23 +51,24 @@ export function StatisticsOverview({
   timePeriod,
 }: StatisticsOverviewProps) {
   const { formatCurrency, currencySymbol } = useCurrencyFormatter();
+  const t = useTranslations("statistics.overview");
 
   const getTimePeriodLabel = () => {
     switch (timePeriod) {
       case "daily":
         return "Last 30 days";
       case "weekly":
-        return "Last 12 weeks";
+        return t("thisWeek");
       case "monthly":
-        return "Last 12 months";
+        return t("thisMonth");
       case "quarterly":
         return "Last 4 quarters";
       case "yearly":
-        return "Last 3 years";
+        return t("thisYear");
       case "all":
-        return "All time";
+        return t("allTime");
       default:
-        return "All time";
+        return t("allTime");
     }
   };
 
@@ -94,10 +96,10 @@ export function StatisticsOverview({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline">
-            Financial Statistics
+            {t("title")}
           </h2>
           <p className="text-muted-foreground">
-            Comprehensive overview for {getTimePeriodLabel().toLowerCase()}
+            {t("comprehensiveOverview", { period: getTimePeriodLabel().toLowerCase() })}
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -111,7 +113,7 @@ export function StatisticsOverview({
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("totalBalance")}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -119,14 +121,14 @@ export function StatisticsOverview({
               {formatCurrency(summary.totalBalance)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Across {summary.totalAccounts} accounts
+              {t("acrossAccounts", { count: summary.totalAccounts })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("netIncome")}</CardTitle>
             {summary.netIncome >= 0 ? (
               <TrendingUp className="h-4 w-4 text-green-600" />
             ) : (
@@ -137,13 +139,13 @@ export function StatisticsOverview({
             <div className="text-2xl font-bold">
               {formatCurrency(summary.netIncome)}
             </div>
-            <p className="text-xs text-muted-foreground">Income - Expenses</p>
+            <p className="text-xs text-muted-foreground">{t("incomeMinusExpenses")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("savingsRate")}</CardTitle>
             <PiggyBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -160,7 +162,7 @@ export function StatisticsOverview({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Transactions
+              {t("totalTransactions")}
             </CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -180,7 +182,7 @@ export function StatisticsOverview({
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              This Month Income
+              {t("totalIncome")}
             </CardTitle>
             {incomeChange >= 0 ? (
               <TrendingUp className="h-4 w-4 text-green-600" />
@@ -204,7 +206,7 @@ export function StatisticsOverview({
                 {incomeChange.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground ml-2">
-                from last month
+                {t("fromLastMonth")}
               </p>
             </div>
           </CardContent>
@@ -213,7 +215,7 @@ export function StatisticsOverview({
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              This Month Expenses
+              {t("totalExpenses")}
             </CardTitle>
             {expenseChange <= 0 ? (
               <TrendingDown className="h-4 w-4 text-green-600" />
@@ -237,7 +239,7 @@ export function StatisticsOverview({
                 {expenseChange.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground ml-2">
-                from last month
+                {t("fromLastMonth")}
               </p>
             </div>
           </CardContent>
@@ -246,7 +248,7 @@ export function StatisticsOverview({
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Recurring Transactions
+              {t("recurringTransactions")}
             </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -267,8 +269,10 @@ export function StatisticsOverview({
               ></div>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {summary.activeRecurringTransactions} active out of{" "}
-              {summary.totalRecurringTransactions} total
+              {t("activeOutOfTotal", { 
+                active: summary.activeRecurringTransactions, 
+                total: summary.totalRecurringTransactions 
+              })}
             </p>
           </CardContent>
         </Card>
@@ -281,7 +285,7 @@ export function StatisticsOverview({
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center">
               <BarChart3 className="h-5 w-5 mr-2" />
-              Monthly Trends
+              {t("monthlyTrends")}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-0 sm:px-6">
@@ -349,7 +353,7 @@ export function StatisticsOverview({
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center">
               <Target className="h-5 w-5 mr-2" />
-              Top Expense Categories
+              {t("topExpenseCategories")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -398,13 +402,13 @@ export function StatisticsOverview({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
-            Financial Health Indicators
+            {t("financialHealthIndicators")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
-              <p className="text-sm font-medium">Expense to Income Ratio</p>
+              <p className="text-sm font-medium">{t("expenseToIncomeRatio")}</p>
               <div className="text-2xl font-bold">
                 {summary.expenseToIncomeRatio.toFixed(2)}
               </div>
@@ -423,10 +427,10 @@ export function StatisticsOverview({
                   }`}
                 >
                   {summary.expenseToIncomeRatio < 0.8
-                    ? "Healthy"
+                    ? t("healthy")
                     : summary.expenseToIncomeRatio < 1
-                    ? "Moderate"
-                    : "High Risk"}
+                    ? t("moderate")
+                    : t("highRisk")}
                 </span>
               </div>
             </div>
@@ -458,7 +462,7 @@ export function StatisticsOverview({
             </div>
 
             <div className="space-y-2 bg-muted/30 p-3 rounded-lg">
-              <p className="text-sm font-medium">Account Balance Status</p>
+              <p className="text-sm font-medium">{t("accountBalanceStatus")}</p>
               <div className="text-2xl font-bold">
                 {summary.accountsWithPositiveBalance}/{summary.totalAccounts}
               </div>
@@ -475,9 +479,9 @@ export function StatisticsOverview({
                 ></div>
               </div>
               <p className="text-xs text-muted-foreground flex justify-between mt-1">
-                <span>Positive accounts</span>
+                <span>{t("positiveAccounts")}</span>
                 <span>
-                  Highest: {formatCurrency(summary.highestAccountBalance)}
+                  {t("highest")}: {formatCurrency(summary.highestAccountBalance)}
                 </span>
               </p>
             </div>
@@ -492,7 +496,7 @@ export function StatisticsOverview({
           <CardHeader>
             <CardTitle className="flex items-center">
               <CreditCard className="h-5 w-5 mr-2" />
-              Account Distribution
+              {t("accountDistribution")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -505,8 +509,7 @@ export function StatisticsOverview({
                   <div className="flex flex-col mb-2 sm:mb-0">
                     <span className="font-medium">{accountType.type}</span>
                     <span className="text-sm text-muted-foreground">
-                      {accountType.count} account
-                      {accountType.count !== 1 ? "s" : ""}
+                      {accountType.count} {accountType.count === 1 ? t("account") : t("accounts")}
                     </span>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end sm:space-x-4">
@@ -534,14 +537,14 @@ export function StatisticsOverview({
           <CardHeader>
             <CardTitle className="flex items-center">
               <Calendar className="h-5 w-5 mr-2" />
-              Estimated Monthly Recurring
+              {t("estimatedMonthlyRecurring")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Recurring Income</span>
+                  <span className="text-sm font-medium">{t("recurringIncome")}</span>
                   <span className="font-bold text-green-600">
                     {formatCurrency(summary.estimatedMonthlyRecurringIncome)}
                   </span>
@@ -555,7 +558,7 @@ export function StatisticsOverview({
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">
-                    Recurring Expenses
+                    {t("recurringExpenses")}
                   </span>
                   <span className="font-bold text-red-600">
                     {formatCurrency(summary.estimatedMonthlyRecurringExpenses)}
@@ -571,7 +574,7 @@ export function StatisticsOverview({
 
               <div className="rounded-lg bg-muted/50 p-4 mt-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">Net Recurring</span>
+                  <span className="font-medium">{t("netRecurring")}</span>
                   <span
                     className={`text-lg font-bold ${
                       summary.estimatedMonthlyRecurringIncome -

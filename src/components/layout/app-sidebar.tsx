@@ -10,17 +10,18 @@ import {
   Target,
   Activity,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/accounts", icon: Wallet, label: "Accounts" },
-  { href: "/recurring", icon: Repeat, label: "Recurring" },
-  { href: "/goals", icon: Target, label: "Goals" },
-  { href: "/activity", icon: Activity, label: "Activity" },
-  { href: "/statistics", icon: BarChart3, label: "Statistics" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/dashboard", icon: LayoutDashboard, labelKey: "navigation.dashboard" },
+  { href: "/accounts", icon: Wallet, labelKey: "navigation.accounts" },
+  { href: "/recurring", icon: Repeat, labelKey: "navigation.recurring" },
+  { href: "/goals", icon: Target, labelKey: "navigation.goals" },
+  { href: "/activity", icon: Activity, labelKey: "navigation.activity" },
+  { href: "/statistics", icon: BarChart3, labelKey: "navigation.statistics" },
+  { href: "/settings", icon: Settings, labelKey: "navigation.settings" },
 ];
 
 interface AppSidebarProps {
@@ -29,6 +30,21 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
+  const t = useTranslations();
+
+  // Better active detection - remove locale prefix and check path segments
+  const getIsActive = (href: string) => {
+    // Remove locale prefix (e.g., /en or /es) from pathname
+    const cleanPathname = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/';
+    
+    // For root dashboard, check exact match or if we're on root
+    if (href === '/dashboard') {
+      return cleanPathname === '/dashboard' || cleanPathname === '/';
+    }
+    
+    // For other routes, check if the clean pathname starts with the href
+    return cleanPathname.startsWith(href) && cleanPathname !== '/';
+  };
 
   const handleLinkClick = () => {
     onNavigate?.();
@@ -43,25 +59,49 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
           className="flex items-center gap-3  font-headline font-semibold text-lg"
         >
           <img src="/logo.png" alt="Fynco" className="h-16  w-auto" />
-          <span>Fynco</span>
+          <span>{t('app.title')}</span>
         </Link>
       </div>
       <div className="flex-1">
         <nav className="grid items-start px-4 text-base font-medium lg:px-4 lg:text-sm">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isActive = getIsActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={handleLinkClick}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-4 rounded-lg px-4 py-3 text-muted-foreground transition-all hover:text-primary lg:gap-3 lg:px-3 lg:py-2",
-                  { "bg-muted text-primary": isActive }
+                  "relative flex items-center gap-4 rounded-lg px-4 py-3 transition-all duration-200 lg:gap-3 lg:px-3 lg:py-2",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold shadow-sm" 
+                    : "text-muted-foreground hover:text-primary hover:bg-accent/50"
                 )}
               >
-                <item.icon className="h-5 w-5 lg:h-4 lg:w-4" />
-                {item.label}
+                {/* Enhanced active indicator bar */}
+                <span
+                  className={cn(
+                    "absolute left-0 top-1 bottom-1 w-1 rounded-r-full transition-all duration-200",
+                    isActive 
+                      ? "bg-primary shadow-sm" 
+                      : "bg-transparent"
+                  )}
+                />
+                {/* Icon with active state styling */}
+                <item.icon 
+                  className={cn(
+                    "h-5 w-5 lg:h-4 lg:w-4 transition-colors duration-200",
+                    isActive ? "text-primary" : ""
+                  )} 
+                />
+                {/* Text with active indicator */}
+                <span className="relative">
+                  {t(item.labelKey)}
+                  {isActive && (
+                    <span className="absolute -right-2 top-0 h-1.5 w-1.5 bg-primary rounded-full"></span>
+                  )}
+                </span>
               </Link>
             );
           })}

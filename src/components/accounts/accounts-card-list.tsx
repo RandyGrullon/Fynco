@@ -28,6 +28,7 @@ import {
   PiggyBank,
   Wallet,
 } from "lucide-react";
+import { useTranslations } from 'next-intl';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -57,6 +58,8 @@ export function AccountsCardList({
   refreshAccounts,
 }: AccountsCardListProps) {
   const { toast } = useToast();
+  const tCommon = useTranslations('common');
+  const t = useTranslations('accounts');
   const { user } = useAuth();
   const { formatCurrency } = useCurrencyFormatter();
   const [deletingAccountId, setDeletingAccountId] = useState<string | null>(
@@ -191,7 +194,7 @@ export function AccountsCardList({
             {account.isDefault && (
               <div className="absolute -top-2 -right-2 z-10">
                 <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg border-0 px-3 py-1">
-                  ✨ Default
+                  ✨ {tCommon('default')}
                 </Badge>
               </div>
             )}
@@ -201,7 +204,7 @@ export function AccountsCardList({
               <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
                 <div className="flex items-center gap-2 bg-background/90 px-4 py-2 rounded-md shadow-lg">
                   <span className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full" />
-                  <span>Deleting...</span>
+                  <span>{tCommon('deleting')}</span>
                 </div>
               </div>
             )}
@@ -334,7 +337,7 @@ export function AccountsCardList({
                     className="bg-amber-100 text-amber-700 text-xs font-semibold border"
                     variant="secondary"
                   >
-                    Goal Account
+                    {tCommon('goalAccount')}
                   </Badge>
                 )}
               </div>
@@ -381,7 +384,7 @@ export function AccountsCardList({
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span className="truncate">Add</span>
+                  <span className="truncate">{tCommon('add')}</span>
                 </Button>
               </AccountTransactionDialog>
 
@@ -406,7 +409,7 @@ export function AccountsCardList({
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span className="truncate">Transfer</span>
+                  <span className="truncate">{tCommon('transfer')}</span>
                 </Button>
               </TransferDialog>
             </CardFooter>

@@ -1,72 +1,8 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import IOSInstallBanner from "../components/ios-install-banner";
-
-export const metadata: Metadata = {
-  title: "Fynco",
-  description: "Personal finance tracking made easy.",
-  manifest: "/manifest.json",
-  themeColor: "#000000",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Fynco",
-  },
-};
-
+// The root layout must be minimal and just pass through to locale layouts
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-          rel="stylesheet"
-        />
-        <link rel="manifest" href="/manifest.json" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/favicon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/favicon-16x16.png"
-        />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Fynco" />
-        <meta name="theme-color" content="#000000" />
-      </head>
-      <body className="font-body antialiased">
-        {children}
-        {/* iOS doesn't show an install prompt; show a small helper for Safari users */}
-        <IOSInstallBanner />
-      </body>
-    </html>
-  );
+}) {
+  return children;
 }

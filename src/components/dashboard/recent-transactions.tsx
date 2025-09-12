@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Transaction } from "@/lib/transactions";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
+import { useTranslations } from "next-intl";
 import { Account } from "@/lib/accounts";
 
 interface RecentTransactionsProps {
@@ -25,23 +26,24 @@ export function RecentTransactions({
   accounts = [],
 }: RecentTransactionsProps) {
   const { formatCurrency } = useCurrencyFormatter();
+  const t = useTranslations();
 
   // Function to get account name by accountId
   const getAccountName = (accountId: string) => {
     const account = accounts.find((a) => a.id === accountId);
-    return account ? account.name : "Unknown Account";
+    return account ? account.name : t('recentTransactions.unknownAccount');
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Transactions</CardTitle>
+        <CardTitle>{t('recentTransactions.title')}</CardTitle>
         <CardDescription>
-          You made {totalCount} transactions in total.
+          {t('recentTransactions.summary', { count: totalCount })}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {transactions.length > 0 ? (
+  {transactions.length > 0 ? (
           <div className="space-y-8">
             {transactions.map((transaction) => (
               <div key={transaction.id} className="flex items-center">
@@ -87,7 +89,7 @@ export function RecentTransactions({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-8">
-            No recent transactions found. Add one to get started!
+            {t('recentTransactions.empty')}
           </p>
         )}
       </CardContent>

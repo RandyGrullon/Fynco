@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,8 @@ export function EditGoalDialog({
 }: EditGoalDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("goals");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(goal.name);
@@ -103,8 +106,8 @@ export function EditGoalDialog({
     e.preventDefault();
     if (!user || !goal.id) {
       toast({
-        title: "Error",
-        description: "You must be logged in to edit a goal",
+        title: tCommon("permissionDenied") || "Error",
+        description: t("errors.loginRequired") || "You must be logged in to edit a goal",
         variant: "destructive",
       });
       return;
@@ -112,8 +115,8 @@ export function EditGoalDialog({
 
     if (!name) {
       toast({
-        title: "Error",
-        description: "Goal name is required",
+        title: tCommon("permissionDenied") || "Error",
+        description: t("errors.nameRequired") || "Goal name is required",
         variant: "destructive",
       });
       return;
@@ -121,8 +124,8 @@ export function EditGoalDialog({
 
     if (!targetAmount || parseFloat(targetAmount) <= 0) {
       toast({
-        title: "Error",
-        description: "Target amount must be greater than zero",
+        title: tCommon("permissionDenied") || "Error",
+        description: t("errors.targetAmountInvalid") || "Target amount must be greater than zero",
         variant: "destructive",
       });
       return;
@@ -142,8 +145,8 @@ export function EditGoalDialog({
       });
 
       toast({
-        title: "Goal Updated",
-        description: "Your goal has been successfully updated",
+        title: t("updateSuccessTitle") || "Goal Updated",
+        description: t("updateSuccessDescription") || "Your goal has been successfully updated",
       });
 
       // Trigger goals refresh event
@@ -172,15 +175,13 @@ export function EditGoalDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Goal</DialogTitle>
-          <DialogDescription>
-            Update your financial goal information.
-          </DialogDescription>
+          <DialogTitle>{t("editGoal")}</DialogTitle>
+          <DialogDescription>{t("editDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Goal Name</Label>
+              <Label htmlFor="name">{t("goalName")}</Label>
               <Input
                 id="name"
                 value={name}
@@ -190,7 +191,7 @@ export function EditGoalDialog({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="targetAmount">Target Amount</Label>
+                <Label htmlFor="targetAmount">{t("targetAmount")}</Label>
                 <Input
                   id="targetAmount"
                   type="number"
@@ -202,7 +203,7 @@ export function EditGoalDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="currentAmount">Current Amount</Label>
+                <Label htmlFor="currentAmount">{t("currentAmount")}</Label>
                 <Input
                   id="currentAmount"
                   type="number"
@@ -215,14 +216,14 @@ export function EditGoalDialog({
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">{t("currency")}</Label>
               <Select
                 value={currency}
                 onValueChange={(value) => setCurrency(value)}
                 disabled={loading}
               >
                 <SelectTrigger id="currency">
-                  <SelectValue placeholder="Select currency" />
+                  <SelectValue placeholder={t("selectCurrency")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="USD">USD - US Dollar</SelectItem>
@@ -235,24 +236,24 @@ export function EditGoalDialog({
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
+        <Label htmlFor="status">{t("status")}</Label>
               <Select
                 value={status}
                 onValueChange={(value) => setStatus(value as GoalStatus)}
                 disabled={loading}
               >
                 <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
+          <SelectValue placeholder={t("placeholders.selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
+          <SelectItem value="active">{t("statuses.active")}</SelectItem>
+          <SelectItem value="completed">{t("statuses.completed")}</SelectItem>
+          <SelectItem value="canceled">{t("statuses.canceled")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="deadline">Target Date (Optional)</Label>
+              <Label htmlFor="deadline">{t("targetDateOptional")}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -265,7 +266,7 @@ export function EditGoalDialog({
                     disabled={loading}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {deadline ? format(deadline, "PPP") : "Pick a date"}
+                    {deadline ? format(deadline, "PPP") : t("placeholders.pickDate")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -279,7 +280,7 @@ export function EditGoalDialog({
               </Popover>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="description">{t("descriptionOptional")}</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -288,7 +289,7 @@ export function EditGoalDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="accountId">Linked Account</Label>
+              <Label htmlFor="accountId">{t("linkedAccount")}</Label>
               <Select
                 value={accountId || "none"}
                 onValueChange={(value) =>
@@ -297,10 +298,10 @@ export function EditGoalDialog({
                 disabled={loading || loadingAccounts}
               >
                 <SelectTrigger id="accountId">
-                  <SelectValue placeholder="Select an account" />
+                  <SelectValue placeholder={t("accounts.selectAccountPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No Account</SelectItem>
+                  <SelectItem value="none">{t("accounts.noAccount")}</SelectItem>
                   {accounts.map((account) => (
                     <SelectItem key={account.id} value={account.id || ""}>
                       {account.name} ({account.type})
@@ -310,8 +311,7 @@ export function EditGoalDialog({
               </Select>
               {accounts.length === 0 && !loadingAccounts && (
                 <p className="text-sm text-muted-foreground">
-                  No available accounts. All accounts are already associated
-                  with goals.
+                  {t("accounts.noAvailableAccountsEdit")}
                 </p>
               )}
             </div>
@@ -319,11 +319,11 @@ export function EditGoalDialog({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={loading}>
-                Cancel
+                {tCommon("cancel")}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? tCommon("loading") : t("saveChanges")}
             </Button>
           </DialogFooter>
         </form>

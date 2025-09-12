@@ -7,12 +7,14 @@ import { FinancialChatBot } from "@/components/financial-chat-bot";
 import { RouteGuard } from "@/components/security/route-guard";
 import { AuthMonitor } from "@/components/security/auth-monitor";
 import { useRequireAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useRequireAuth();
   const router = useRouter();
+  const t = useTranslations('common');
 
   useEffect(() => {
     console.log('AppLayout - Auth state:', { loading, hasUser: !!user });
@@ -41,7 +43,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
-          <p className="text-muted-foreground">Cargando tu sesión...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     );

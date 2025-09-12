@@ -47,9 +47,12 @@ import { AccountsList } from "@/components/accounts/accounts-list";
 import { RecurringTransactionsList } from "@/components/recurring/recurring-transactions-list";
 import { GoalsList } from "@/components/goals/goals-list";
 import { TransferCardList } from "@/components/transfers/transfer-card-list";
+import { useTranslations } from "next-intl";
 
 export default function StatisticsPage() {
   const { user } = useAuth();
+  const t = useTranslations("statistics");
+  const tCommon = useTranslations("common");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [recurringTransactions, setRecurringTransactions] = useState<
@@ -179,7 +182,7 @@ export default function StatisticsPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">
-          No data available for statistics generation.
+          {t("empty.noData")}
         </p>
       </div>
     );
@@ -191,10 +194,10 @@ export default function StatisticsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline">
-            Financial Hub
+            {t("title")}
           </h1>
           <p className="text-muted-foreground">
-            Comprehensive financial overview, reports, and exports
+            {t("description")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -203,15 +206,15 @@ export default function StatisticsPage() {
             onValueChange={(value: TimePeriodFilter) => setTimePeriod(value)}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Select time period" />
+              <SelectValue placeholder={t("filters.timePeriod")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">Last 30 days</SelectItem>
-              <SelectItem value="weekly">Last 12 weeks</SelectItem>
-              <SelectItem value="monthly">Last 12 months</SelectItem>
-              <SelectItem value="quarterly">Last 4 quarters</SelectItem>
-              <SelectItem value="yearly">Last 3 years</SelectItem>
-              <SelectItem value="all">All time</SelectItem>
+              <SelectItem value="daily">{t("timePeriods.weekly")}</SelectItem>
+              <SelectItem value="weekly">{t("timePeriods.weekly")}</SelectItem>
+              <SelectItem value="monthly">{t("timePeriods.monthly")}</SelectItem>
+              <SelectItem value="quarterly">{t("timePeriods.quarterly")}</SelectItem>
+              <SelectItem value="yearly">{t("timePeriods.yearly")}</SelectItem>
+              <SelectItem value="all">{t("timePeriods.allTime")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -231,7 +234,7 @@ export default function StatisticsPage() {
               disabled={loading}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              {t("actions.refresh")}
             </Button>
           </div>
         </div>
@@ -250,14 +253,14 @@ export default function StatisticsPage() {
               className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <BarChart className="h-4 w-4" />
-              <span>Overview</span>
+              <span>{t("navigation.overview")}</span>
             </button>
             <button
               onClick={() => scrollTo(accountsRef)}
               className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <Wallet className="h-4 w-4" />
-              <span>Accounts</span>
+              <span>{t("navigation.accounts")}</span>
             </button>
             {/* Transactions section removed from UI (kept in logic) */}
             <button
@@ -265,21 +268,21 @@ export default function StatisticsPage() {
               className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <ArrowLeftRight className="h-4 w-4" />
-              <span>Transfers</span>
+              <span>{t("navigation.transfers")}</span>
             </button>
             <button
               onClick={() => scrollTo(goalsRef)}
               className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <PiggyBank className="h-4 w-4" />
-              <span>Goals</span>
+              <span>{t("navigation.goals")}</span>
             </button>
             <button
               onClick={() => scrollTo(recurringRef)}
               className="w-full text-left flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <Calendar className="h-4 w-4" />
-              <span>Recurring</span>
+              <span>{t("navigation.recurring")}</span>
             </button>
           </nav>
         </aside>
@@ -291,7 +294,7 @@ export default function StatisticsPage() {
             <div className="rounded-lg border-2 border-blue-200 dark:border-blue-900 p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/50 dark:to-blue-900/30">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-blue-800 dark:text-blue-300">
-                  Overview
+                  {t("overview.title")}
                 </h2>
                 {/* collapse toggle for mobile */}
                 <button
@@ -319,10 +322,10 @@ export default function StatisticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-emerald-800 dark:text-emerald-300 mb-1">
-                    Accounts Summary
+                    {t("accounts.title")}
                   </h2>
                   <p className="text-emerald-700 dark:text-emerald-400">
-                    Overview of all your financial accounts
+                    {t("accounts.description")}
                   </p>
                 </div>
                 <button
@@ -353,10 +356,10 @@ export default function StatisticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-amber-800 dark:text-amber-300 mb-1">
-                    Transactions History
+                    {t("transactions.title")}
                   </h2>
                   <p className="text-amber-700 dark:text-amber-400">
-                    All transactions across all your accounts
+                    {t("transactions.description")}
                   </p>
                 </div>
                 <button
@@ -376,8 +379,7 @@ export default function StatisticsPage() {
 
               {!collapsedSections["transactions"] && (
                 <div className="p-4 text-sm text-muted-foreground">
-                  Transactions UI has been removed. Transaction data is still
-                  available for statistics and background logic.
+                  {t("transactions.removedMessage")}
                 </div>
               )}
             </div>
@@ -389,10 +391,10 @@ export default function StatisticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-indigo-800 dark:text-indigo-300 mb-1">
-                    Account Transfers
+                    {t("transfers.title")}
                   </h2>
                   <p className="text-indigo-700 dark:text-indigo-400">
-                    Move funds between your accounts
+                    {t("transfers.description")}
                   </p>
                 </div>
                 <button
@@ -423,10 +425,10 @@ export default function StatisticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-purple-800 dark:text-purple-300 mb-1">
-                    Financial Goals
+                    {t("goals.title")}
                   </h2>
                   <p className="text-purple-700 dark:text-purple-400">
-                    Track progress on your savings goals
+                    {t("goals.description")}
                   </p>
                 </div>
                 <button
@@ -452,10 +454,10 @@ export default function StatisticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-pink-800 dark:text-pink-300 mb-1">
-                    Recurring Transactions
+                    {t("recurring.title")}
                   </h2>
                   <p className="text-pink-700 dark:text-pink-400">
-                    All your scheduled recurring payments and income
+                    {t("recurring.description")}
                   </p>
                 </div>
                 <button

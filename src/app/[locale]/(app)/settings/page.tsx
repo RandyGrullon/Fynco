@@ -28,6 +28,7 @@ import { useCurrency } from "@/contexts/currency-context";
 import { availableCurrencies } from "@/lib/currency";
 import { useTheme } from "@/contexts/theme-context";
 import { Monitor, Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const GmailIcon = () => (
   <svg
@@ -49,24 +50,25 @@ const GmailIcon = () => (
 
 const ThemeSection = () => {
   const { theme, setTheme } = useTheme();
+  const t = useTranslations("settings.theme");
 
   const themeOptions = [
     {
       value: "light" as const,
-      label: "Light",
-      description: "Light theme for bright environments",
+      label: t("light.title"),
+      description: t("light.description"),
       icon: Sun,
     },
     {
       value: "dark" as const,
-      label: "Dark",
-      description: "Dark theme for low light environments",
+      label: t("dark.title"),
+      description: t("dark.description"),
       icon: Moon,
     },
     {
       value: "system" as const,
-      label: "System",
-      description: "Follows your system's theme preference",
+      label: t("system.title"),
+      description: t("system.description"),
       icon: Monitor,
     },
   ];
@@ -74,9 +76,9 @@ const ThemeSection = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Appearance</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
         <CardDescription>
-          Choose your preferred theme. The system option will automatically switch between light and dark modes based on your device settings.
+          {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -131,6 +133,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { currency, setCurrency, isLoading: currencyLoading } = useCurrency();
+  const t = useTranslations("settings");
   const [name, setName] = useState(user?.displayName || "");
   const [loading, setLoading] = useState(false);
   const [salaryLoading, setSalaryLoading] = useState(false);
@@ -301,8 +304,8 @@ export default function SettingsPage() {
       await setDoc(userDocRef, { displayName: name }, { merge: true });
 
       toast({
-        title: "Profile Updated",
-        description: "Your name has been updated successfully.",
+        title: t("profile.updated"),
+        description: t("profile.updated"),
         className: "bg-accent text-accent-foreground",
       });
     } catch (error: any) {
@@ -368,8 +371,11 @@ export default function SettingsPage() {
       await setCurrency(selectedCurrency);
 
       toast({
-        title: "Moneda Actualizada",
-        description: `Se ha configurado ${selectedCurrency.name} (${selectedCurrency.symbol}) como tu moneda predeterminada.`,
+        title: t("currency.updated"),
+        description: t("currency.updatedDescription", { 
+          name: selectedCurrency.name, 
+          symbol: selectedCurrency.symbol 
+        }),
         className: "bg-accent text-accent-foreground",
       });
     } catch (error: any) {
@@ -387,25 +393,24 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Settings
+          {t("title")}
         </h2>
         <p className="text-muted-foreground">
-          Manage your account settings and integrations.
+          {t("description")}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle>{t("profile.title")}</CardTitle>
           <CardDescription>
-            Update your personal information. This will be displayed across the
-            app.
+            {t("profile.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleProfileUpdate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("profile.name")}</Label>
               <Input
                 id="name"
                 value={name}
@@ -414,7 +419,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("profile.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -423,7 +428,7 @@ export default function SettingsPage() {
               />
             </div>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Update Profile"}
+              {loading ? t("profile.saving") : t("profile.updateProfile")}
             </Button>
           </form>
         </CardContent>
@@ -432,23 +437,22 @@ export default function SettingsPage() {
       {/* Nueva sección para la configuración de moneda */}
       <Card>
         <CardHeader>
-          <CardTitle>Configuración de Moneda</CardTitle>
+          <CardTitle>{t("currency.title")}</CardTitle>
           <CardDescription>
-            Selecciona la moneda predeterminada para todas las transacciones en
-            la aplicación.
+            {t("currency.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currency">Moneda</Label>
+              <Label htmlFor="currency">{t("currency.label")}</Label>
               <Select
                 value={currency.code}
                 onValueChange={handleCurrencyUpdate}
                 disabled={currencyUpdateLoading || currencyLoading}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona moneda" />
+                  <SelectValue placeholder={t("currency.placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableCurrencies.map((curr) => (
@@ -463,8 +467,7 @@ export default function SettingsPage() {
               <div className="flex items-center space-x-2">
                 <span className="text-2xl font-bold">{currency.symbol}</span>
                 <span className="text-muted-foreground">
-                  Todos los valores se mostrarán en {currency.name} (
-                  {currency.code})
+                  {t("currency.preview", { name: currency.name, code: currency.code })}
                 </span>
               </div>
             </div>
@@ -479,10 +482,9 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Email Sync</CardTitle>
+          <CardTitle>{t("emailSync.title")}</CardTitle>
           <CardDescription>
-            Connect your email accounts to automatically import expenses from
-            receipts (Feature coming soon).
+            {t("emailSync.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -491,14 +493,14 @@ export default function SettingsPage() {
               <GmailIcon />
               <span className="font-medium">Gmail</span>
             </div>
-            <Button disabled>Connect</Button>
+            <Button disabled>{t("emailSync.connect")}</Button>
           </div>
           <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
             <div className="flex items-center">
               <OutlookIcon />
               <span className="font-medium">Outlook</span>
             </div>
-            <Button disabled>Connect</Button>
+            <Button disabled>{t("emailSync.connect")}</Button>
           </div>
         </CardContent>
       </Card>

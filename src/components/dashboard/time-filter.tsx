@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export type TimeFilterPeriod =
   | "daily"
@@ -24,13 +25,14 @@ export function TimeFilter({
   selectedPeriod,
   onPeriodChange,
 }: TimeFilterProps) {
+  const t = useTranslations();
   const periodLabels: Record<TimeFilterPeriod, string> = {
-    daily: "Daily",
-    weekly: "Weekly",
-    monthly: "Monthly",
-    quarterly: "Quarterly",
-    yearly: "Yearly",
-    all: "All Time",
+    daily: t('timeFilter.daily'),
+    weekly: t('timeFilter.weekly'),
+    monthly: t('timeFilter.monthly'),
+    quarterly: t('timeFilter.quarterly'),
+    yearly: t('timeFilter.yearly'),
+    all: t('timeFilter.all'),
   };
 
   return (
@@ -43,22 +45,22 @@ export function TimeFilter({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => onPeriodChange("daily")}>
-          Daily
+          {t('timeFilter.daily')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPeriodChange("weekly")}>
-          Weekly
+          {t('timeFilter.weekly')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPeriodChange("monthly")}>
-          Monthly
+          {t('timeFilter.monthly')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPeriodChange("quarterly")}>
-          Quarterly
+          {t('timeFilter.quarterly')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPeriodChange("yearly")}>
-          Yearly
+          {t('timeFilter.yearly')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onPeriodChange("all")}>
-          All Time
+          {t('timeFilter.all')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

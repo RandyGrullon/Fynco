@@ -51,6 +51,7 @@ import {
 } from "@/lib/recurring-transactions";
 import { Switch } from "@/components/ui/switch";
 import { EditRecurringTransactionDialog } from "./edit-recurring-transaction-dialog";
+import { useTranslations } from "next-intl";
 
 interface RecurringTransactionsListProps {
   transactions: RecurringTransactionWithAccount[];
@@ -66,6 +67,8 @@ export function RecurringTransactionsList({
   const { toast } = useToast();
   const { user } = useAuth();
   const { formatCurrency } = useCurrencyFormatter();
+  const t = useTranslations("recurring");
+  const tCommon = useTranslations("common");
   const [deletingTransactionId, setDeletingTransactionId] = useState<
     string | null
   >(null);
@@ -75,17 +78,17 @@ export function RecurringTransactionsList({
   const getFrequencyLabel = (frequency: string) => {
     switch (frequency) {
       case "daily":
-        return "Daily";
+  return t("frequencies.daily");
       case "weekly":
-        return "Weekly";
+  return t("frequencies.weekly");
       case "biweekly":
-        return "Every 2 Weeks";
+  return t("frequencies.biweekly");
       case "monthly":
-        return "Monthly";
+  return t("frequencies.monthly");
       case "quarterly":
-        return "Quarterly";
+  return t("frequencies.quarterly");
       case "yearly":
-        return "Yearly";
+  return t("frequencies.yearly");
       default:
         return frequency;
     }
@@ -105,16 +108,16 @@ export function RecurringTransactionsList({
       const result = await deleteRecurringTransaction(transactionId, user.uid);
       if (result.success) {
         toast({
-          title: "Transaction deleted",
-          description: "Your recurring transaction was successfully deleted",
+          title: t("toast.deleted"),
+          description: t("toast.deleted"),
         });
         if (onTransactionUpdated) {
           onTransactionUpdated();
         }
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to delete transaction",
+          title: t("toast.errorTitle"),
+          description: result.error || t("toast.deleteFailed"),
           variant: "destructive",
         });
       }
@@ -144,11 +147,11 @@ export function RecurringTransactionsList({
       if (result.success) {
         toast({
           title: transaction.isActive
-            ? "Transaction deactivated"
-            : "Transaction activated",
-          description: `Recurring ${
-            transaction.isActive ? "deactivated" : "activated"
-          } successfully`,
+            ? t("toast.deactivated")
+            : t("toast.activated"),
+          description: transaction.isActive
+            ? t("toast.deactivated")
+            : t("toast.activated"),
         });
         if (onTransactionUpdated) {
           onTransactionUpdated();
@@ -201,7 +204,7 @@ export function RecurringTransactionsList({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Transaction Actions</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("actions.label")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <EditRecurringTransactionDialog
@@ -210,9 +213,9 @@ export function RecurringTransactionsList({
                       onTransactionUpdated={onTransactionUpdated}
                     >
                       <button className="w-full flex items-center">
-                        <Edit className="mr-2 h-4 w-4" /> Edit Transaction
+                        <Edit className="mr-2 h-4 w-4" /> {tCommon("edit")}
                       </button>
-                    </EditRecurringTransactionDialog>
+                     </EditRecurringTransactionDialog>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => toggleActive(transaction)}
@@ -220,11 +223,11 @@ export function RecurringTransactionsList({
                   >
                     {transaction.isActive ? (
                       <>
-                        <ToggleLeft className="mr-2 h-4 w-4" /> Deactivate
+                        <ToggleLeft className="mr-2 h-4 w-4" /> {t("statusActive")}
                       </>
                     ) : (
                       <>
-                        <ToggleRight className="mr-2 h-4 w-4" /> Activate
+                        <ToggleRight className="mr-2 h-4 w-4" /> {t("inactive")}
                       </>
                     )}
                   </DropdownMenuItem>
@@ -232,21 +235,20 @@ export function RecurringTransactionsList({
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <DropdownMenuItem className="text-red-600 focus:text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Transaction
+                          <Trash2 className="mr-2 h-4 w-4" /> {t("delete")}
                         </DropdownMenuItem>
                       </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>
-                          Delete Recurring Transaction
+                            {t("actions.deleteTitle")}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete this recurring
-                          transaction? This action cannot be undone.
+                            {t("actions.deleteDescription")}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() =>
                             transaction.id && handleDelete(transaction.id)
@@ -254,10 +256,10 @@ export function RecurringTransactionsList({
                           disabled={isDeleting}
                           className="bg-red-600 hover:bg-red-700"
                         >
-                          {isDeleting &&
-                          deletingTransactionId === transaction.id
-                            ? "Deleting..."
-                            : "Delete"}
+                            {isDeleting &&
+                            deletingTransactionId === transaction.id
+                              ? t("deleting")
+                              : t("delete")}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -267,7 +269,7 @@ export function RecurringTransactionsList({
             </CardTitle>
             <div className="flex gap-2 flex-wrap mt-1">
               <Badge className={getTypeColor(transaction.type)}>
-                {transaction.type === "income" ? "Income" : "Expense"}
+                  {transaction.type === "income" ? t("income") : t("expense")}
               </Badge>
               <Badge variant="outline" className="flex items-center">
                 <Repeat className="mr-1 h-3 w-3" />
@@ -285,22 +287,22 @@ export function RecurringTransactionsList({
 
             <div className="text-xs sm:text-sm text-muted-foreground mt-2 flex flex-col gap-1">
               <div className="flex items-center">
-                <span className="font-medium">Account:</span>
+                  <span className="font-medium">{t("labels.account")}</span>
                 <span className="ml-2">
-                  {transaction.account?.name || "Unknown Account"}
+                  {transaction.account?.name || t("labels.unknownAccount")}
                 </span>
               </div>
               <div className="flex items-center">
-                <span className="font-medium">Next date:</span>
+                  <span className="font-medium">{t("labels.nextDate")}</span>
                 <span className="ml-2">
                   {transaction.nextProcessDate
                     ? formatDate(transaction.nextProcessDate)
-                    : "N/A"}
+                    : t("n_a")}
                 </span>
               </div>
               {transaction.category && (
                 <div className="flex items-center">
-                  <span className="font-medium">Category:</span>
+                    <span className="font-medium">{t("labels.category")}</span>
                   <span className="ml-2">{transaction.category}</span>
                 </div>
               )}
@@ -313,13 +315,13 @@ export function RecurringTransactionsList({
                 onCheckedChange={() => toggleActive(transaction)}
                 disabled={isTogglingActive}
               />
-              <span className="text-xs text-muted-foreground">
-                {transaction.isActive ? "Active" : "Inactive"}
-              </span>
+                <span className="text-xs text-muted-foreground">
+                  {transaction.isActive ? t("statusActive") : t("inactive")}
+                </span>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Started: {formatDate(transaction.startDate)}
-            </div>
+              <div className="text-xs text-muted-foreground">
+                {t("labels.started")} {formatDate(transaction.startDate)}
+              </div>
           </CardFooter>
         </Card>
       ))}

@@ -22,6 +22,7 @@ import {
 } from "date-fns";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { TimeFilterPeriod } from "./time-filter";
+import { useTranslations } from "next-intl";
 
 interface OverviewProps {
   data: Transaction[];
@@ -30,6 +31,7 @@ interface OverviewProps {
 
 export function Overview({ data, timePeriod = "monthly" }: OverviewProps) {
   const { currencySymbol } = useCurrencyFormatter();
+  const t = useTranslations();
 
   // Filter data based on time period
   const filteredData = data.filter((transaction) => {
@@ -103,16 +105,16 @@ export function Overview({ data, timePeriod = "monthly" }: OverviewProps) {
       <CardHeader>
         <CardTitle>
           {timePeriod === "daily"
-            ? "Daily Overview"
+            ? t('overview.daily')
             : timePeriod === "weekly"
-            ? "Weekly Overview"
+            ? t('overview.weekly')
             : timePeriod === "monthly"
-            ? "Monthly Overview"
+            ? t('overview.monthly')
             : timePeriod === "quarterly"
-            ? "Quarterly Overview"
+            ? t('overview.quarterly')
             : timePeriod === "yearly"
-            ? "Yearly Overview"
-            : "All Time Overview"}
+            ? t('overview.yearly')
+            : t('overview.all')}
         </CardTitle>
       </CardHeader>
       <CardContent className="pl-2">
@@ -145,13 +147,13 @@ export function Overview({ data, timePeriod = "monthly" }: OverviewProps) {
               dataKey="income"
               fill="hsl(var(--chart-2))"
               radius={[4, 4, 0, 0]}
-              name="Income"
+              name={t('overview.income')}
             />
             <Bar
               dataKey="expense"
               fill="hsl(var(--chart-1))"
               radius={[4, 4, 0, 0]}
-              name="Expense"
+              name={t('overview.expense')}
             />
           </BarChart>
         </ResponsiveContainer>

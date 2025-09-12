@@ -30,6 +30,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +63,8 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
   };
   const { user } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("goals");
+  const tCommon = useTranslations("common");
   const formatter = useCurrencyFormatter();
   const router = useRouter();
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
@@ -72,10 +75,8 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
     return (
       <Card className="border-dashed">
         <CardHeader className="text-center">
-          <CardTitle>No Goals Yet</CardTitle>
-          <CardDescription>
-            Start setting financial goals to reach your dreams
-          </CardDescription>
+          <CardTitle>{t("empty.title")}</CardTitle>
+          <CardDescription>{t("empty.description")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -168,22 +169,22 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                   {goal.name}
                 </CardTitle>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" data-no-nav>
                       <MoreHorizontal className="h-5 w-5" />
-                      <span className="sr-only">More options</span>
+                      <span className="sr-only">{tCommon("navigation")}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Options</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("actions.label")}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <EditGoalDialog
                       goal={goal}
                       onGoalEdited={() => refreshGoals()}
                     >
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                         <Edit className="mr-2 h-4 w-4" />
-                        Edit Goal
+                        {tCommon("edit")}
                       </DropdownMenuItem>
                     </EditGoalDialog>
                     <DropdownMenuItem
@@ -194,7 +195,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Goal
+                      {tCommon("delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -224,20 +225,20 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progress</span>
+                    <span className="text-muted-foreground">{t("progress")}</span>
                     <span className="font-medium">{progressPercentage}%</span>
                   </div>
                   <Progress value={progressPercentage} className="h-2" />
                 </div>
                 <div className="grid grid-cols-2 gap-4 py-2">
                   <div>
-                    <p className="text-sm text-muted-foreground">Current</p>
+                    <p className="text-sm text-muted-foreground">{t("current")}</p>
                     <p className="font-medium">
                       {formatter.formatCurrency(goal.currentAmount)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Target</p>
+                    <p className="text-sm text-muted-foreground">{t("target")}</p>
                     <p className="font-medium">
                       {formatter.formatCurrency(goal.targetAmount)}
                     </p>
@@ -254,7 +255,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                       className="text-primary hover:underline"
                       data-no-nav
                     >
-                      Linked Account
+                      {t("linkedAccount")}
                     </Link>
                   </div>
                 )}
@@ -270,7 +271,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                     >
                       <Button variant="default" className="w-full" data-no-nav>
                         <PiggyBank className="mr-2 h-4 w-4" />
-                        Añadir fondos
+                        {t("addFunds")}
                       </Button>
                     </AddFundsToGoalDialog>
                   )}
@@ -284,7 +285,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                       data-no-nav
                     >
                       <Target className="mr-2 h-4 w-4" />
-                      {goal.accountId ? "Ver cuenta" : "Añadir cuenta"}
+                      {goal.accountId ? t("viewAccount") : t("addAccount")}
                     </Link>
                   </Button>
                 </div>
@@ -295,23 +296,21 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
       })}
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent>
+          <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{tCommon("areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this goal. If the goal has a linked
-              account, the account will remain but will no longer be associated
-              with this goal.
+              {t("deleteConfirmation")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGoal}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? tCommon("deleting") : tCommon("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

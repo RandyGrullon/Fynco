@@ -32,16 +32,23 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("light");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    
     // Load theme from localStorage on mount
     try {
       const storedTheme = localStorage.getItem(storageKey) as Theme;
       if (storedTheme && ["dark", "light", "system"].includes(storedTheme)) {
         setTheme(storedTheme);
+      } else {
+        // If no stored theme, default to system
+        setTheme("system");
       }
     } catch {
-      // If localStorage is not available, keep default theme
+      // If localStorage is not available, use system theme
+      setTheme("system");
     }
   }, [storageKey]);
 
@@ -106,20 +113,20 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
+    setTheme: (newTheme: Theme) => {
       try {
-        localStorage.setItem(storageKey, theme);
+        localStorage.setItem(storageKey, newTheme);
       } catch {
         // If localStorage is not available, continue without persisting
       }
-      setTheme(theme);
+      setTheme(newTheme);
     },
     resolvedTheme,
   };
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
-      {children}
+      {mounted ? children : <div style={{ visibility: 'hidden' }}>{children}</div>}
     </ThemeProviderContext.Provider>
   );
 }

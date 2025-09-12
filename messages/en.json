@@ -1,0 +1,733 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "yes": "Yes",
+    "no": "No",
+    "processing": "Processing...",
+    "tryAgain": "Try Again",
+    "understood": "Understood",
+    "permissionDenied": "Permission Denied",
+    "startRecording": "Start Recording",
+    "stopRecording": "Stop Recording",
+    "transcribing": "Transcribing...",
+    "deleting": "Deleting...",
+    "transfer": "Transfer",
+    "default": "Default",
+    "goalAccount": "Goal Account",
+    "toggleTheme": "Toggle theme",
+    "toggleMenu": "Toggle Menu",
+    "navigation": "Navigation"
+    ,
+    "app": {
+      "title": "Fynco"
+    }
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "accounts": "Accounts",
+    "transactions": "Transactions",
+    "goals": "Goals",
+    "statistics": "Statistics",
+    "settings": "Settings",
+    "activity": "Activity",
+    "movements": "Movements",
+    "recurring": "Recurring"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+  "settings": "Settings",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember me",
+    "signInWith": "Sign in with",
+    "signUpWith": "Sign up with",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "createAccount": "Create Account"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "totalBalance": "Total Balance",
+    "monthlyIncome": "Monthly Income",
+    "monthlyExpenses": "Monthly Expenses",
+    "recentTransactions": "Recent Transactions",
+    "accountsOverview": "Accounts Overview",
+    "quickActions": "Quick Actions"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "addAccount": "Add Account",
+    "editAccount": "Edit Account",
+    "accountName": "Account Name",
+    "accountType": "Account Type",
+    "initialBalance": "Initial Balance",
+    "currentBalance": "Current Balance",
+    "viewAllTransactions": "View All Transactions",
+    "accountsList": "Accounts List",
+    "overview": "Overview",
+    "acrossAllAccounts": "Across all accounts",
+    "activeAccounts": "Active accounts",
+    "noAccountsYet": "You don't have any accounts yet.",
+    "createFirstAccount": "Create your first account",
+    "addAccountTrigger": "Add Account",
+    "dialog": {
+      "title": "Add New Account",
+      "description": "Create a new account to track your finances."
+    },
+    "addAccountButton": "Add Account",
+    "adding": "Adding...",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Main Checking Account",
+      "balance": "Balance",
+      "type": "Type",
+      "selectAccountType": "Select account type",
+      "currency": "Currency",
+      "selectCurrency": "Select currency",
+      "description": "Description",
+      "descriptionPlaceholder": "Optional description",
+      "default": "Default",
+      "setAsDefault": "Set as default account"
+    },
+    "accountTypes": {
+      "checking": "Checking",
+      "savings": "Savings",
+      "credit": "Credit Card",
+      "investment": "Investment",
+      "cash": "Cash",
+      "other": "Other"
+    }
+  },
+  "transactions": {
+    "title": "Transactions",
+    "addTransaction": "Add Transaction",
+    "editTransaction": "Edit Transaction",
+    "amount": "Amount",
+    "description": "Description",
+    "date": "Date",
+    "category": "Category",
+    "account": "Account",
+    "type": "Type",
+    "income": "Income",
+    "expense": "Expense",
+    "transfer": "Transfer"
+  },
+  "goals": {
+    "title": "Goals",
+    "description": "Set and track your financial goals",
+    "addGoal": "Add Goal",
+    "addDescription": "Create a new financial goal to help you reach your objectives.",
+    "editGoal": "Edit Goal",
+    "editDescription": "Update your financial goal information.",
+    "goalName": "Goal Name",
+    "targetAmount": "Target Amount",
+    "currentAmount": "Current Amount",
+    "targetDate": "Target Date",
+    "progress": "Progress",
+    "selectCurrency": "Select currency",
+    "status": "Status",
+    "saveChanges": "Save Changes",
+    "currency": "Currency",
+    "descriptionOptional": "Description (Optional)",
+    "targetDateOptional": "Target Date (Optional)",
+    "account": "Account",
+    "placeholders": {
+      "name": "e.g., New Car, Vacation",
+      "description": "Describe your goal...",
+      "pickDate": "Pick a date",
+      "selectStatus": "Select status"
+    },
+    "accounts": {
+      "useExisting": "Use Existing Account",
+      "createNew": "Create New Account",
+      "selectAccountPlaceholder": "Select an account",
+      "noAccount": "No Account",
+      "noAvailableAccounts": "No available accounts. All accounts are already associated with goals or you don't have any accounts yet.",
+      "accountName": "Account Name",
+      "initialBalance": "Initial Balance",
+      "accountType": "Account Type",
+      "descriptionOptional": "Description (Optional)",
+      "newAccountPlaceholder": "Goal Account",
+      "newAccountDescriptionPlaceholder": "Account for this goal...",
+      "accountTypes": {
+        "savings": "Savings",
+        "checking": "Checking",
+        "investment": "Investment",
+        "credit": "Credit",
+        "other": "Other"
+      }
+    },
+    "empty": {
+      "title": "No Goals Yet",
+      "description": "Start setting financial goals to reach your dreams"
+    },
+    "actions": {
+      "label": "Goal Actions"
+    },
+    "deleteConfirmation": "This will permanently delete this goal. If the goal has a linked account, the account will remain but will no longer be associated with this goal.",
+    "linkedAccount": "Linked Account",
+    "addFunds": "Add Funds",
+    "addFundsTitle": "Add Funds to Goal",
+    "addFundsDescription": "Add funds from the linked account \"{account}\" to your goal \"{goal}\".",
+    "loadingAccount": "Loading account information...",
+    "labels": {
+      "availableBalance": "Available Balance",
+      "amountToAdd": "Amount to add",
+      "remainingToTarget": "Remaining to target:",
+      "currentStatus": "Current Status",
+      "current": "Current",
+      "target": "Target",
+      "newAccountBalance": "New account balance:",
+      "goalProgress": "Goal progress:"
+    },
+    "errors": {
+      "loginRequired": "You must be logged in to perform this action",
+      "nameRequired": "Goal name is required",
+      "targetAmountInvalid": "Target amount must be greater than zero",
+      "accountRequired": "There must be an account associated with this goal",
+      "amountGreaterThanZero": "Amount must be greater than zero",
+      "loadAccount": "Could not load account information",
+      "addFundsFailed": "Failed to add funds"
+    },
+    "toasts": {
+      "completedTitle": "Goal completed!",
+      "completedDescription": "Congratulations! You've reached your goal",
+      "fundsAddedTitle": "Funds added",
+      "fundsAddedDescription": "Funds successfully added to your goal"
+    },
+    "statuses": {
+      "active": "Active",
+      "completed": "Completed",
+      "canceled": "Canceled"
+    },
+    "current": "Current",
+    "target": "Target",
+    "viewAccount": "View Account",
+    "addAccount": "Add Account",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "edit": "Edit"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your account settings and integrations.",
+    "profile": {
+      "title": "Profile",
+      "description": "Update your personal information. This will be displayed across the app.",
+      "name": "Name",
+      "email": "Email",
+      "updateProfile": "Update Profile",
+      "saving": "Saving...",
+      "updated": "Profile updated successfully"
+    },
+    "currency": {
+      "title": "Currency Configuration",
+      "description": "Select the default currency for all transactions in the application.",
+      "label": "Currency",
+      "placeholder": "Select currency",
+      "preview": "All values will be displayed in {name} ({code})",
+      "updated": "Currency Updated",
+      "updatedDescription": "{name} ({symbol}) has been set as your default currency."
+    },
+    "theme": {
+      "title": "Appearance",
+      "description": "Choose your preferred theme. The system option will automatically switch between light and dark modes based on your device settings.",
+      "light": {
+        "title": "Light",
+        "description": "Light theme for bright environments"
+      },
+      "dark": {
+        "title": "Dark", 
+        "description": "Dark theme for low light environments"
+      },
+      "system": {
+        "title": "System",
+        "description": "Follows your system's theme preference"
+      }
+    },
+    "emailSync": {
+      "title": "Email Sync",
+      "description": "Connect your email accounts to automatically import expenses from receipts (Feature coming soon).",
+      "connect": "Connect"
+    }
+  },
+  "activity": {
+    "title": "Financial Activity",
+    "description": "Complete record of all your financial activities",
+    "refresh": "Refresh",
+    "migrateData": "Migrate Data",
+    "processing": "Processing...",
+    "migrationStarted": "Migration started",
+    "migrationStartedDescription": "Processing existing data...",
+    "migrationCompleted": "Migration completed",
+    "migrationCompletedDescription": "All data has been processed successfully.",
+    "migrationError": "Migration error",
+    "migrationErrorDescription": "There was a problem processing the data. Try again.",
+    "infoModal": {
+      "title": "Financial Activity - Complete Record",
+      "description": "This module automatically records all actions you perform in the application to maintain a complete history of your financial activity.",
+      "sections": {
+        "accounts": {
+          "title": "Account Management",
+          "items": {
+            "creation": "Creation of new accounts",
+            "modification": "Modification of existing accounts", 
+            "deletion": "Account deletion"
+          }
+        },
+        "transactions": {
+          "title": "Transactions",
+          "items": {
+            "creation": "New transaction recording",
+            "editing": "Transaction editing",
+            "deletion": "Transaction deletion",
+            "transfers": "Transfers between accounts"
+          }
+        },
+        "goals": {
+          "title": "Financial Goals",
+          "items": {
+            "creation": "Creation of new goals",
+            "progress": "Goal progress updates",
+            "completion": "Goal completion",
+            "fundsAdded": "Funds added to goals"
+          }
+        },
+        "recurring": {
+          "title": "Recurring Transactions",
+          "items": {
+            "setup": "Recurring transaction setup",
+            "execution": "Automatic execution of recurring transactions",
+            "modification": "Recurring transaction modification"
+          }
+        }
+      },
+      "benefits": {
+        "title": "Benefits of Activity Tracking",
+        "items": {
+          "auditTrail": "Complete audit trail of all financial movements",
+          "transparency": "Total transparency in financial management",
+          "analysis": "Detailed analysis of your financial behavior",
+          "compliance": "Regulatory compliance and financial control",
+          "recovery": "Easy recovery of information in case of errors",
+          "insights": "Valuable insights into your financial patterns"
+        }
+      },
+      "privacy": {
+        "title": "Privacy and Security",
+        "description": "All activity data is stored securely and is only accessible by you. We do not share your financial information with third parties."
+      }
+    },
+    "filters": {
+      "search": "Search activities...",
+      "type": "Filter by type", 
+      "dateFrom": "From date",
+      "dateTo": "To date",
+      "allTypes": "All types",
+      "clear": "Clear filters"
+    },
+    "types": {
+      "account_created": "Account Created",
+      "account_updated": "Account Updated", 
+      "account_deleted": "Account Deleted",
+      "transaction_created": "Transaction Created",
+      "transaction_updated": "Transaction Updated",
+      "transaction_deleted": "Transaction Deleted", 
+      "transfer_created": "Transfer Created",
+      "goal_created": "Goal Created",
+      "goal_updated": "Goal Updated",
+      "goal_deleted": "Goal Deleted",
+      "goal_funds_added": "Funds Added to Goal",
+      "recurring_transaction_created": "Recurring Transaction Created",
+      "recurring_transaction_updated": "Recurring Transaction Updated",
+      "recurring_transaction_deleted": "Recurring Transaction Deleted"
+    },
+    "noResults": "No activities found",
+    "noResultsDescription": "Try adjusting your search criteria or filters."
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "currency": {
+    "usd": "US Dollar (USD)",
+    "eur": "Euro (EUR)",
+    "gbp": "British Pound (GBP)",
+    "dop": "Dominican Peso (DOP)"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "pleaseVerifyInformation": "Please verify your information",
+    "requiredField": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsDontMatch": "Passwords don't match"
+  },
+  "success": {
+    "accountCreated": "Account created successfully",
+    "accountUpdated": "Account updated successfully",
+    "accountDeleted": "Account deleted successfully",
+    "transactionCreated": "Transaction created successfully",
+    "transactionUpdated": "Transaction updated successfully",
+    "transactionDeleted": "Transaction deleted successfully",
+    "goalCreated": "Goal created successfully",
+    "goalUpdated": "Goal updated successfully",
+    "goalDeleted": "Goal deleted successfully"
+  },
+  "voiceRecording": {
+    "transcriptionFailed": "Transcription Failed",
+    "transcriptionFailedDescription": "Could not process the audio. Please try again.",
+    "microphoneAccessDenied": "Microphone Access Denied",
+    "microphoneAccessDeniedDescription": "Please enable microphone permissions in your browser settings."
+  },
+  "iosInstall": {
+    "title": "Install Fynco on iPhone",
+    "instructions": "Tap the Share button (the square with an arrow) in Safari and select \"Add to Home Screen\"."
+  },
+  "financial": {
+    "totalBalance": "Total Balance",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "financialHub": "Financial Hub",
+    "monthlyIncome": "Monthly Income",
+    "monthlyExpenses": "Monthly Expenses",
+    "recentTransactions": "Recent Transactions",
+    "accountsOverview": "Accounts Overview",
+    "quickActions": "Quick Actions",
+    "allAccountsCombined": "All accounts combined",
+    "comprehensiveReports": "For comprehensive reports",
+    "goToStatistics": "Go to Statistics",
+    "allTimeIncome": "All time income",
+    "allTimeExpenses": "All time expenses",
+    "last30Days": "Last 30 days",
+    "last12Weeks": "Last 12 weeks", 
+    "last12Months": "Last 12 months",
+    "last4Quarters": "Last 4 quarters",
+    "last3Years": "Last 3 years"
+  },
+  "overview": {
+    "daily": "Daily Overview",
+    "weekly": "Weekly Overview",
+    "monthly": "Monthly Overview",
+    "quarterly": "Quarterly Overview",
+    "yearly": "Yearly Overview",
+    "all": "All Time Overview",
+    "income": "Income",
+    "expense": "Expense"
+  },
+  "recentTransactions": {
+    "title": "Recent Transactions",
+    "summary": "You made {count} transactions in total.",
+    "empty": "No recent transactions found. Add one to get started!",
+    "unknownAccount": "Unknown Account"
+  },
+  "timeFilter": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly",
+    "all": "All Time"
+  },
+  "forms": {
+    "amount": "Amount",
+    "description": "Description",
+    "transferDescription": "Transfer description (optional)",
+    "swapAccounts": "Swap From/To accounts",
+    "from": "From",
+    "to": "To",
+    "startDate": "Start Date",
+    "endDate": "End Date (Optional)",
+    "pickDate": "Pick a date",
+    "noEndDate": "No end date",
+    "whenStart": "When this recurring transaction should start",
+    "placeholder": "0.00"
+  },
+  "recurring": {
+    "title": "Add Recurring Transaction",
+    "description": "Set up a new recurring transaction that will be processed automatically.",
+    "editTitle": "Edit Recurring Transaction",
+    "editDescription": "Update your recurring transaction settings.",
+    "transactionType": "Transaction Type",
+    "income": "Income",
+    "expense": "Expense",
+    "amount": "Amount",
+    "descriptionPlaceholder": "e.g., Monthly Rent",
+    "account": "Account",
+    "selectAccountPlaceholder": "Select account",
+    "addAccount": "Add Account",
+    "category": "Category",
+    "selectCategoryPlaceholder": "Select category",
+    "frequency": "Frequency",
+    "selectFrequencyPlaceholder": "Select frequency",
+    "frequencies": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "biweekly": "Every 2 Weeks",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    },
+    "frequencyDescription": "How often this transaction should recur",
+    "startDate": "Start Date",
+    "pickDate": "Pick a date",
+    "startDateDescription": "When this recurring transaction should start",
+    "endDate": "End Date (Optional)",
+    "noEndDate": "No end date",
+    "endDateDescription": "Leave blank for transactions that continue indefinitely",
+    "activeDescription": "Toggle to enable or disable this recurring transaction",
+    "cancel": "Cancel",
+    "adding": "Adding...",
+    "addButton": "Add Recurring Transaction",
+    "updating": "Updating...",
+    "updateButton": "Update Transaction",
+    "toast": {
+      "errorTitle": "Error",
+      "successTitle": "Success",
+      "loginRequired": "You must be logged in to perform this action",
+      "accountRequired": "Please select an account before creating a recurring transaction.",
+      "added": "Recurring transaction added successfully",
+      "addFailed": "Failed to add recurring transaction",
+      "deleted": "Recurring transaction deleted successfully",
+      "deleteFailed": "Failed to delete recurring transaction",
+      "activated": "Recurring transaction activated successfully",
+      "deactivated": "Recurring transaction deactivated successfully",
+      "updated": "Recurring transaction updated successfully",
+      "updateFailed": "Failed to update recurring transaction",
+      "genericError": "An error occurred"
+    },
+    "actions": {
+      "label": "Transaction Actions",
+      "deleteTitle": "Delete Recurring Transaction",
+      "deleteDescription": "Are you sure you want to delete this recurring transaction? This action cannot be undone."
+    },
+    "deleting": "Deleting...",
+    "delete": "Delete",
+    "labels": {
+      "account": "Account:",
+      "nextDate": "Next date:",
+      "category": "Category:",
+      "started": "Started:",
+      "unknownAccount": "Unknown Account"
+    },
+    "n_a": "N/A",
+    "statusActive": "Active",
+    "inactive": "Inactive",
+    "addRecurringIncome": "Add Recurring Income",
+    "addRecurringExpense": "Add Recurring Expense"
+    ,
+    "pageTitle": "Recurring Transactions",
+    "cards": {
+      "active": "Active Recurring",
+      "activeDescription": "Active recurring transactions",
+      "monthlyIncome": "Monthly Income",
+      "monthlyIncomeDescription": "Expected monthly recurring income",
+      "monthlyExpenses": "Monthly Expenses",
+      "monthlyExpensesDescription": "Expected monthly recurring expenses"
+    },
+    "tabs": {
+      "all": "All",
+      "income": "Income",
+      "expense": "Expenses"
+    },
+    "empty": {
+      "noTransactions": "You don't have any recurring transactions yet.",
+      "createFirst": "Create your first recurring transaction",
+      "noIncome": "You don't have any recurring income yet.",
+      "noExpenses": "You don't have any recurring expenses yet.",
+      "addIncome": "Add recurring income",
+      "addExpense": "Add recurring expense"
+    }
+  },
+  "statistics": {
+    "title": "Financial Statistics",
+    "description": "Comprehensive view of your financial data and insights",
+    "timePeriods": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly",
+      "allTime": "All Time"
+    },
+    "overview": {
+      "title": "Financial Statistics",
+      "totalBalance": "Total Balance",
+      "totalIncome": "Total Income",
+      "totalExpenses": "Total Expenses",
+      "netIncome": "Net Income",
+      "savingsRate": "Savings Rate",
+      "totalTransactions": "Total Transactions",
+      "averageTransaction": "Average Transaction",
+      "transactionCount": "Total Transactions",
+      "accountCount": "Active Accounts",
+      "goalProgress": "Goal Progress",
+      "acrossAccounts": "Across {count} accounts",
+      "incomeMinusExpenses": "Income - Expenses",
+      "thisMonth": "This month",
+      "thisWeek": "This week",
+      "thisYear": "This year",
+      "allTime": "All time",
+      "accountDistribution": "Account Distribution",
+      "expenseBreakdown": "Expense Breakdown",
+      "incomeVsExpenses": "Income vs Expenses Trend",
+      "noDataAvailable": "No data available for the selected period",
+      "comprehensiveOverview": "Comprehensive overview for {period}",
+      "activeOutOfTotal": "{active} active out of {total} total",
+      "monthlyTrends": "Monthly Trends",
+      "topExpenseCategories": "Top Expense Categories",
+      "financialHealthIndicators": "Financial Health Indicators",
+      "expenseToIncomeRatio": "Expense to Income Ratio",
+      "healthy": "Healthy",
+      "moderate": "Moderate",
+      "highRisk": "High Risk",
+      "fromLastMonth": "from last month",
+      "recurringTransactions": "Recurring Transactions",
+      "estimatedMonthlyRecurring": "Estimated Monthly Recurring",
+      "recurringIncome": "Recurring Income",
+      "recurringExpenses": "Recurring Expenses",
+      "netRecurring": "Net Recurring",
+      "accountBalanceStatus": "Account Balance Status",
+      "positiveAccounts": "Positive accounts",
+      "highest": "Highest",
+      "accounts": "accounts",
+      "account": "account"
+    },
+    "accounts": {
+      "title": "Accounts Summary",
+      "description": "Overview of all your financial accounts",
+      "totalAccounts": "Total Accounts",
+      "totalBalance": "Total Balance",
+      "highestBalance": "Highest Balance",
+      "lowestBalance": "Lowest Balance",
+      "averageBalance": "Average Balance",
+      "byType": "By Account Type",
+      "byCurrency": "By Currency"
+    },
+    "transactions": {
+      "title": "Transactions History",
+      "description": "All transactions across all your accounts",
+      "removedMessage": "Transactions UI has been removed. Transaction data is still available for statistics and background logic.",
+      "totalTransactions": "Total Transactions",
+      "totalVolume": "Total Volume",
+      "averageAmount": "Average Amount",
+      "incomeVsExpenses": "Income vs Expenses",
+      "byCategory": "By Category",
+      "byMonth": "Monthly Trend",
+      "topCategories": "Top Categories",
+      "recentActivity": "Recent Activity"
+    },
+    "goals": {
+      "title": "Financial Goals",
+      "description": "Track progress on your savings goals",
+      "totalGoals": "Total Goals",
+      "completed": "Completed",
+      "active": "Active",
+      "totalTarget": "Total Target Amount",
+      "totalSaved": "Total Saved",
+      "averageProgress": "Average Progress",
+      "progressDistribution": "Progress Distribution",
+      "completionRate": "Completion Rate"
+    },
+    "transfers": {
+      "title": "Account Transfers",
+      "description": "Move funds between your accounts"
+    },
+    "recurring": {
+      "title": "Recurring Transactions",
+      "description": "All your scheduled recurring payments and income",
+      "totalRecurring": "Total Recurring",
+      "monthlyIncome": "Monthly Income",
+      "monthlyExpenses": "Monthly Expenses",
+      "netMonthlyFlow": "Net Monthly Flow",
+      "byFrequency": "By Frequency",
+      "nextPayments": "Upcoming Payments"
+    },
+    "export": {
+      "title": "Export Data",
+      "description": "Export your financial data for external analysis",
+      "selectPeriod": "Select Period",
+      "selectFormat": "Select Format",
+      "formats": {
+        "csv": "CSV (Spreadsheet)",
+        "json": "JSON (Data)",
+        "pdf": "PDF (Report)"
+      },
+      "includeData": "Include Data",
+      "transactions": "Transactions",
+      "accounts": "Accounts",
+      "goals": "Goals",
+      "recurring": "Recurring Transactions",
+      "exportButton": "Export Data",
+      "exporting": "Exporting...",
+      "success": "Export completed successfully",
+      "error": "Failed to export data"
+    },
+    "filters": {
+      "timePeriod": "Time Period",
+      "accountType": "Account Type",
+      "category": "Category",
+      "transactionType": "Transaction Type",
+      "all": "All",
+      "reset": "Reset Filters"
+    },
+    "charts": {
+      "loading": "Loading chart data...",
+      "noData": "No data available for the selected period",
+      "income": "Income",
+      "expenses": "Expenses",
+      "balance": "Balance",
+      "trend": "Trend"
+    },
+    "navigation": {
+      "overview": "Overview",
+      "accounts": "Accounts",
+      "transactions": "Transactions",
+      "transfers": "Transfers",
+      "goals": "Goals",
+      "recurring": "Recurring",
+      "export": "Export"
+    },
+    "actions": {
+      "refresh": "Refresh Data",
+      "export": "Export",
+      "viewDetails": "View Details",
+      "expand": "Expand",
+      "collapse": "Collapse"
+    },
+    "empty": {
+      "noData": "No data available",
+      "noTransactions": "No transactions found for the selected period",
+      "noAccounts": "No accounts available",
+      "noGoals": "No goals created yet",
+      "noRecurring": "No recurring transactions set up"
+    }
+  },
+  "alerts": {
+    "areYouSure": "Are you sure?",
+    "deleteAccountWarning": "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
+    "continueAction": "Continue"
+  },
+  "app": {
+    "title": "Fynco",
+    "description": "Personal finance tracking made easy"
+  }
+}

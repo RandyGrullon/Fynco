@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTranslations } from 'next-intl';
 
 const STORAGE_KEY = "fynco_ios_install_dismissed";
 
@@ -29,6 +30,8 @@ function inStandaloneMode() {
 
 export default function IOSInstallBanner() {
   const [show, setShow] = useState(false);
+  const t = useTranslations('iosInstall');
+  const tCommon = useTranslations('common');
 
   useEffect(() => {
     try {
@@ -75,17 +78,16 @@ export default function IOSInstallBanner() {
         </svg>
       </div>
       <div className="flex-1 text-sm text-slate-900 dark:text-slate-200">
-        <div className="font-semibold">Instalar Fynco en iPhone</div>
+        <div className="font-semibold">{t('title')}</div>
         <div className="mt-1">
-          Toca el botón Compartir (el cuadrado con una flecha) en Safari y
-          selecciona "Añadir a pantalla de inicio".
+          {t('instructions')}
         </div>
         <div className="mt-2 flex gap-2">
           <button
             onClick={dismiss}
             className="rounded-md bg-slate-100 px-3 py-1 text-xs font-medium text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100"
           >
-            Entendido
+            {tCommon('understood')}
           </button>
         </div>
       </div>

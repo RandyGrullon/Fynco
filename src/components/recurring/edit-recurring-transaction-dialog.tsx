@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -109,6 +110,9 @@ export function EditRecurringTransactionDialog({
     },
   });
 
+  const t = useTranslations("recurring");
+  const tCommon = useTranslations("common");
+
   // Set form values when the transaction data is available
   useEffect(() => {
     if (transaction) {
@@ -188,8 +192,8 @@ export function EditRecurringTransactionDialog({
   const handleSubmit = async (values: RecurringTransactionFormValues) => {
     if (!user || !transaction.id) {
       toast({
-        title: "Error",
-        description: "You must be logged in to update a recurring transaction",
+        title: t("toast.errorTitle"),
+        description: t("toast.loginRequired"),
         variant: "destructive",
       });
       return;
@@ -207,8 +211,8 @@ export function EditRecurringTransactionDialog({
 
       if (result.success) {
         toast({
-          title: "Success",
-          description: "Recurring transaction updated successfully",
+          title: t("toast.successTitle"),
+          description: t("toast.updated"),
         });
         setOpen(false);
         if (onTransactionUpdated) {
@@ -216,15 +220,15 @@ export function EditRecurringTransactionDialog({
         }
       } else {
         toast({
-          title: "Error",
-          description: result.error || "Failed to update recurring transaction",
+          title: t("toast.errorTitle"),
+          description: result.error || t("toast.updateFailed"),
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: (error as Error).message || "An error occurred",
+        title: t("toast.errorTitle"),
+        description: (error as Error).message || t("toast.genericError"),
         variant: "destructive",
       });
     } finally {
@@ -237,10 +241,8 @@ export function EditRecurringTransactionDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Recurring Transaction</DialogTitle>
-          <DialogDescription>
-            Update your recurring transaction settings.
-          </DialogDescription>
+          <DialogTitle>{t("editTitle")}</DialogTitle>
+          <DialogDescription>{t("editDescription")}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -253,7 +255,7 @@ export function EditRecurringTransactionDialog({
               name="type"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel>Transaction Type</FormLabel>
+                  <FormLabel>{t("transactionType")}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -266,7 +268,7 @@ export function EditRecurringTransactionDialog({
                           htmlFor="edit-income"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          Income
+                          {t("income")}
                         </label>
                       </div>
                       <div className="flex items-center space-x-2 ml-4">
@@ -275,7 +277,7 @@ export function EditRecurringTransactionDialog({
                           htmlFor="edit-expense"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          Expense
+                          {t("expense")}
                         </label>
                       </div>
                     </RadioGroup>
@@ -289,7 +291,7 @@ export function EditRecurringTransactionDialog({
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>{t("amount")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -313,9 +315,9 @@ export function EditRecurringTransactionDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t("description")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Monthly Rent" {...field} />
+                    <Input placeholder={t("descriptionPlaceholder") as string} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -327,7 +329,7 @@ export function EditRecurringTransactionDialog({
               name="accountId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account</FormLabel>
+                  <FormLabel>{t("account")}</FormLabel>
                   <div className="flex items-center space-x-2">
                     <Select
                       onValueChange={field.onChange}
@@ -335,7 +337,7 @@ export function EditRecurringTransactionDialog({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select account" />
+                          <SelectValue placeholder={t("selectAccountPlaceholder") as string} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -350,7 +352,7 @@ export function EditRecurringTransactionDialog({
                     <AddAccountDialog onAccountAdded={handleAccountCreated}>
                       <Button variant="outline" size="sm">
                         <PlusCircle className="mr-1 h-4 w-4" />
-                        Add Account
+                        {t("addAccount")}
                       </Button>
                     </AddAccountDialog>
                   </div>
@@ -364,14 +366,14 @@ export function EditRecurringTransactionDialog({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>{t("category")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={t("selectCategoryPlaceholder") as string} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -395,28 +397,26 @@ export function EditRecurringTransactionDialog({
               name="frequency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Frequency</FormLabel>
+                  <FormLabel>{t("frequency")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select frequency" />
+                        <SelectValue placeholder={t("selectFrequencyPlaceholder") as string} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="biweekly">Every 2 Weeks</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                      <SelectItem value="yearly">Yearly</SelectItem>
+                      <SelectItem value="daily">{t("frequencies.daily")}</SelectItem>
+                      <SelectItem value="weekly">{t("frequencies.weekly")}</SelectItem>
+                      <SelectItem value="biweekly">{t("frequencies.biweekly")}</SelectItem>
+                      <SelectItem value="monthly">{t("frequencies.monthly")}</SelectItem>
+                      <SelectItem value="quarterly">{t("frequencies.quarterly")}</SelectItem>
+                      <SelectItem value="yearly">{t("frequencies.yearly")}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    How often this transaction should recur
-                  </FormDescription>
+                  <FormDescription>{t("frequencyDescription")}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -427,7 +427,7 @@ export function EditRecurringTransactionDialog({
               name="startDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Start Date</FormLabel>
+                  <FormLabel>{t("startDate")}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -441,7 +441,7 @@ export function EditRecurringTransactionDialog({
                           {field.value ? (
                             format(field.value, "PPP")
                           ) : (
-                            <span>Pick a date</span>
+                            <span>{t("pickDate")}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -456,9 +456,7 @@ export function EditRecurringTransactionDialog({
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormDescription>
-                    When this recurring transaction should start
-                  </FormDescription>
+                  <FormDescription>{t("startDateDescription")}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -469,7 +467,7 @@ export function EditRecurringTransactionDialog({
               name="endDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>End Date (Optional)</FormLabel>
+                  <FormLabel>{t("endDate")}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -483,7 +481,7 @@ export function EditRecurringTransactionDialog({
                           {field.value ? (
                             format(field.value, "PPP")
                           ) : (
-                            <span>No end date</span>
+                            <span>{t("noEndDate")}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -498,9 +496,7 @@ export function EditRecurringTransactionDialog({
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormDescription>
-                    Leave blank for transactions that continue indefinitely
-                  </FormDescription>
+                  <FormDescription>{t("endDateDescription")}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -512,10 +508,8 @@ export function EditRecurringTransactionDialog({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel>Active</FormLabel>
-                    <FormDescription>
-                      Toggle to enable or disable this recurring transaction
-                    </FormDescription>
+                    <FormLabel>{t("statusActive")}</FormLabel>
+                      <FormDescription>{t("activeDescription")}</FormDescription>
                   </div>
                   <FormControl>
                     <Switch
@@ -533,10 +527,10 @@ export function EditRecurringTransactionDialog({
                 variant="outline"
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Updating..." : "Update Transaction"}
+                {isSubmitting ? t("updating") : t("updateButton")}
               </Button>
             </DialogFooter>
           </form>

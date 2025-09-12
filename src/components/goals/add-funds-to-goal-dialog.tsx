@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { PiggyBank, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { Goal, addFundsToGoalFromAccount } from "@/lib/goals";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +37,8 @@ export function AddFundsToGoalDialog({
   const { user } = useAuth();
   const { toast } = useToast();
   const formatter = useCurrencyFormatter();
+  const t = useTranslations("goals");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
@@ -57,8 +60,8 @@ export function AddFundsToGoalDialog({
     } catch (error) {
       console.error("Error loading account:", error);
       toast({
-        title: "Error",
-        description: "No se pudo cargar la información de la cuenta",
+  title: t("errors.loadAccountTitle") || "Error",
+  description: t("errors.loadAccount") || "No se pudo cargar la información de la cuenta",
         variant: "destructive",
       });
     } finally {
@@ -70,8 +73,8 @@ export function AddFundsToGoalDialog({
     e.preventDefault();
     if (!user || !goal.id || !goal.accountId) {
       toast({
-        title: "Error",
-        description: "Debe haber una cuenta asociada a esta meta",
+        title: t("errors.genericTitle") || "Error",
+        description: t("errors.accountRequired") || "Debe haber una cuenta asociada a esta meta",
         variant: "destructive",
       });
       return;
@@ -79,8 +82,8 @@ export function AddFundsToGoalDialog({
 
     if (!amount || parseFloat(amount) <= 0) {
       toast({
-        title: "Error",
-        description: "El monto debe ser mayor que cero",
+        title: t("errors.genericTitle") || "Error",
+        description: t("errors.amountGreaterThanZero") || "El monto debe ser mayor que cero",
         variant: "destructive",
       });
       return;
@@ -106,10 +109,10 @@ export function AddFundsToGoalDialog({
       );
 
       toast({
-        title: result.completed ? "¡Meta completada!" : "Fondos añadidos",
+        title: result.completed ? t("toasts.completedTitle") : t("toasts.fundsAddedTitle"),
         description: result.completed
-          ? "¡Felicidades! Has alcanzado tu meta"
-          : "Fondos añadidos exitosamente a tu meta",
+          ? t("toasts.completedDescription")
+          : t("toasts.fundsAddedDescription"),
       });
 
       // Trigger goals refresh event
@@ -125,10 +128,8 @@ export function AddFundsToGoalDialog({
       }, 0);
     } catch (error) {
       toast({
-        title: "Error",
-        description: `No se pudieron añadir fondos: ${
-          (error as Error).message
-        }`,
+        title: t("errors.genericTitle") || "Error",
+        description: `${t("errors.addFundsFailed") || "No se pudieron añadir fondos"}: ${(error as Error).message}`,
         variant: "destructive",
       });
     } finally {
@@ -147,29 +148,28 @@ export function AddFundsToGoalDialog({
         {children || (
           <Button size="sm">
             <PiggyBank className="mr-2 h-4 w-4" />
-            Añadir fondos
+            {t("addFunds")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Añadir fondos a la meta</DialogTitle>
+          <DialogTitle>{t("addFundsTitle")}</DialogTitle>
           <DialogDescription>
-            Añade fondos desde la cuenta asociada "{account?.name}" a tu meta "
-            {goal.name}".
+            {t("addFundsDescription", { account: account?.name ?? "", goal: goal.name })}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {loadingAccount ? (
+                {loadingAccount ? (
               <div className="text-center py-4">
-                Cargando información de la cuenta...
+                {t("loadingAccount")}
               </div>
             ) : (
               <>
                 {account && (
                   <div className="grid gap-2">
-                    <Label>Saldo disponible</Label>
+                    <Label>{t("labels.availableBalance")}</Label>
                     <div className="p-2 bg-muted rounded-md">
                       <p className="font-medium">
                         {formatter.formatCurrency(account.balance)}
@@ -179,7 +179,7 @@ export function AddFundsToGoalDialog({
                 )}
 
                 <div className="grid gap-2">
-                  <Label htmlFor="amount">Monto a añadir</Label>
+                  <Label htmlFor="amount">{t("labels.amountToAdd")}</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -192,22 +192,21 @@ export function AddFundsToGoalDialog({
                     disabled={loading || !account}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Para completar la meta:{" "}
-                    {formatter.formatCurrency(remainingToTarget)}
+                    {t("labels.remainingToTarget")} {formatter.formatCurrency(remainingToTarget)}
                   </p>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Estado actual</Label>
+          <Label>{t("labels.currentStatus")}</Label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Actual</p>
+            <p className="text-sm text-muted-foreground">{t("labels.current")}</p>
                       <p className="font-medium">
                         {formatter.formatCurrency(goal.currentAmount)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Meta</p>
+            <p className="text-sm text-muted-foreground">{t("labels.target")}</p>
                       <p className="font-medium">
                         {formatter.formatCurrency(goal.targetAmount)}
                       </p>
@@ -218,17 +217,14 @@ export function AddFundsToGoalDialog({
                 {amount && (
                   <div className="mt-2 p-2 bg-muted rounded-md">
                     <p className="text-sm">
-                      Nuevo saldo de la cuenta:{" "}
-                      {formatter.formatCurrency(
+                      {t("labels.newAccountBalance")} {formatter.formatCurrency(
                         account ? account.balance - parseFloat(amount) : 0
                       )}
                     </p>
                     <p className="text-sm">
-                      Progreso de la meta:{" "}
-                      {formatter.formatCurrency(
+                      {t("labels.goalProgress")} {formatter.formatCurrency(
                         goal.currentAmount + parseFloat(amount)
-                      )}{" "}
-                      / {formatter.formatCurrency(goal.targetAmount)}
+                      )} / {formatter.formatCurrency(goal.targetAmount)}
                     </p>
                   </div>
                 )}
@@ -238,11 +234,11 @@ export function AddFundsToGoalDialog({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={loading}>
-                Cancelar
+                {tCommon("cancel")}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={loading || !account}>
-              {loading ? "Añadiendo..." : "Añadir fondos"}
+              {loading ? t("adding") : t("addFunds")}
             </Button>
           </DialogFooter>
         </form>

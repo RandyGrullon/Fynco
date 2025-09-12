@@ -7,8 +7,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { AddGoalDialog } from "@/components/goals/add-goal-dialog";
 import { GoalsList } from "@/components/goals/goals-list";
+import { useTranslations } from "next-intl";
 
 export default function GoalsPage() {
+  const t = useTranslations("goals");
   const { user } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,11 +53,9 @@ export default function GoalsPage() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            Goals
+            {t("title")}
           </h1>
-          <p className="text-muted-foreground">
-            Set and track your financial goals
-          </p>
+          <p className="text-muted-foreground">{t("description")}</p>
         </div>
         <AddGoalDialog onGoalAdded={loadGoals} />
       </div>

@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Target, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks/use-auth";
 import { GoalStatus, addGoal } from "@/lib/goals";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +48,9 @@ interface AddGoalDialogProps {
 }
 
 export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
+  const t = useTranslations("goals");
+  const tCommon = useTranslations("common");
+  const tSuccess = useTranslations("success");
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -104,22 +108,22 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
     e.preventDefault();
     if (!user) {
       toast({
-        title: "Error",
-        description: "You must be logged in to add a goal",
+        title: tCommon("permissionDenied") || "Error",
+        description: t("errors.loginRequired") || "You must be logged in to add a goal",
         variant: "destructive",
       });
       return;
     }
 
     if (!name) {
-      setErrors((s) => ({ ...s, name: "Goal name is required" }));
+      setErrors((s) => ({ ...s, name: t("errors.nameRequired") }));
       return;
     }
 
     if (!targetAmount || parseFloat(targetAmount) <= 0) {
       setErrors((s) => ({
         ...s,
-        targetAmount: "Target amount must be greater than zero",
+        targetAmount: t("errors.targetAmountInvalid"),
       }));
       return;
     }
@@ -135,7 +139,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
       ) {
         setErrors((s) => ({
           ...s,
-          account: "Please select an account or create a new one.",
+          account: t("errors.accountRequired"),
         }));
         setLoading(false);
         return;
@@ -171,8 +175,8 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
       );
 
       toast({
-        title: "Goal Added",
-        description: "Your goal has been successfully added",
+  title: tSuccess("goalCreated") || "Goal Added",
+  description: tSuccess("goalCreated") || "Your goal has been successfully added",
       });
 
       // Use setTimeout to ensure state updates happen after render is complete
@@ -215,21 +219,19 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
         {children || (
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            Add Goal
+            {t("addGoal")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Goal</DialogTitle>
-          <DialogDescription>
-            Create a new financial goal to help you reach your objectives.
-          </DialogDescription>
+          <DialogTitle>{t("addGoal")}</DialogTitle>
+          <DialogDescription>{t("addDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Goal Name</Label>
+              <Label htmlFor="name">{t("goalName")}</Label>
               <div>
                 <Input
                   id="name"
@@ -238,7 +240,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                     setName(e.target.value);
                     setErrors((s) => ({ ...s, name: undefined }));
                   }}
-                  placeholder="e.g., New Car, Vacation"
+                  placeholder={t("placeholders.name")}
                   disabled={loading}
                   aria-invalid={!!errors.name}
                   className={
@@ -252,7 +254,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="targetAmount">Target Amount</Label>
+                <Label htmlFor="targetAmount">{t("targetAmount")}</Label>
                 <Input
                   id="targetAmount"
                   type="number"
@@ -276,7 +278,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="currentAmount">Current Amount</Label>
+                <Label htmlFor="currentAmount">{t("currentAmount")}</Label>
                 <Input
                   id="currentAmount"
                   type="number"
@@ -290,14 +292,14 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency">{t("currency")}</Label>
               <Select
                 value={currency}
                 onValueChange={(value) => setCurrency(value)}
                 disabled={loading}
               >
                 <SelectTrigger id="currency">
-                  <SelectValue placeholder="Select currency" />
+                  <SelectValue placeholder={t("selectCurrency")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="USD">USD - US Dollar</SelectItem>
@@ -310,7 +312,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="deadline">Target Date (Optional)</Label>
+              <Label htmlFor="deadline">{t("targetDateOptional")}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -323,7 +325,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                     disabled={loading}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {deadline ? format(deadline, "PPP") : "Pick a date"}
+                    {deadline ? format(deadline, "PPP") : t("placeholders.pickDate")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -338,27 +340,25 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
               </Popover>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="description">{t("descriptionOptional")}</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your goal..."
+                placeholder={t("placeholders.description")}
                 disabled={loading}
               />
             </div>
 
             <div className="grid gap-2 pt-2">
-              <Label>Account</Label>
+              <Label>{t("account")}</Label>
               <Tabs
                 defaultValue="existing"
                 onValueChange={(v) => setAccountOption(v as "existing" | "new")}
               >
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="existing">
-                    Use Existing Account
-                  </TabsTrigger>
-                  <TabsTrigger value="new">Create New Account</TabsTrigger>
+                  <TabsTrigger value="existing">{t("accounts.useExisting")}</TabsTrigger>
+                    <TabsTrigger value="new">{t("accounts.createNew")}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="existing">
                   <div className="grid gap-2 mt-2">
@@ -370,10 +370,10 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                       disabled={loading || loadingAccounts}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select an account" />
+                        <SelectValue placeholder={t("accounts.selectAccountPlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">No Account</SelectItem>
+                        <SelectItem value="none">{t("accounts.noAccount")}</SelectItem>
                         {accounts.map((account) => (
                           <SelectItem key={account.id} value={account.id || ""}>
                             {account.name} ({account.type})
@@ -388,9 +388,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                     )}
                     {accounts.length === 0 && !loadingAccounts && (
                       <p className="text-sm text-muted-foreground">
-                        No available accounts. All accounts are already
-                        associated with goals or you don't have any accounts
-                        yet.
+                        {t("accounts.noAvailableAccounts")}
                       </p>
                     )}
                   </div>
@@ -398,20 +396,18 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                 <TabsContent value="new">
                   <div className="grid gap-4 mt-2">
                     <div className="grid gap-2">
-                      <Label htmlFor="newAccountName">Account Name</Label>
+                      <Label htmlFor="newAccountName">{t("accounts.accountName")}</Label>
                       <Input
                         id="newAccountName"
                         value={newAccountName}
                         onChange={(e) => setNewAccountName(e.target.value)}
-                        placeholder={name ? `${name} Account` : "Goal Account"}
+                        placeholder={name ? `${name} ${tCommon("goalAccount")}` : t("accounts.newAccountPlaceholder")}
                         disabled={loading}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="newAccountBalance">
-                          Initial Balance
-                        </Label>
+                        <Label htmlFor="newAccountBalance">{t("accounts.initialBalance")}</Label>
                         <Input
                           id="newAccountBalance"
                           type="number"
@@ -424,7 +420,7 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                         />
                       </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="newAccountType">Account Type</Label>
+                        <Label htmlFor="newAccountType">{t("accounts.accountType")}</Label>
                         <Select
                           value={newAccountType}
                           onValueChange={(value) =>
@@ -436,28 +432,24 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="savings">Savings</SelectItem>
-                            <SelectItem value="checking">Checking</SelectItem>
-                            <SelectItem value="investment">
-                              Investment
-                            </SelectItem>
-                            <SelectItem value="credit">Credit</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                            <SelectItem value="savings">{t("accounts.accountTypes.savings")}</SelectItem>
+                            <SelectItem value="checking">{t("accounts.accountTypes.checking")}</SelectItem>
+                            <SelectItem value="investment">{t("accounts.accountTypes.investment")}</SelectItem>
+                            <SelectItem value="credit">{t("accounts.accountTypes.credit")}</SelectItem>
+                            <SelectItem value="other">{t("accounts.accountTypes.other")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="newAccountDescription">
-                        Description (Optional)
-                      </Label>
+                      <Label htmlFor="newAccountDescription">{t("accounts.descriptionOptional")}</Label>
                       <Textarea
                         id="newAccountDescription"
                         value={newAccountDescription}
                         onChange={(e) =>
                           setNewAccountDescription(e.target.value)
                         }
-                        placeholder="Account for this goal..."
+                        placeholder={t("accounts.newAccountDescriptionPlaceholder")}
                         disabled={loading}
                       />
                     </div>
@@ -469,11 +461,11 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={loading}>
-                Cancel
+                {tCommon("cancel")}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Goal"}
+              {loading ? tCommon("loading") : t("addGoal")}
             </Button>
           </DialogFooter>
         </form>

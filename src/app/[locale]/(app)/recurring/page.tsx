@@ -21,8 +21,10 @@ import { PlusCircle, RefreshCcw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddRecurringTransactionDialog } from "@/components/recurring/add-recurring-transaction-dialog";
 import RecurringTransactionsList from "@/components/recurring/recurring-transactions-list";
+import { useTranslations } from "next-intl";
 
 export default function RecurringTransactionsPage() {
+  const t = useTranslations("recurring");
   const { user } = useAuth();
   const [recurringTransactions, setRecurringTransactions] = useState<
     RecurringTransactionWithAccount[]
@@ -88,7 +90,7 @@ export default function RecurringTransactionsPage() {
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 mb-4">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Recurring Transactions
+          {t("pageTitle")}
         </h2>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
           <Button
@@ -110,13 +112,13 @@ export default function RecurringTransactionsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Recurring
-            </CardTitle>
+                {t("cards.active")}
+              </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeRecurringCount}</div>
             <p className="text-xs text-muted-foreground">
-              Active recurring transactions
+              {t("cards.activeDescription")}
             </p>
           </CardContent>
         </Card>
@@ -124,7 +126,7 @@ export default function RecurringTransactionsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Monthly Income
+              {t("cards.monthlyIncome")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -135,7 +137,7 @@ export default function RecurringTransactionsPage() {
               }).format(monthlyIncome)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Expected monthly recurring income
+              {t("cards.monthlyIncomeDescription")}
             </p>
           </CardContent>
         </Card>
@@ -143,7 +145,7 @@ export default function RecurringTransactionsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Monthly Expenses
+              {t("cards.monthlyExpenses")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -154,22 +156,22 @@ export default function RecurringTransactionsPage() {
               }).format(monthlyExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Expected monthly recurring expenses
+              {t("cards.monthlyExpensesDescription")}
             </p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4 w-full sm:w-auto">
+          <TabsList className="mb-4 w-full sm:w-auto">
           <TabsTrigger value="all" className="flex-1 sm:flex-none">
-            All
+            {t("tabs.all")}
           </TabsTrigger>
           <TabsTrigger value="income" className="flex-1 sm:flex-none">
-            Income
+            {t("tabs.income")}
           </TabsTrigger>
           <TabsTrigger value="expense" className="flex-1 sm:flex-none">
-            Expenses
+            {t("tabs.expense")}
           </TabsTrigger>
         </TabsList>
 
@@ -178,7 +180,7 @@ export default function RecurringTransactionsPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 sm:py-10">
                 <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
-                  You don't have any recurring transactions yet.
+                  {t("empty.noTransactions")}
                 </p>
                 <AddRecurringTransactionDialog
                   accounts={accounts}
@@ -186,7 +188,7 @@ export default function RecurringTransactionsPage() {
                 >
                   <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Create your first recurring transaction
+                    {t("empty.createFirst")}
                   </Button>
                 </AddRecurringTransactionDialog>
               </CardContent>
@@ -206,7 +208,7 @@ export default function RecurringTransactionsPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 sm:py-10">
                 <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
-                  You don't have any recurring income yet.
+                  {t("empty.noIncome")}
                 </p>
                 <AddRecurringTransactionDialog
                   accounts={accounts}
@@ -215,7 +217,7 @@ export default function RecurringTransactionsPage() {
                 >
                   <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add recurring income
+                    {t("empty.addIncome")}
                   </Button>
                 </AddRecurringTransactionDialog>
               </CardContent>
@@ -237,7 +239,7 @@ export default function RecurringTransactionsPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8 sm:py-10">
                 <p className="mb-4 text-center text-sm sm:text-base text-muted-foreground">
-                  You don't have any recurring expenses yet.
+                  {t("empty.noExpenses")}
                 </p>
                 <AddRecurringTransactionDialog
                   accounts={accounts}
@@ -246,7 +248,7 @@ export default function RecurringTransactionsPage() {
                 >
                   <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add recurring expense
+                    {t("empty.addExpense")}
                   </Button>
                 </AddRecurringTransactionDialog>
               </CardContent>

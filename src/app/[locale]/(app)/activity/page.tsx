@@ -10,10 +10,12 @@ import { migrateAllExistingData } from "@/lib/migration";
 import { useToast } from "@/hooks/use-toast";
 import { ActivityInfoModal } from "@/components/activity/activity-info-modal";
 import { ActivityList } from "@/components/activity/activity-list";
+import { useTranslations } from "next-intl";
 
 export default function ActivityPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const t = useTranslations("activity");
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<Movement[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,15 +56,15 @@ export default function ActivityPage() {
       setMigrating(true);
       
       toast({
-        title: "Migración iniciada",
-        description: "Procesando datos existentes...",
+        title: t("migrationStarted"),
+        description: t("migrationStartedDescription"),
       });
 
       await migrateAllExistingData(user.uid);
       
       toast({
-        title: "Migración completada",
-        description: "Todos los datos han sido procesados exitosamente.",
+        title: t("migrationCompleted"),
+        description: t("migrationCompletedDescription"),
       });
 
       // Reload activities after migration
@@ -70,8 +72,8 @@ export default function ActivityPage() {
     } catch (error) {
       console.error("Migration error:", error);
       toast({
-        title: "Error en la migración",
-        description: "Hubo un problema al procesar los datos. Inténtalo de nuevo.",
+        title: t("migrationError"),
+        description: t("migrationErrorDescription"),
         variant: "destructive",
       });
     } finally {
@@ -125,10 +127,10 @@ export default function ActivityPage() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Activity className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold">Actividad Financiera</h1>
+            <h1 className="text-3xl font-bold">{t("title")}</h1>
           </div>
           <p className="text-muted-foreground">
-            Registro completo de todas tus actividades financieras
+            {t("description")}
           </p>
         </div>
         
@@ -146,7 +148,7 @@ export default function ActivityPage() {
             ) : (
               <Database className="h-4 w-4" />
             )}
-            {migrating ? "Procesando..." : "Migrar Datos"}
+            {migrating ? t("processing") : t("migrateData")}
           </Button>
           
           <Button
