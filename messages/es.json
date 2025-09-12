@@ -67,7 +67,21 @@
     "signUpWith": "Registrarse con",
     "alreadyHaveAccount": "¿Ya tienes una cuenta?",
     "dontHaveAccount": "¿No tienes una cuenta?",
-    "createAccount": "Crear cuenta"
+    "createAccount": "Crear cuenta",
+    "welcomeBack": "Bienvenido de vuelta a Fynco",
+    "signInToManage": "Inicia sesión para gestionar tus finanzas",
+    "signIn": "Iniciar Sesión",
+    "chooseMethod": "Elige tu método de inicio de sesión preferido",
+    "signInWithGoogle": "Iniciar sesión con Google",
+    "orContinueWith": "O continúa con",
+    "signingIn": "Iniciando sesión...",
+    "invalidEmail": "Email Inválido",
+    "enterValidEmail": "Por favor ingresa una dirección de email válida",
+    "signInFailed": "Error al Iniciar Sesión",
+    "googleSignInFailed": "Error al Iniciar Sesión con Google",
+    "success": "¡Éxito!",
+    "signedInSuccessfully": "Has iniciado sesión exitosamente",
+    "signedInWithGoogle": "Has iniciado sesión con Google exitosamente"
   },
   "dashboard": {
     "title": "Panel de control",

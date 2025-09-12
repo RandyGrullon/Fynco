@@ -24,6 +24,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -41,6 +42,8 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -238,15 +241,15 @@ export default function LoginPage() {
       <div className="flex flex-col items-center text-center mb-8">
         <img src="/logo.png" alt="Fynco" className="h-16 w-auto mb-2" />
         <h1 className="text-3xl font-headline font-bold">
-          Welcome back to Fynco
+          {t("welcomeBack")}
         </h1>
-        <p className="text-muted-foreground">Sign in to manage your finances</p>
+        <p className="text-muted-foreground">{t("signInToManage")}</p>
       </div>
       <Card>
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Sign In</CardTitle>
+          <CardTitle className="text-2xl">{t("signIn")}</CardTitle>
           <CardDescription>
-            Choose your preferred sign in method
+            {t("chooseMethod")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -257,7 +260,7 @@ export default function LoginPage() {
               disabled={loading}
             >
               <GoogleIcon className="mr-2 h-4 w-4" />
-              Sign in with Google
+              {t("signInWithGoogle")}
             </Button>
           </div>
           <div className="relative">
@@ -266,13 +269,13 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
+                {t("orContinueWith")}
               </span>
             </div>
           </div>
           <form onSubmit={handleEmailSignIn}>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -283,7 +286,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="grid gap-2 mt-4">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -293,18 +296,18 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full mt-6" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+              {loading ? t("signingIn") : t("signIn")}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">
-              Don&apos;t have an account?
+              {t("dontHaveAccount")}
             </p>
             <Link href="/signup">
               <Button variant="outline" className="w-full">
-                Create New Account
+                {t("createAccount")}
               </Button>
             </Link>
           </div>
