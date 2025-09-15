@@ -16,14 +16,18 @@ import {
   getDoc,
   writeBatch,
 } from "firebase/firestore";
-import { recordAccountCreation, recordTransfer, recordTransactionCreation } from "@/lib/movements";
+import {
+  recordAccountCreation,
+  recordTransfer,
+  recordTransactionCreation,
+} from "@/lib/movements";
 
 /**
  * Verifica que el userId proporcionado sea válido y no esté vacío
  * Esto previene acceso no autorizado a datos de otros usuarios
  */
 function validateUserId(userId: string, operationName: string): boolean {
-  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+  if (!userId || typeof userId !== "string" || userId.trim() === "") {
     console.error(`Security: Invalid userId provided to ${operationName}`);
     throw new Error("Unauthorized access: Invalid user ID");
   }
@@ -155,22 +159,13 @@ export async function updateAccount(
 
 export async function deleteAccount(id: string, userId: string) {
   try {
-    console.log(`Starting to delete account ${id} for user ${userId}`);
-
     // Debug function to check the structure of goals
     async function debugGoals() {
       const goalsCollection = collection(db, "users", userId, "goals");
       const allGoalsSnapshot = await getDocs(goalsCollection);
 
-      console.log(`User has ${allGoalsSnapshot.size} total goals`);
-
       allGoalsSnapshot.forEach((goalDoc) => {
         const goal = goalDoc.data();
-        console.log(
-          `Goal ${goalDoc.id}: ${goal.name}, accountId: ${
-            goal.accountId || "none"
-          }`
-        );
       });
     }
 
@@ -188,9 +183,6 @@ export async function deleteAccount(id: string, userId: string) {
     }
 
     const accountData = accountSnap.data() as Account;
-    console.log(
-      `Account found: ${accountData.name}, type: ${accountData.type}`
-    );
 
     // If this is a default account and there are multiple accounts, set another one as default
     const accounts = await getAccounts(userId);
@@ -199,9 +191,6 @@ export async function deleteAccount(id: string, userId: string) {
       const newDefaultAccount = accounts.find((acc) => acc.id !== id);
       if (newDefaultAccount?.id) {
         await updateAccount(newDefaultAccount.id, { isDefault: true }, userId);
-        console.log(
-          `Set account ${newDefaultAccount.id} as the new default account`
-        );
       }
     }
     // Allow deleting the last account, even if it's default
@@ -247,18 +236,12 @@ export async function deleteAccount(id: string, userId: string) {
       "accountId",
       id
     );
-    console.log(
-      `Deleted ${transactionsDeleted} transactions for account ${id}`
-    );
 
     // Delete all recurring transactions associated with this account
     const recurringTransactionsDeleted = await deleteCollection(
       `users/${userId}/recurringTransactions`,
       "accountId",
       id
-    );
-    console.log(
-      `Deleted ${recurringTransactionsDeleted} recurring transactions for account ${id}`
     );
 
     // Handle goals associated with this account in two ways:
@@ -271,9 +254,6 @@ export async function deleteAccount(id: string, userId: string) {
       if (goalSnap.exists()) {
         // Delete the goal completely since its dedicated account is being deleted
         await deleteDoc(goalRef);
-        console.log(
-          `Deleted goal ${accountData.goalId} because its dedicated account was deleted`
-        );
       }
     }
 
@@ -285,23 +265,15 @@ export async function deleteAccount(id: string, userId: string) {
       );
 
       const goalsSnapshot = await getDocs(goalsQuery);
-      console.log(`Found ${goalsSnapshot.size} goals with accountId = ${id}`);
 
       // If we have goals associated with this account, delete them
       if (!goalsSnapshot.empty) {
         const batch = writeBatch(db);
         goalsSnapshot.forEach((goalDoc) => {
-          console.log(
-            `Deleting goal ${goalDoc.id} associated with account ${id}`
-          );
           batch.delete(goalDoc.ref);
         });
         await batch.commit();
-        console.log(
-          `Deleted ${goalsSnapshot.size} goals associated with account ${id}`
-        );
       } else {
-        console.log(`No goals found associated with account ${id}`);
       }
     } catch (error) {
       console.error(`Error deleting goals for account ${id}:`, error);
@@ -311,7 +283,6 @@ export async function deleteAccount(id: string, userId: string) {
     await deleteDoc(accountRef);
 
     // Debug goals after deletion to confirm they were removed
-    console.log("Goals after account deletion:");
     await debugGoals();
 
     return { success: true };
@@ -325,28 +296,32 @@ export async function getAccounts(userId: string): Promise<Account[]> {
   try {
     // Validar que el userId es válido (previene acceso no autorizado)
     validateUserId(userId, "getAccounts");
-    
+
     const accountsCollection = getAccountsCollection(userId);
     const q = query(accountsCollection, orderBy("createdAt", "desc"));
 
     const querySnapshot = await getDocs(q);
-    const accounts = querySnapshot.docs.map((doc) => {
-      const data = doc.data();
-      
-      // Verificación adicional: asegurar que los datos pertenecen al usuario correcto
-      if (data.userId && data.userId !== userId) {
-        console.error(`Security: Account ${doc.id} does not belong to user ${userId}`);
-        return null;
-      }
-      
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
-        updatedAt: (data.updatedAt as Timestamp).toDate().toISOString(),
-      } as Account;
-    }).filter(account => account !== null); // Filtrar cuentas nulas por seguridad
-    
+    const accounts = querySnapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+
+        // Verificación adicional: asegurar que los datos pertenecen al usuario correcto
+        if (data.userId && data.userId !== userId) {
+          console.error(
+            `Security: Account ${doc.id} does not belong to user ${userId}`
+          );
+          return null;
+        }
+
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+          updatedAt: (data.updatedAt as Timestamp).toDate().toISOString(),
+        } as Account;
+      })
+      .filter((account) => account !== null); // Filtrar cuentas nulas por seguridad
+
     return accounts;
   } catch (error) {
     console.error("Error getting accounts for user", userId, error);
@@ -529,8 +504,13 @@ export async function addAccountTransaction(
       // Also create transactions in the main transactions collection
       // so transfers appear in the general transactions page
       // We create them manually to avoid double balance updates
-      const transactionsCollection = collection(db, "users", userId, "transactions");
-      
+      const transactionsCollection = collection(
+        db,
+        "users",
+        userId,
+        "transactions"
+      );
+
       // Create expense transaction for source account
       await addDoc(transactionsCollection, {
         type: "expense",
@@ -549,7 +529,7 @@ export async function addAccountTransaction(
         amount: transaction.amount,
         source: `Transfer from ${sourceAccountName}: ${transaction.description}`,
         date: dateToStore,
-        method: "Bank Transfer", 
+        method: "Bank Transfer",
         category: "Transfer",
         accountId: transaction.toAccountId,
         userId,
@@ -610,10 +590,13 @@ export async function addAccountTransaction(
       // Registrar el movimiento de transacción de cuenta directamente
       try {
         const account = await getAccountById(userId, transaction.accountId);
-        const mainTransactionType = transaction.type === "credit" ? "income" : "expense";
-        const defaultCategory = transaction.category || 
+        const mainTransactionType =
+          transaction.type === "credit" ? "income" : "expense";
+        const defaultCategory =
+          transaction.category ||
           (transaction.type === "credit" ? "Other" : "Other");
-        const description = transaction.description || 
+        const description =
+          transaction.description ||
           (transaction.type === "credit" ? "Account Credit" : "Account Debit");
 
         await recordTransactionCreation(
@@ -634,15 +617,23 @@ export async function addAccountTransaction(
       // Also create a transaction in the main transactions collection
       // so it appears in the general transactions page
       // We create it manually to avoid double balance updates
-      const transactionsCollection = collection(db, "users", userId, "transactions");
-      const mainTransactionType = transaction.type === "credit" ? "income" : "expense";
-      
+      const transactionsCollection = collection(
+        db,
+        "users",
+        userId,
+        "transactions"
+      );
+      const mainTransactionType =
+        transaction.type === "credit" ? "income" : "expense";
+
       // Use better default categories and descriptions for account transactions
-      const defaultCategory = transaction.category || 
+      const defaultCategory =
+        transaction.category ||
         (transaction.type === "credit" ? "Other" : "Other");
-      const description = transaction.description || 
+      const description =
+        transaction.description ||
         (transaction.type === "credit" ? "Account Credit" : "Account Debit");
-      
+
       await addDoc(transactionsCollection, {
         type: mainTransactionType,
         amount: transaction.amount,
@@ -708,18 +699,18 @@ export async function getAllAccountTransactions(
   try {
     // Get accounts and their transactions in parallel
     const accounts = await getAccounts(userId);
-    
+
     if (accounts.length === 0) {
       return [];
     }
 
     // Use Promise.all to fetch all account transactions in parallel
     const transactionPromises = accounts
-      .filter(account => account.id)
-      .map(account => getAccountTransactions(userId, account.id!));
+      .filter((account) => account.id)
+      .map((account) => getAccountTransactions(userId, account.id!));
 
     const transactionArrays = await Promise.all(transactionPromises);
-    
+
     // Flatten all transactions into a single array
     const allTransactions = transactionArrays.flat();
 
@@ -811,7 +802,10 @@ export async function deleteAccountTransaction(
         : transactionData.amount;
 
     // If it's a transfer, handle the related transaction
-    if (transactionData.type === "transfer" && transactionData.relatedTransactionId) {
+    if (
+      transactionData.type === "transfer" &&
+      transactionData.relatedTransactionId
+    ) {
       // Find and delete the related transaction in the other account
       if (transactionData.toAccountId) {
         const relatedTransactionRef = doc(
@@ -823,17 +817,22 @@ export async function deleteAccountTransaction(
           "transactions",
           transactionData.relatedTransactionId
         );
-        
+
         const relatedTransactionSnap = await getDoc(relatedTransactionRef);
         if (relatedTransactionSnap.exists()) {
           // Reverse balance in the target account
-          const relatedTransactionData = relatedTransactionSnap.data() as AccountTransaction;
-          const relatedAmountChange = 
+          const relatedTransactionData =
+            relatedTransactionSnap.data() as AccountTransaction;
+          const relatedAmountChange =
             relatedTransactionData.type === "credit"
               ? -relatedTransactionData.amount
               : relatedTransactionData.amount;
-          
-          await updateAccountBalance(userId, transactionData.toAccountId, relatedAmountChange);
+
+          await updateAccountBalance(
+            userId,
+            transactionData.toAccountId,
+            relatedAmountChange
+          );
           await deleteDoc(relatedTransactionRef);
         }
       }
@@ -853,7 +852,7 @@ export async function deleteAccountTransaction(
         where("amount", "==", transactionData.amount),
         where("source", "==", transactionData.description)
       );
-      
+
       const mainTransactionsSnap = await getDocs(mainTransactionsQuery);
       mainTransactionsSnap.forEach(async (doc) => {
         await deleteDoc(doc.ref);

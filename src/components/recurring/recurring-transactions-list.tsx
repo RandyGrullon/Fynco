@@ -229,12 +229,12 @@ export function RecurringTransactionsList({
                     )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Transaction
-                        </DropdownMenuItem>
-                      </AlertDialogTrigger>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Transaction
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>
@@ -277,10 +277,7 @@ export function RecurringTransactionsList({
           </CardHeader>
           <CardContent className="relative pt-2 pb-6">
             <div className="text-xl sm:text-2xl font-bold truncate">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: transaction.account?.currency || "USD",
-              }).format(transaction.amount)}
+              {formatCurrency(transaction.amount)}
             </div>
 
             <div className="text-xs sm:text-sm text-muted-foreground mt-2 flex flex-col gap-1">

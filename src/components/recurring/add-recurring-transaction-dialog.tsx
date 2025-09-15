@@ -42,6 +42,7 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Account, getAccountById } from "@/lib/accounts";
@@ -69,6 +70,7 @@ const recurringTransactionSchema = z.object({
     "yearly",
   ]),
   isActive: z.boolean().default(true),
+  payOnWeekends: z.boolean().default(true),
 });
 
 type RecurringTransactionFormValues = z.infer<
@@ -105,6 +107,7 @@ export function AddRecurringTransactionDialog({
       endDate: null,
       frequency: "monthly",
       isActive: true,
+      payOnWeekends: true,
     },
   });
 
@@ -198,6 +201,7 @@ export function AddRecurringTransactionDialog({
           endDate: null,
           frequency: "monthly",
           isActive: true,
+          payOnWeekends: true,
         });
         if (onTransactionAdded) {
           onTransactionAdded();
@@ -516,6 +520,28 @@ export function AddRecurringTransactionDialog({
                   </div>
                   <FormControl>
                     <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="payOnWeekends"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>¿La empresa paga fines de semana?</FormLabel>
+                    <FormDescription>
+                      Si no, y el día de pago cae en fin de semana, se pagará el
+                      día laborable anterior más cercano.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />

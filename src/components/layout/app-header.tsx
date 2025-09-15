@@ -11,9 +11,12 @@ import Link from "next/link";
 import { AppSidebar } from "./app-sidebar";
 import { UserNav } from "../user-nav";
 import { ThemeToggle } from "../theme-toggle";
+import { Switch } from "@/components/ui/switch";
+import { useAmountVisibility } from "@/contexts/amount-visibility-context";
 
 export function AppHeader() {
   const [open, setOpen] = useState(false);
+  const { hideAmounts, setHideAmounts } = useAmountVisibility();
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
@@ -33,6 +36,12 @@ export function AppHeader() {
         {/* Can add breadcrumbs or page title here */}
       </div>
       <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground hidden sm:inline">
+            Ocultar montos
+          </span>
+          <Switch checked={hideAmounts} onCheckedChange={setHideAmounts} />
+        </div>
         <ThemeToggle />
         <UserNav />
       </div>

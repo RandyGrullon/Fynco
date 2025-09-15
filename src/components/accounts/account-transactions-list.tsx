@@ -9,6 +9,7 @@ import {
   deleteAccountTransaction,
 } from "@/lib/accounts";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import {
   Table,
   TableBody,
@@ -74,13 +75,16 @@ export function AccountTransactionsList({
 }: AccountTransactionsListProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrencyFormatter();
   const [transactions, setTransactions] = useState<AccountTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "amount">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [deletingTransactionId, setDeletingTransactionId] = useState<string | null>(null);
+  const [deletingTransactionId, setDeletingTransactionId] = useState<
+    string | null
+  >(null);
 
   const refreshTransactions = useCallback(async () => {
     if (user && account.id) {
@@ -121,12 +125,12 @@ export function AccountTransactionsList({
 
       if (result.success) {
         // Remove the transaction from local state
-        setTransactions(prev => prev.filter(t => t.id !== transactionId));
+        setTransactions((prev) => prev.filter((t) => t.id !== transactionId));
         toast({
           title: "Success",
           description: "Transaction deleted successfully",
         });
-        
+
         // Call the handler to refresh both local and parent data
         handleTransactionChange();
       } else {
@@ -277,10 +281,7 @@ export function AccountTransactionsList({
                   Total Income
                 </p>
                 <p className="text-lg font-bold text-green-900 dark:text-green-100">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: account.currency,
-                  }).format(statistics.totalIncome)}
+                  {formatCurrency(statistics.totalIncome)}
                 </p>
               </div>
               <div className="p-2 bg-green-200 dark:bg-green-800 rounded-lg">
@@ -298,10 +299,7 @@ export function AccountTransactionsList({
                   Total Expenses
                 </p>
                 <p className="text-lg font-bold text-red-900 dark:text-red-100">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: account.currency,
-                  }).format(statistics.totalExpenses)}
+                  {formatCurrency(statistics.totalExpenses)}
                 </p>
               </div>
               <div className="p-2 bg-red-200 dark:bg-red-800 rounded-lg">
@@ -326,10 +324,7 @@ export function AccountTransactionsList({
                   }`}
                 >
                   {statistics.netFlow >= 0 ? "+" : ""}
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: account.currency,
-                  }).format(statistics.netFlow)}
+                  {formatCurrency(statistics.netFlow)}
                 </p>
               </div>
               <div className="p-2 bg-blue-200 dark:bg-blue-800 rounded-lg">
@@ -494,10 +489,6 @@ export function AccountTransactionsList({
                   {/* Responsive card view for all screen sizes */}
                   <div className="space-y-3">
                     {filteredAndSortedTransactions.map((transaction) => {
-                      console.log(
-                        "Transaction description:",
-                        transaction.description
-                      );
                       return (
                         <div
                           key={transaction.id}
@@ -578,14 +569,9 @@ export function AccountTransactionsList({
                                   : transaction.type === "debit"
                                   ? "-"
                                   : ""}
-                                {new Intl.NumberFormat("en-US", {
-                                  style: "currency",
-                                  currency: account.currency,
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 2,
-                                }).format(transaction.amount)}
+                                {formatCurrency(transaction.amount)}
                               </div>
-                              
+
                               {/* Delete Button with Confirmation */}
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
@@ -593,9 +579,13 @@ export function AccountTransactionsList({
                                     variant="ghost"
                                     size="sm"
                                     className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                    disabled={deletingTransactionId === transaction.id || !transaction.id}
+                                    disabled={
+                                      deletingTransactionId ===
+                                        transaction.id || !transaction.id
+                                    }
                                   >
-                                    {deletingTransactionId === transaction.id ? (
+                                    {deletingTransactionId ===
+                                    transaction.id ? (
                                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
                                     ) : (
                                       <Trash2 className="h-4 w-4" />
@@ -604,16 +594,25 @@ export function AccountTransactionsList({
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                                    <AlertDialogTitle>
+                                      Delete Transaction
+                                    </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to delete this transaction? This action cannot be undone.
-                                      The account balance will be updated to reflect this change.
+                                      Are you sure you want to delete this
+                                      transaction? This action cannot be undone.
+                                      The account balance will be updated to
+                                      reflect this change.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
-                                      onClick={() => transaction.id && handleDeleteTransaction(transaction.id)}
+                                      onClick={() =>
+                                        transaction.id &&
+                                        handleDeleteTransaction(transaction.id)
+                                      }
                                       className="bg-red-600 hover:bg-red-700 text-white"
                                     >
                                       Delete Transaction

@@ -12,6 +12,7 @@ import {
 import { ChevronDown, SwitchCamera } from "lucide-react";
 import { Account } from "@/lib/accounts";
 import { useRouter } from "next/navigation";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 
 interface AccountSwitcherProps {
   currentAccount: Account;
@@ -23,6 +24,7 @@ export function AccountSwitcher({
   otherAccounts,
 }: AccountSwitcherProps) {
   const router = useRouter();
+  const { formatCurrency } = useCurrencyFormatter();
 
   const handleAccountSwitch = (accountId: string) => {
     router.push(`/accounts/${accountId}`);
@@ -44,10 +46,7 @@ export function AccountSwitcher({
           <div className="flex justify-between w-full items-center">
             <span className="font-medium">{currentAccount.name}</span>
             <span className="text-xs text-muted-foreground">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: currentAccount.currency,
-              }).format(currentAccount.balance)}
+              {formatCurrency(currentAccount.balance)}
             </span>
           </div>
         </DropdownMenuItem>
@@ -64,10 +63,7 @@ export function AccountSwitcher({
               <div className="flex justify-between w-full items-center">
                 <span>{account.name}</span>
                 <span className="text-xs text-muted-foreground">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: account.currency,
-                  }).format(account.balance)}
+                  {formatCurrency(account.balance)}
                 </span>
               </div>
             </DropdownMenuItem>

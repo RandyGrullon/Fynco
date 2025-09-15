@@ -220,7 +220,9 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                       account={account}
                       onAccountUpdated={refreshAccounts}
                     >
-                      <DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
+                      >
                         <Edit className="h-4 w-4" /> Edit Account
                       </DropdownMenuItem>
                     </EditAccountDialog>
@@ -229,7 +231,9 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                       transactionType="credit"
                       onTransactionAdded={refreshAccounts}
                     >
-                      <DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
+                      >
                         <Banknote className="h-4 w-4" /> Add Income
                       </DropdownMenuItem>
                     </AccountTransactionDialog>
@@ -238,7 +242,9 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                       transactionType="debit"
                       onTransactionAdded={refreshAccounts}
                     >
-                      <DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
+                      >
                         <Banknote className="h-4 w-4" /> Add Expense
                       </DropdownMenuItem>
                     </AccountTransactionDialog>
@@ -248,6 +254,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                       onTransferCompleted={refreshAccounts}
                     >
                       <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
                         disabled={
                           accounts.filter((a) => a.id !== account.id).length ===
                           0
@@ -259,7 +266,10 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                     <DropdownMenuSeparator />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-red-600 focus:text-red-600">
+                        <DropdownMenuItem
+                          onSelect={(e: any) => e.preventDefault()}
+                          className="text-red-600 focus:text-red-600"
+                        >
                           <Trash2 className="h-4 w-4" /> Delete Account
                         </DropdownMenuItem>
                       </AlertDialogTrigger>
@@ -303,10 +313,7 @@ export function AccountsList({ accounts, refreshAccounts }: AccountsListProps) {
                 <div className="relative">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: account.currency,
-                      }).format(account.balance)}
+                      {formatCurrency(account.balance)}
                     </div>
                     <div
                       className={`w-3 h-3 rounded-full ${

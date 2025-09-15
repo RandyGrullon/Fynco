@@ -19,10 +19,12 @@ import AccountsPageClient from "@/components/accounts/accounts-page-client";
 import { AddAccountDialog } from "@/components/add-account-dialog";
 import AccountsOverview from "@/components/accounts/accounts-overview";
 import { useData } from "@/contexts/data-context";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 
 export default function AccountsPage() {
   const { user } = useAuth();
   const { accounts, isLoading, refreshAccounts } = useData();
+  const { formatCurrency } = useCurrencyFormatter();
 
   // Calculate total balance across all accounts
   const totalBalance = accounts.reduce(
@@ -98,10 +100,7 @@ export default function AccountsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  }).format(totalBalance)}
+                  {formatCurrency(totalBalance)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Across all accounts

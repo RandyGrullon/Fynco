@@ -7,6 +7,7 @@ import {
   AccountTransaction,
   getAccountTransactions,
 } from "@/lib/accounts";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import {
   Card,
   CardContent,
@@ -50,6 +51,7 @@ export function TransferCardList({
   onTransferCompleted,
 }: TransferCardListProps) {
   const { user } = useAuth();
+  const { formatCurrency } = useCurrencyFormatter();
   const [transactions, setTransactions] = useState<AccountTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -238,12 +240,7 @@ export function TransferCardList({
                   Total Amount Transferred
                 </p>
                 <p className="text-lg font-bold text-violet-900 dark:text-violet-100">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD", // Default currency
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
-                  }).format(statistics.totalTransferAmount)}
+                  {formatCurrency(statistics.totalTransferAmount)}
                 </p>
               </div>
               <div className="p-2 bg-violet-200 dark:bg-violet-800 rounded-lg">
@@ -294,10 +291,7 @@ export function TransferCardList({
                     {account.name}
                   </h3>
                   <p className="text-sm text-muted-foreground text-center mb-3">
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: account.currency,
-                    }).format(account.balance)}
+                    {formatCurrency(account.balance)}
                   </p>
                   <TransferDialog
                     fromAccount={account}
@@ -523,14 +517,7 @@ export function TransferCardList({
                           {/* Amount and date */}
                           <div className="sm:text-right">
                             <div className="font-semibold text-lg text-indigo-600 dark:text-indigo-400">
-                              {new Intl.NumberFormat("en-US", {
-                                style: "currency",
-                                currency: getAccountCurrencyById(
-                                  transaction.accountId
-                                ),
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 2,
-                              }).format(transaction.amount)}
+                              {formatCurrency(transaction.amount)}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-end mt-1">
                               <Calendar className="h-3 w-3 mr-1" />

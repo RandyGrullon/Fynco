@@ -15,10 +15,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    console.log('AppLayout - Auth state:', { loading, hasUser: !!user });
-    
     if (!loading && !user) {
-      console.warn('AppLayout - No user detected, redirecting to login');
+      console.warn("AppLayout - No user detected, redirecting to login");
       router.replace("/login");
     }
   }, [loading, user, router]);
@@ -66,7 +64,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
-          <p className="text-muted-foreground">Sesión no válida. Redirigiendo al login...</p>
+          <p className="text-muted-foreground">
+            Sesión no válida. Redirigiendo al login...
+          </p>
         </div>
       </div>
     );

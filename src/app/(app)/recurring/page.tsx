@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect, useCallback } from "react";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import {
   RecurringTransaction,
   RecurringTransactionWithAccount,
@@ -24,6 +25,7 @@ import RecurringTransactionsList from "@/components/recurring/recurring-transact
 
 export default function RecurringTransactionsPage() {
   const { user } = useAuth();
+  const { formatCurrency } = useCurrencyFormatter();
   const [recurringTransactions, setRecurringTransactions] = useState<
     RecurringTransactionWithAccount[]
   >([]);
@@ -129,10 +131,7 @@ export default function RecurringTransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(monthlyIncome)}
+              {formatCurrency(monthlyIncome)}
             </div>
             <p className="text-xs text-muted-foreground">
               Expected monthly recurring income
@@ -148,10 +147,7 @@ export default function RecurringTransactionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(monthlyExpenses)}
+              {formatCurrency(monthlyExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">
               Expected monthly recurring expenses

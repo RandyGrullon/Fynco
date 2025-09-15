@@ -29,7 +29,7 @@ interface OverviewProps {
 }
 
 export function Overview({ data, timePeriod = "monthly" }: OverviewProps) {
-  const { currencySymbol } = useCurrencyFormatter();
+  const { currencySymbol, formatCurrency } = useCurrencyFormatter();
 
   // Filter data based on time period
   const filteredData = data.filter((transaction) => {
@@ -131,7 +131,7 @@ export function Overview({ data, timePeriod = "monthly" }: OverviewProps) {
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `${currencySymbol}${value}`}
+              tickFormatter={(value) => formatCurrency(value)}
             />
             <Tooltip
               cursor={{ fill: "hsl(var(--muted))" }}
@@ -140,6 +140,10 @@ export function Overview({ data, timePeriod = "monthly" }: OverviewProps) {
                 borderColor: "hsl(var(--border))",
                 borderRadius: "var(--radius)",
               }}
+              formatter={(value: number, name: string) => [
+                formatCurrency(value),
+                name,
+              ]}
             />
             <Bar
               dataKey="income"

@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { Account, addAccountTransaction } from "@/lib/accounts";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -41,14 +42,13 @@ export function TransferDialog({
 }: TransferDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrencyFormatter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [toAccountId, setToAccountId] = useState("");
-  const [sourceAccountId, setSourceAccountId] = useState(
-    fromAccount.id || ""
-  );
+  const [sourceAccountId, setSourceAccountId] = useState(fromAccount.id || "");
 
   // Keep sourceAccountId in sync when the dialog opens or when the prop changes
   useEffect(() => {
@@ -113,14 +113,14 @@ export function TransferDialog({
       return;
     }
 
-  // Description is optional for transfers
+    // Description is optional for transfers
 
-  // Check if there's enough balance for the transfer
+    // Check if there's enough balance for the transfer
     const transferAmount = parseFloat(amount);
     // lookup source account balance
     const allAccounts = [fromAccount, ...accounts];
-    const sourceAcc = allAccounts.find((a) => a.id === sourceAccountId) ||
-      fromAccount;
+    const sourceAcc =
+      allAccounts.find((a) => a.id === sourceAccountId) || fromAccount;
     if (sourceAcc.balance < transferAmount) {
       toast({
         title: "Error",
@@ -132,9 +132,9 @@ export function TransferDialog({
 
     setLoading(true);
     try {
-    const result = await addAccountTransaction(
+      const result = await addAccountTransaction(
         {
-      accountId: sourceAccountId,
+          accountId: sourceAccountId,
           amount: transferAmount,
           description,
           type: "transfer",
@@ -153,7 +153,7 @@ export function TransferDialog({
         setAmount("");
         setDescription("");
         setToAccountId("");
-  setSourceAccountId(fromAccount.id || "");
+        setSourceAccountId(fromAccount.id || "");
         if (onTransferCompleted) {
           onTransferCompleted();
         }
@@ -194,16 +194,16 @@ export function TransferDialog({
               <div className="col-span-3">
                 {(() => {
                   const allAccounts = [fromAccount, ...accounts];
-                  const currentSourceAccount = allAccounts.find((a) => a.id === sourceAccountId) || fromAccount;
+                  const currentSourceAccount =
+                    allAccounts.find((a) => a.id === sourceAccountId) ||
+                    fromAccount;
                   return (
                     <>
-                      <p className="text-sm font-medium">{currentSourceAccount.name}</p>
+                      <p className="text-sm font-medium">
+                        {currentSourceAccount.name}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        Balance:{" "}
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: currentSourceAccount.currency,
-                        }).format(currentSourceAccount.balance)}
+                        Balance: {formatCurrency(currentSourceAccount.balance)}
                       </p>
                     </>
                   );
@@ -228,12 +228,17 @@ export function TransferDialog({
                       ) : (
                         // Include all accounts but remove duplicates and exclude the current sourceAccountId
                         [fromAccount, ...accounts]
-                          .filter((account, index, arr) => 
-                            account.id !== sourceAccountId &&
-                            arr.findIndex(a => a.id === account.id) === index
+                          .filter(
+                            (account, index, arr) =>
+                              account.id !== sourceAccountId &&
+                              arr.findIndex((a) => a.id === account.id) ===
+                                index
                           )
                           .map((account) => (
-                            <SelectItem key={account.id} value={account.id || ""}>
+                            <SelectItem
+                              key={account.id}
+                              value={account.id || ""}
+                            >
                               {account.name}
                             </SelectItem>
                           ))
@@ -247,7 +252,9 @@ export function TransferDialog({
                     size="sm"
                     type="button"
                     onClick={handleSwapAccounts}
-                    disabled={!toAccountId && sourceAccountId === fromAccount.id}
+                    disabled={
+                      !toAccountId && sourceAccountId === fromAccount.id
+                    }
                     title="Swap From/To accounts"
                   >
                     ⇄

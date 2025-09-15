@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { Account, addAccountTransaction } from "@/lib/accounts";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -41,6 +42,7 @@ export function AccountTransactionDialog({
 }: AccountTransactionDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrencyFormatter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
@@ -154,11 +156,7 @@ export function AccountTransactionDialog({
               <div className="col-span-3">
                 <p className="text-sm font-medium">{account.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  Balance:{" "}
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: account.currency,
-                  }).format(account.balance)}
+                  Balance: {formatCurrency(account.balance)}
                 </p>
               </div>
             </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -16,26 +16,24 @@ interface RouteGuardProps {
 export function RouteGuard({ children }: RouteGuardProps) {
   const { user, loading, forceLogout } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
+  // usePathname can return null (SSR or before hydration). Default to empty string
+  // so string operations like .includes/.split are safe.
+  const pathname = usePathname() ?? "";
   const [isValidating, setIsValidating] = useState(true);
 
   useEffect(() => {
     const validateUser = async () => {
-      console.log('RouteGuard - Validating user access:', { 
-        pathname, 
-        hasUser: !!user, 
-        loading,
-        userEmail: user?.email 
-      });
-
       // Si no está cargando y no hay usuario, forzar logout
       if (!loading && !user) {
-        console.warn('RouteGuard - No authenticated user detected, forcing logout');
-        
+        console.warn(
+          "RouteGuard - No authenticated user detected, forcing logout"
+        );
+
         toast({
           variant: "destructive",
           title: "Sesión expirada",
-          description: "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
+          description:
+            "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
         });
 
         await forceLogout();
@@ -43,29 +41,38 @@ export function RouteGuard({ children }: RouteGuardProps) {
       }
 
       // Bloquear acceso a rutas de transacciones (fueron removidas)
-      if (pathname.includes('/transactions')) {
-        console.warn('RouteGuard - Blocked access to removed transactions route');
+      if (pathname.includes("/transactions")) {
+        console.warn(
+          "RouteGuard - Blocked access to removed transactions route"
+        );
         toast({
           variant: "destructive",
           title: "Página no disponible",
           description: "Esta funcionalidad ha sido removida.",
         });
-        router.replace('/dashboard');
+        router.replace("/dashboard");
         return;
       }
 
       // Verificar si la URL contiene parámetros que podrían ser IDs de otros usuarios
-      const urlSegments = pathname.split('/');
-      const potentialUserIds = urlSegments.filter(segment => 
-        segment.length > 10 && // IDs de Firebase son largos
-        segment.match(/^[a-zA-Z0-9]+$/) // Solo alfanuméricos
+      const urlSegments = pathname.split("/");
+      const potentialUserIds = urlSegments.filter(
+        (segment) =>
+          segment.length > 10 && // IDs de Firebase son largos
+          segment.match(/^[a-zA-Z0-9]+$/) // Solo alfanuméricos
       );
 
       // Si encontramos un posible ID de usuario en la URL que no coincide
       let unauthorizedAccess = false;
-      potentialUserIds.forEach(potentialUserId => {
-        if (user && potentialUserId !== user.uid && potentialUserId.length > 20) {
-          console.warn(`RouteGuard - Security violation: Attempted access to user ${potentialUserId} by ${user.uid}`);
+      potentialUserIds.forEach((potentialUserId) => {
+        if (
+          user &&
+          potentialUserId !== user.uid &&
+          potentialUserId.length > 20
+        ) {
+          console.warn(
+            `RouteGuard - Security violation: Attempted access to user ${potentialUserId} by ${user.uid}`
+          );
           unauthorizedAccess = true;
         }
       });
@@ -76,7 +83,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
           title: "Acceso no autorizado",
           description: "No tienes permisos para acceder a esta información.",
         });
-        router.replace('/dashboard');
+        router.replace("/dashboard");
         return;
       }
 

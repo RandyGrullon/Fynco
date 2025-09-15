@@ -5,8 +5,6 @@ const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
 
 export async function POST(request: NextRequest) {
-  console.log("=== Financial chat API called ===");
-
   // Validate API key early to provide clear error message
   if (!GEMINI_API_KEY || GEMINI_API_KEY.length === 0) {
     console.error("GEMINI_API_KEY is not set in environment variables");
@@ -30,12 +28,7 @@ export async function POST(request: NextRequest) {
 
     const { message, userContext } = body;
 
-    console.log("Request body:", body);
-    console.log("Received message:", message);
-    console.log("User context:", userContext);
-
     if (!message || typeof message !== "string" || !message.trim()) {
-      console.log("Invalid message provided");
       return NextResponse.json(
         { error: "Message es requerido" },
         { status: 400 }
@@ -106,14 +99,11 @@ Responde siempre en español y de manera concisa pero útil.`;
     };
 
     // 4. Llamada a Gemini
-    console.log("Making request to Gemini API...");
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
     });
-
-    console.log("Gemini API response status:", response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -137,7 +127,6 @@ Responde siempre en español y de manera concisa pero útil.`;
 
     // 5. Procesar respuesta de Gemini
     const data = await response.json();
-    console.log("Gemini response JSON:", JSON.stringify(data, null, 2));
 
     const assistantMessage =
       data.candidates?.[0]?.content?.parts?.[0]?.text || null;

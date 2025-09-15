@@ -1,6 +1,7 @@
 "use client";
 
 import { Account } from "@/lib/accounts";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import {
   Card,
   CardContent,
@@ -22,6 +23,7 @@ interface AccountsOverviewProps {
 }
 
 export function AccountsOverview({ accounts }: AccountsOverviewProps) {
+  const { formatCurrency } = useCurrencyFormatter();
   // Generate chart data from accounts
   const chartData = accounts.map((account) => ({
     name: account.name,
@@ -67,12 +69,7 @@ export function AccountsOverview({ accounts }: AccountsOverviewProps) {
       return (
         <div className="bg-background p-2 border rounded shadow-sm">
           <p className="font-medium">{payload[0].name}</p>
-          <p>
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-            }).format(payload[0].value)}
-          </p>
+          <p>{formatCurrency(payload[0].value)}</p>
           <p className="text-xs text-muted-foreground">
             {((payload[0].value / totalBalance) * 100).toFixed(1)}% of total
           </p>

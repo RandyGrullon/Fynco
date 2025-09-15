@@ -8,6 +8,7 @@ import {
   AccountTransaction,
   Account,
 } from "@/lib/accounts";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import {
   Table,
   TableBody,
@@ -38,6 +39,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AllTransactionsPage() {
   const { user } = useAuth();
+  const { formatCurrency } = useCurrencyFormatter();
   const [transactions, setTransactions] = useState<AccountTransaction[]>([]);
   const [accounts, setAccounts] = useState<Record<string, Account>>({});
   const [loading, setLoading] = useState(true);
@@ -263,10 +265,7 @@ export default function AllTransactionsPage() {
                             : ""
                         }`}
                       >
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: getAccountCurrency(transaction.accountId),
-                        }).format(transaction.amount)}
+                        {formatCurrency(transaction.amount)}
                       </TableCell>
                     </TableRow>
                   ))}

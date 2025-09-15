@@ -47,7 +47,7 @@ service cloud.firestore {
       }
       
       // Recurring transactions subcollection
-      match /recurring-transactions/{recurringId} {
+      match /recurringTransactions/{recurringId} {
         allow read, write: if isOwner(userId) && 
           (request.method == 'get' || validateUserData());
         allow create: if isOwner(userId) && 

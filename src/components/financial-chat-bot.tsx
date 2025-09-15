@@ -63,8 +63,6 @@ export function FinancialChatBot() {
     setIsLoading(true);
 
     try {
-      console.log("Preparing user context and sending message to API");
-
       // Gather user context client-side to provide Gemini full view of user data
       let userContextPayload: any = {
         userId: user?.uid || null,
@@ -105,8 +103,6 @@ export function FinancialChatBot() {
           userContext: userContextPayload,
         }),
       });
-
-      console.log("API Response status:", response.status);
 
       // Try to parse body safely
       let parsed: any = null;
@@ -272,7 +268,9 @@ export function FinancialChatBot() {
                     )}
                   >
                     {message.sender === "user" ? (
-                      <p className="text-sm leading-relaxed text-white">{message.content}</p>
+                      <p className="text-sm leading-relaxed text-white">
+                        {message.content}
+                      </p>
                     ) : (
                       <FormattedMessage content={message.content} />
                     )}

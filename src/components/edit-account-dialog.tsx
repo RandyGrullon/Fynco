@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { Account, AccountType, updateAccount } from "@/lib/accounts";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ export function EditAccountDialog({
 }: EditAccountDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrencyFormatter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(account.name);
@@ -47,8 +49,20 @@ export function EditAccountDialog({
   const [description, setDescription] = useState(account.description || "");
   const [isDefault, setIsDefault] = useState(!!account.isDefault);
 
+  // Reset form fields when dialog opens or account changes
+  useEffect(() => {
+    if (open) {
+      setName(account.name);
+      setType(account.type);
+      setDescription(account.description || "");
+      setIsDefault(!!account.isDefault);
+    }
+  }, [open, account]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (!user || !account.id) {
       toast({
         title: "Error",
@@ -88,7 +102,8 @@ export function EditAccountDialog({
           title: "Success",
           description: "Account updated successfully",
         });
-        setOpen(false);
+        // Close dialog after successful update
+        setTimeout(() => setOpen(false), 100);
         if (onAccountUpdated) {
           onAccountUpdated();
         }
@@ -109,18 +124,27 @@ export function EditAccountDialog({
       setLoading(false);
     }
   };
-
+  console.log("====================================");
+  console.log(open);
+  console.log("====================================");
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        // Prevent closing dialog while loading
+        if (loading && !newOpen) return;
+        setOpen(newOpen);
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit Account</DialogTitle>
+          <DialogDescription>
+            Update your account details below.
+          </DialogDescription>
+        </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Edit Account</DialogTitle>
-            <DialogDescription>
-              Update your account details below.
-            </DialogDescription>
-          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
@@ -157,10 +181,7 @@ export function EditAccountDialog({
               </Label>
               <div className="col-span-3">
                 <p className="text-sm font-medium">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: account.currency,
-                  }).format(account.balance)}
+                  {formatCurrency(account.balance)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Balance can only be changed through transactions
@@ -220,17 +241,17 @@ export function EditAccountDialog({
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Account"}
-            </Button>
-          </DialogFooter>
         </form>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="outline" disabled={loading}>
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button type="submit" disabled={loading} onClick={handleSubmit}>
+            {loading ? "Updating..." : "Update Account"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

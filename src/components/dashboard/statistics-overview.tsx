@@ -301,7 +301,7 @@ export function StatisticsOverview({
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
-                    tickFormatter={(value) => `${currencySymbol}${value}`}
+                    tickFormatter={(value) => formatCurrency(value)}
                     width={60}
                   />
                   <Tooltip

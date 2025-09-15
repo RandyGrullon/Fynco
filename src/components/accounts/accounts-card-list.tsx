@@ -23,9 +23,10 @@ import {
   MoreHorizontal,
   Trash2,
   Banknote,
+  ArrowDownUp,
   CreditCard,
-  Building,
   PiggyBank,
+  Building,
   Wallet,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -134,7 +135,7 @@ export function AccountsCardList({
           title: "Account deleted",
           description: "The account has been successfully deleted",
         });
-        refreshAccounts();
+        await refreshAccounts();
       } else {
         toast({
           title: "Error",
@@ -232,62 +233,60 @@ export function AccountsCardList({
                       account={account}
                       onAccountUpdated={refreshAccounts}
                     >
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                      <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
+                      >
+                        <Edit className="mr-2 h-4 w-4" /> Edit
                       </DropdownMenuItem>
                     </EditAccountDialog>
-                    <TransferDialog
-                      fromAccount={account}
-                      accounts={accounts.filter((a) => a.id !== account.id)}
-                      onTransferCompleted={refreshAccounts}
+
+                    <AccountTransactionDialog
+                      account={account}
+                      transactionType="credit"
+                      onTransactionAdded={refreshAccounts}
                     >
-                      <DropdownMenuItem>
-                        <svg
-                          className="mr-2 h-4 w-4"
-                          width="15"
-                          height="15"
-                          viewBox="0 0 15 15"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M7.14645 2.14645C7.34171 1.95118 7.65829 1.95118 7.85355 2.14645L11.8536 6.14645C12.0488 6.34171 12.0488 6.65829 11.8536 6.85355C11.6583 7.04882 11.3417 7.04882 11.1464 6.85355L8 3.70711L8 12.5C8 12.7761 7.77614 13 7.5 13C7.22386 13 7 12.7761 7 12.5L7 3.70711L3.85355 6.85355C3.65829 7.04882 3.34171 7.04882 3.14645 6.85355C2.95118 6.65829 2.95118 6.34171 3.14645 6.14645L7.14645 2.14645Z"
-                            fill="currentColor"
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                          ></path>
-                        </svg>
-                        Transfer
+                      <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
+                      >
+                        <Banknote className="mr-2 h-4 w-4" /> Add Income
                       </DropdownMenuItem>
-                    </TransferDialog>
+                    </AccountTransactionDialog>
+
                     <AccountTransactionDialog
                       account={account}
                       transactionType="debit"
                       onTransactionAdded={refreshAccounts}
                     >
-                      <DropdownMenuItem>
-                        <svg
-                          className="mr-2 h-4 w-4"
-                          width="15"
-                          height="15"
-                          viewBox="0 0 15 15"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M8 2.75C8 2.47386 7.77614 2.25 7.5 2.25C7.22386 2.25 7 2.47386 7 2.75V7H2.75C2.47386 7 2.25 7.22386 2.25 7.5C2.25 7.77614 2.47386 8 2.75 8H7V12.25C7 12.5261 7.22386 12.75 7.5 12.75C7.77614 12.75 8 12.5261 8 12.25V8H12.25C12.5261 8 12.75 7.77614 12.75 7.5C12.75 7.22386 12.5261 7 12.25 7H8V2.75Z"
-                            fill="currentColor"
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                          ></path>
-                        </svg>
-                        Add Transaction
+                      <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
+                      >
+                        <Banknote className="mr-2 h-4 w-4" /> Add Expense
                       </DropdownMenuItem>
                     </AccountTransactionDialog>
+
+                    <TransferDialog
+                      fromAccount={account}
+                      accounts={accounts.filter((a) => a.id !== account.id)}
+                      onTransferCompleted={refreshAccounts}
+                    >
+                      <DropdownMenuItem
+                        onSelect={(e: any) => e.preventDefault()}
+                        disabled={
+                          accounts.filter((a) => a.id !== account.id).length ===
+                          0
+                        }
+                      >
+                        <ArrowDownUp className="mr-2 h-4 w-4" /> Transfer
+                      </DropdownMenuItem>
+                    </TransferDialog>
+
+                    <DropdownMenuSeparator />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">
+                        <DropdownMenuItem
+                          onSelect={(e: any) => e.preventDefault()}
+                          className="text-destructive focus:text-destructive"
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>

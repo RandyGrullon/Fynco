@@ -34,16 +34,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { useData } from "@/contexts/data-context";
 import { OptimizedLoading } from "@/components/ui/optimized-loading";
-import { useFilteredTransactions, useTransactionStats } from "@/hooks/use-filtered-transactions";
+import {
+  useFilteredTransactions,
+  useTransactionStats,
+} from "@/hooks/use-filtered-transactions";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { transactions, accounts, isLoading, refreshData } = useData();
   const [timePeriod, setTimePeriod] = useState<TimeFilterPeriod>("monthly");
   const { formatCurrency } = useCurrencyFormatter();
-  
+
   // Use optimized filtered transactions and stats
-  const filteredTransactions = useFilteredTransactions(transactions, timePeriod);
+  const filteredTransactions = useFilteredTransactions(
+    transactions,
+    timePeriod
+  );
   const transactionStats = useTransactionStats(filteredTransactions);
 
   // Filter transactions based on time period

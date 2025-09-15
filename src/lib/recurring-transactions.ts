@@ -40,6 +40,7 @@ export type RecurringTransaction = {
   createdAt: Date | Timestamp | string;
   updatedAt: Date | Timestamp | string;
   type: "income" | "expense"; // Whether this is recurring income or expense
+  payOnWeekends?: boolean; // Whether to pay on weekends or adjust to previous weekday
 };
 
 export type RecurringTransactionWithAccount = RecurringTransaction & {
@@ -81,7 +82,8 @@ export async function addRecurringTransaction(
           ? new Date(transaction.startDate)
           : transaction.startDate
       ),
-      transaction.frequency
+      transaction.frequency,
+      transaction.payOnWeekends ?? true
     );
 
     const docRef = await addDoc(recurringTransactionsCollection, {
@@ -137,8 +139,14 @@ export async function updateRecurringTransaction(
           : (currentData.startDate as Date);
 
         const frequency = transaction.frequency || currentData.frequency;
+        const payOnWeekends =
+          transaction.payOnWeekends ?? currentData.payOnWeekends ?? true;
 
-        const nextProcessDate = calculateNextProcessDate(startDate, frequency);
+        const nextProcessDate = calculateNextProcessDate(
+          startDate,
+          frequency,
+          payOnWeekends
+        );
         if (nextProcessDate) {
           updateData.nextProcessDate = Timestamp.fromDate(nextProcessDate);
         }
@@ -313,14 +321,15 @@ export async function getRecurringTransaction(
 // Helper function to calculate the next process date based on frequency
 function calculateNextProcessDate(
   startDate: Date,
-  frequency: RecurrenceFrequency
+  frequency: RecurrenceFrequency,
+  payOnWeekends: boolean = true
 ): Date | null {
   const now = new Date();
   const result = new Date(startDate);
 
   // If start date is in the future, that's the next process date
   if (startDate > now) {
-    return startDate;
+    return adjustForWeekends(startDate, payOnWeekends);
   }
 
   // Start from the start date and find the next occurrence based on frequency
@@ -346,7 +355,7 @@ function calculateNextProcessDate(
       const biweeklyCycles = Math.floor(daysDiff / 14);
       const nextBiweeklyDate = new Date(startDate);
       nextBiweeklyDate.setDate(startDate.getDate() + (biweeklyCycles + 1) * 14);
-      return nextBiweeklyDate;
+      return adjustForWeekends(nextBiweeklyDate, payOnWeekends);
 
     case "monthly":
       // Move to the same day next month
@@ -379,10 +388,24 @@ function calculateNextProcessDate(
       return null;
   }
 
-  return result;
+  return adjustForWeekends(result, payOnWeekends);
 }
 
 // Helper to get days in month (accounting for leap years)
 function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
+}
+
+// Helper to adjust date if it falls on weekend and payOnWeekends is false
+function adjustForWeekends(date: Date, payOnWeekends: boolean): Date {
+  if (payOnWeekends) return date;
+
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    // If Sunday or Saturday, move to previous Friday
+    const adjusted = new Date(date);
+    adjusted.setDate(date.getDate() - (dayOfWeek === 0 ? 2 : 1));
+    return adjusted;
+  }
+  return date;
 }

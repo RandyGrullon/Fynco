@@ -1,26 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { CalendarIcon, Filter, Search, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { 
-  Movement, 
-  MovementType, 
-  getMovements, 
-  getMovementsByType, 
+import {
+  Movement,
+  MovementType,
+  getMovements,
+  getMovementsByType,
   getMovementsByDateRange,
   getMovementTypeLabel,
-  getMovementTypeIcon 
+  getMovementTypeIcon,
 } from "@/lib/movements";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useAuth } from "@/hooks/use-auth";
@@ -32,7 +48,7 @@ interface MovementsListProps {
 
 const movementTypes: MovementType[] = [
   "account_created",
-  "account_updated", 
+  "account_updated",
   "account_deleted",
   "transaction_created",
   "transaction_updated",
@@ -44,7 +60,7 @@ const movementTypes: MovementType[] = [
   "goal_funds_added",
   "recurring_transaction_created",
   "recurring_transaction_updated",
-  "recurring_transaction_deleted"
+  "recurring_transaction_deleted",
 ];
 
 export function MovementsList({ className }: MovementsListProps) {
@@ -73,7 +89,10 @@ export function MovementsList({ className }: MovementsListProps) {
         setHasMore(false);
       } else if (selectedType !== "all") {
         // Filtrar por tipo
-        result = await getMovementsByType(user.uid, selectedType as MovementType);
+        result = await getMovementsByType(
+          user.uid,
+          selectedType as MovementType
+        );
         setMovements(result);
         setHasMore(false);
       } else {
@@ -84,13 +103,13 @@ export function MovementsList({ className }: MovementsListProps) {
           50,
           docToUse
         );
-        
+
         if (reset) {
           setMovements(newMovements);
         } else {
-          setMovements(prev => [...prev, ...newMovements]);
+          setMovements((prev) => [...prev, ...newMovements]);
         }
-        
+
         setLastDoc(lastDocument);
         setHasMore(newMovements.length === 50);
       }
@@ -113,9 +132,11 @@ export function MovementsList({ className }: MovementsListProps) {
     setLastDoc(null);
   };
 
-  const filteredMovements = movements.filter(movement => {
+  const filteredMovements = movements.filter((movement) => {
     if (!searchTerm) return true;
-    return movement.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return movement.description
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
   });
 
   const formatDate = (date: Date | string | Timestamp) => {
@@ -131,11 +152,16 @@ export function MovementsList({ className }: MovementsListProps) {
   };
 
   const getMovementColor = (type: MovementType) => {
-    if (type.includes("created")) return "bg-green-100 text-green-800 border-green-200";
-    if (type.includes("updated")) return "bg-blue-100 text-blue-800 border-blue-200";
-    if (type.includes("deleted")) return "bg-red-100 text-red-800 border-red-200";
-    if (type === "transfer_created") return "bg-purple-100 text-purple-800 border-purple-200";
-    if (type.includes("goal")) return "bg-orange-100 text-orange-800 border-orange-200";
+    if (type.includes("created"))
+      return "bg-green-100 text-green-800 border-green-200";
+    if (type.includes("updated"))
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    if (type.includes("deleted"))
+      return "bg-red-100 text-red-800 border-red-200";
+    if (type === "transfer_created")
+      return "bg-purple-100 text-purple-800 border-purple-200";
+    if (type.includes("goal"))
+      return "bg-orange-100 text-orange-800 border-orange-200";
     return "bg-gray-100 text-gray-800 border-gray-200";
   };
 
@@ -172,9 +198,11 @@ export function MovementsList({ className }: MovementsListProps) {
             {/* Tipo de movimiento */}
             <div className="space-y-2">
               <Label>Tipo de Movimiento</Label>
-              <Select 
-                value={selectedType} 
-                onValueChange={(value) => setSelectedType(value as MovementType | "all")}
+              <Select
+                value={selectedType}
+                onValueChange={(value) =>
+                  setSelectedType(value as MovementType | "all")
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los tipos" />
@@ -203,7 +231,9 @@ export function MovementsList({ className }: MovementsListProps) {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Seleccionar fecha"}
+                    {dateFrom
+                      ? format(dateFrom, "dd/MM/yyyy")
+                      : "Seleccionar fecha"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -230,7 +260,9 @@ export function MovementsList({ className }: MovementsListProps) {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? format(dateTo, "dd/MM/yyyy") : "Seleccionar fecha"}
+                    {dateTo
+                      ? format(dateTo, "dd/MM/yyyy")
+                      : "Seleccionar fecha"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -261,7 +293,9 @@ export function MovementsList({ className }: MovementsListProps) {
         <CardHeader>
           <CardTitle>Historial de Movimientos</CardTitle>
           <CardDescription>
-            {filteredMovements.length} movimiento{filteredMovements.length !== 1 ? 's' : ''} encontrado{filteredMovements.length !== 1 ? 's' : ''}
+            {filteredMovements.length} movimiento
+            {filteredMovements.length !== 1 ? "s" : ""} encontrado
+            {filteredMovements.length !== 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -276,7 +310,9 @@ export function MovementsList({ className }: MovementsListProps) {
             <div className="text-center py-8 text-muted-foreground">
               <div className="mb-4">📋</div>
               <p>No se encontraron movimientos</p>
-              <p className="text-sm">Ajusta los filtros o realiza algunas acciones en la aplicación</p>
+              <p className="text-sm">
+                Ajusta los filtros o realiza algunas acciones en la aplicación
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -288,7 +324,7 @@ export function MovementsList({ className }: MovementsListProps) {
                   <div className="text-2xl mt-1">
                     {getMovementTypeIcon(movement.type)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
@@ -299,39 +335,46 @@ export function MovementsList({ className }: MovementsListProps) {
                           {formatDate(movement.timestamp)}
                         </p>
                       </div>
-                      
+
                       <div className="flex flex-col items-end gap-2">
-                        <Badge 
-                          variant="secondary" 
-                          className={cn("text-xs", getMovementColor(movement.type))}
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "text-xs",
+                            getMovementColor(movement.type)
+                          )}
                         >
                           {getMovementTypeLabel(movement.type)}
                         </Badge>
-                        
+
                         {movement.amount && movement.currency && (
                           <span className="text-sm font-medium">
-                            {movement.currency} {movement.amount.toFixed(2)}
+                            {formatCurrency(movement.amount)}
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Metadata adicional */}
-                    {movement.metadata && Object.keys(movement.metadata).length > 0 && (
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        {movement.fromAccount && movement.toAccount && (
-                          <span>
-                            De: {movement.metadata.fromAccountName} → A: {movement.metadata.toAccountName}
-                          </span>
-                        )}
-                        {movement.metadata.category && (
-                          <span className="ml-2">Categoría: {movement.metadata.category}</span>
-                        )}
-                        {movement.metadata.accountName && (
-                          <span>Cuenta: {movement.metadata.accountName}</span>
-                        )}
-                      </div>
-                    )}
+                    {movement.metadata &&
+                      Object.keys(movement.metadata).length > 0 && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          {movement.fromAccount && movement.toAccount && (
+                            <span>
+                              De: {movement.metadata.fromAccountName} → A:{" "}
+                              {movement.metadata.toAccountName}
+                            </span>
+                          )}
+                          {movement.metadata.category && (
+                            <span className="ml-2">
+                              Categoría: {movement.metadata.category}
+                            </span>
+                          )}
+                          {movement.metadata.accountName && (
+                            <span>Cuenta: {movement.metadata.accountName}</span>
+                          )}
+                        </div>
+                      )}
                   </div>
                 </div>
               ))}
@@ -339,8 +382,8 @@ export function MovementsList({ className }: MovementsListProps) {
               {/* Cargar más */}
               {hasMore && selectedType === "all" && !dateFrom && !dateTo && (
                 <div className="text-center pt-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => loadMovements(false)}
                     disabled={loading}
                   >

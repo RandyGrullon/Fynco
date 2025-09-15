@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Account, getAccountById } from "@/lib/accounts";
 import { useParams, useRouter } from "next/navigation";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { AccountTransactionsList } from "@/components/accounts/account-transactions-list";
 import {
   Card,
@@ -26,6 +27,7 @@ export default function AccountDetailPage() {
   const { accountId } = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrencyFormatter();
   const [account, setAccount] = useState<Account | null>(null);
   const [otherAccounts, setOtherAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export default function AccountDetailPage() {
       );
       if (fetchedAccount) {
         setAccount(fetchedAccount);
-        
+
         // Also refresh other accounts in case of transfers
         const { getAccounts } = await import("@/lib/accounts");
         const allAccounts = await getAccounts(user.uid);
@@ -249,10 +251,7 @@ export default function AccountDetailPage() {
                       : "text-red-600 dark:text-red-400"
                   }`}
                 >
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: account.currency,
-                  }).format(account.balance)}
+                  {formatCurrency(account.balance)}
                 </div>
 
                 {account.description && (
@@ -347,8 +346,8 @@ export default function AccountDetailPage() {
 
       {/* Transactions Section */}
       <div className="w-full">
-        <AccountTransactionsList 
-          account={account} 
+        <AccountTransactionsList
+          account={account}
           onTransactionChange={handleAccountChange}
         />
       </div>

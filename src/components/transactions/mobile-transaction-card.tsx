@@ -28,6 +28,7 @@ import {
 import { format } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import type { Transaction } from "@/lib/transactions";
 
 const categoryIcons: Record<Transaction["category"], React.ElementType> = {
@@ -54,12 +55,10 @@ export function MobileTransactionCard({
   onEdit,
   onDelete,
 }: MobileTransactionCardProps) {
+  const { formatCurrency } = useCurrencyFormatter();
   const Icon = categoryIcons[transaction.category] || Receipt;
   const amount = parseFloat(transaction.amount.toString());
-  const formatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
+  const formatted = formatCurrency(amount);
 
   const TypeIcon = transaction.type === "income" ? TrendingUp : TrendingDown;
 
