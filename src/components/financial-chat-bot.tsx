@@ -322,7 +322,7 @@ export function FinancialChatBot() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Pregúntame sobre tus finanzas..."
-                className="flex-1 border-gray-200 focus:border-blue-500 bg-white"
+                className="flex-1 border-gray-200 focus:border-blue-500 bg-white text-black"
                 disabled={isLoading}
               />
               <Button
