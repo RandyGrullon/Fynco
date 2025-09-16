@@ -184,7 +184,8 @@ export function FinancialChatBot() {
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110",
+          // iPhone SE (320px) -> small floating button and inset, scale up on md
+          "fixed bottom-3 right-3 z-50 h-10 w-10 sm:h-11 sm:w-11 md:h-14 md:w-14 rounded-full shadow-lg transition-all duration-300 hover:scale-110",
           "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700",
           "border-2 border-white/20",
           isOpen && "bg-red-500 hover:bg-red-600"
@@ -200,14 +201,21 @@ export function FinancialChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-1 z-50 w-[420px] h-[550px] shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+        <Card
+          className={cn(
+            // full-width modal on very small screens, centered inset on larger phones and desktops
+            // widths approximate common iPhone widths: 320 (SE) -> 430 (Plus/Pro Max)
+            "fixed z-50 shadow-2xl border-0 bg-white/95 backdrop-blur-sm",
+            // Positioning: small screens sit bottom with small sides inset; larger screens more to the right
+            "left-2 right-2 bottom-20 h-[70vh] max-h-[700px] sm:left-4 sm:right-4 sm:bottom-20 sm:h-[68vh] md:right-6 md:bottom-24 md:w-[420px] md:h-[550px]"
+          )}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
             <div className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               <div>
-                <h3 className="font-semibold">Asistente Financiero</h3>
-                <p className="text-xs opacity-90">Fynco AI</p>
+                <h3 className="font-semibold">Fynco AI</h3>
               </div>
             </div>
             <div className="flex gap-1">
@@ -231,19 +239,11 @@ export function FinancialChatBot() {
                   />
                 </svg>
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-                className="h-8 w-8 p-0 text-white hover:bg-white/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4 h-[420px]">
+          <ScrollArea className="flex-1 p-4 h-[50vh] sm:h-[54vh] md:h-[420px]">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -261,7 +261,8 @@ export function FinancialChatBot() {
 
                   <div
                     className={cn(
-                      "rounded-2xl px-4 py-3 max-w-[320px] break-words",
+                      // small screens: message bubbles occupy up to ~85% width; larger screens cap at 320px
+                      "rounded-2xl px-4 py-3 break-words max-w-[85%] sm:max-w-[75%] md:max-w-[320px]",
                       message.sender === "user"
                         ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
                         : "bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg border border-blue-100/50 dark:from-blue-950/30 dark:to-indigo-950/30 dark:border-blue-800/30"
@@ -316,13 +317,16 @@ export function FinancialChatBot() {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t bg-gray-50/80 rounded-b-lg">
+          <div
+            className="p-4 border-t bg-gray-50/80 rounded-b-lg"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
             <form onSubmit={sendMessage} className="flex gap-2">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Pregúntame sobre tus finanzas..."
-                className="flex-1 border-gray-200 focus:border-blue-500 bg-white text-black"
+                className="flex-1 border-gray-200 focus:border-blue-500 bg-white text-black placeholder-gray-500"
                 disabled={isLoading}
               />
               <Button
@@ -334,9 +338,6 @@ export function FinancialChatBot() {
                 <Send className="h-4 w-4" />
               </Button>
             </form>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Asistente especializado en finanzas personales
-            </p>
           </div>
         </Card>
       )}
