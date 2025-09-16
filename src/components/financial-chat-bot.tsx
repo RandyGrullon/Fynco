@@ -200,7 +200,7 @@ export function FinancialChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 z-50 w-[420px] h-[550px] shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+        <Card className="fixed bottom-24 right-1 z-50 w-[420px] h-[550px] shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
             <div className="flex items-center gap-2">
