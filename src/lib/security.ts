@@ -40,7 +40,10 @@ export function bufferToBase64Url(buffer: ArrayBuffer): string {
   bytes.forEach((b) => {
     binary += String.fromCharCode(b);
   });
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 export function base64UrlToBuffer(value: string): ArrayBuffer {
@@ -68,7 +71,9 @@ export async function hashPin(pin: string, salt: string): Promise<string> {
   return bufferToBase64Url(digest);
 }
 
-export async function loadSecuritySettings(userId: string): Promise<SecuritySettings> {
+export async function loadSecuritySettings(
+  userId: string
+): Promise<SecuritySettings> {
   const docRef = doc(db, "users", userId);
   const snapshot = await getDoc(docRef);
 
@@ -76,7 +81,9 @@ export async function loadSecuritySettings(userId: string): Promise<SecuritySett
     return DEFAULT_SECURITY_SETTINGS;
   }
 
-  const data = snapshot.data() as { securitySettings?: Partial<SecuritySettings> };
+  const data = snapshot.data() as {
+    securitySettings?: Partial<SecuritySettings>;
+  };
   return {
     ...DEFAULT_SECURITY_SETTINGS,
     ...(data.securitySettings ?? {}),
@@ -161,7 +168,8 @@ export async function isBiometricSupported(): Promise<boolean> {
   }
 
   try {
-    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    const available =
+      await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     return available;
   } catch (error) {
     console.warn("Security: Error detecting biometric support", error);

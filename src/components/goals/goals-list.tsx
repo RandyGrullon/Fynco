@@ -114,7 +114,10 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
       const parsed = JSON.parse(stored) as string[];
       setUnlockedGoals(new Set(parsed));
     } catch (error) {
-      console.warn("GoalsList: no se pudieron cargar metas desbloqueadas", error);
+      console.warn(
+        "GoalsList: no se pudieron cargar metas desbloqueadas",
+        error
+      );
       setUnlockedGoals(new Set());
     }
   }, [storageKey]);
@@ -477,7 +480,11 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                         goal={goal}
                         onFundsAdded={refreshGoals}
                       >
-                        <Button variant="default" className="w-full" data-no-nav>
+                        <Button
+                          variant="default"
+                          className="w-full"
+                          data-no-nav
+                        >
                           <PiggyBank className="mr-2 h-4 w-4" />
                           Añadir fondos
                         </Button>
@@ -563,9 +570,7 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
                 Pista: {goalToUnlock.security.hint}
               </p>
             )}
-            {pinError && (
-              <p className="text-sm text-destructive">{pinError}</p>
-            )}
+            {pinError && <p className="text-sm text-destructive">{pinError}</p>}
           </div>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <Button
@@ -576,7 +581,11 @@ export function GoalsList({ goals, onUpdate }: GoalsListProps) {
             >
               Cancelar
             </Button>
-            <Button type="button" onClick={handleUnlockGoal} disabled={isUnlocking}>
+            <Button
+              type="button"
+              onClick={handleUnlockGoal}
+              disabled={isUnlocking}
+            >
               {isUnlocking ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Verificando

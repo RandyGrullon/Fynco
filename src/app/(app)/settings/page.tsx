@@ -97,7 +97,8 @@ const ThemeSection = () => {
       <CardHeader>
         <CardTitle>Appearance</CardTitle>
         <CardDescription>
-          Choose your preferred theme. The system option will automatically switch between light and dark modes based on your device settings.
+          Choose your preferred theme. The system option will automatically
+          switch between light and dark modes based on your device settings.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -111,10 +112,18 @@ const ThemeSection = () => {
               onClick={() => setTheme(value)}
             >
               <div className="flex-shrink-0">
-                <Icon className={`h-5 w-5 ${theme === value ? "text-primary" : "text-muted-foreground"}`} />
+                <Icon
+                  className={`h-5 w-5 ${
+                    theme === value ? "text-primary" : "text-muted-foreground"
+                  }`}
+                />
               </div>
               <div className="flex-1">
-                <div className={`font-medium ${theme === value ? "text-primary" : ""}`}>
+                <div
+                  className={`font-medium ${
+                    theme === value ? "text-primary" : ""
+                  }`}
+                >
                   {label}
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -307,26 +316,29 @@ export default function SettingsPage() {
 
     try {
       // Usar addTransaction en lugar de addDoc directamente para registrar movimientos
-      const { addTransaction } = await import('@/lib/transactions');
-      
+      const { addTransaction } = await import("@/lib/transactions");
+
       // Necesitamos una cuenta para la transacción - usar la primera cuenta disponible
-      const { getAccounts } = await import('@/lib/accounts');
+      const { getAccounts } = await import("@/lib/accounts");
       const accounts = await getAccounts(user.uid);
-      
+
       if (accounts.length === 0) {
         console.error("No accounts available for salary transaction");
         return;
       }
 
-      await addTransaction({
-        amount: amount,
-        source: "Salario",
-        date: new Date(),
-        category: "Salary",
-        type: "income",
-        method: "Direct Deposit",
-        accountId: accounts[0].id || "", // usar la primera cuenta
-      }, user.uid);
+      await addTransaction(
+        {
+          amount: amount,
+          source: "Salario",
+          date: new Date(),
+          category: "Salary",
+          type: "income",
+          method: "Direct Deposit",
+          accountId: accounts[0].id || "", // usar la primera cuenta
+        },
+        user.uid
+      );
     } catch (error) {
       console.error("Error adding salary transaction:", error);
     }
@@ -643,7 +655,9 @@ export default function SettingsPage() {
                   }}
                   disabled={securityLoading}
                 >
-                  {securitySettings.pinEnabled ? "Actualizar PIN" : "Configurar PIN"}
+                  {securitySettings.pinEnabled
+                    ? "Actualizar PIN"
+                    : "Configurar PIN"}
                 </Button>
                 {securitySettings.pinEnabled && (
                   <Button
@@ -677,8 +691,8 @@ export default function SettingsPage() {
                 <div>
                   <p className="font-semibold">FaceID / Huella</p>
                   <p className="text-sm text-muted-foreground">
-                    Usa los sensores biométricos del dispositivo para desbloquear
-                    al instante.
+                    Usa los sensores biométricos del dispositivo para
+                    desbloquear al instante.
                   </p>
                 </div>
               </div>
@@ -687,10 +701,14 @@ export default function SettingsPage() {
                   type="button"
                   onClick={handleRegisterBiometric}
                   disabled={
-                    securityLoading || refreshingCredential || !isBiometricAvailable
+                    securityLoading ||
+                    refreshingCredential ||
+                    !isBiometricAvailable
                   }
                 >
-                  {biometricConfigured ? "Actualizar biometría" : "Activar biometría"}
+                  {biometricConfigured
+                    ? "Actualizar biometría"
+                    : "Activar biometría"}
                 </Button>
                 {!isBiometricAvailable && (
                   <span className="text-sm text-muted-foreground">
@@ -700,7 +718,8 @@ export default function SettingsPage() {
               </div>
               {biometricConfigured ? (
                 <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-4 w-4" /> Configurada para este dispositivo
+                  <CheckCircle2 className="h-4 w-4" /> Configurada para este
+                  dispositivo
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -776,7 +795,9 @@ export default function SettingsPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{securitySettings.pinEnabled ? "Actualizar PIN" : "Crear PIN"}</DialogTitle>
+            <DialogTitle>
+              {securitySettings.pinEnabled ? "Actualizar PIN" : "Crear PIN"}
+            </DialogTitle>
             <DialogDescription>
               Define un PIN numérico de 4 a 12 dígitos. Se solicitará cuando
               abras Fynco si el bloqueo está activo.
@@ -813,13 +834,15 @@ export default function SettingsPage() {
                 }}
               />
             </div>
-            {pinError && (
-              <p className="text-sm text-destructive">{pinError}</p>
-            )}
+            {pinError && <p className="text-sm text-destructive">{pinError}</p>}
           </div>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={securityLoading}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={securityLoading}
+              >
                 Cancelar
               </Button>
             </DialogClose>
@@ -847,7 +870,11 @@ export default function SettingsPage() {
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={securityLoading}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={securityLoading}
+              >
                 Cancelar
               </Button>
             </DialogClose>

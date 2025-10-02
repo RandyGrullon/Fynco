@@ -560,12 +560,15 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                     <Input
                       id="goal-pin-hint"
                       value={pinHint}
-                      onChange={(event) => setPinHint(event.target.value.slice(0, 60))}
+                      onChange={(event) =>
+                        setPinHint(event.target.value.slice(0, 60))
+                      }
                       placeholder="Algo que te ayude a recordar tu PIN"
                       disabled={loading}
                     />
                     <p className="text-xs text-muted-foreground">
-                      La pista se mostrará cuando intentes desbloquear esta meta.
+                      La pista se mostrará cuando intentes desbloquear esta
+                      meta.
                     </p>
                   </div>
                   {pinError && (

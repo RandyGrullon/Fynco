@@ -62,9 +62,8 @@ export function SecurityProvider({ user, children }: SecurityProviderProps) {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [refreshingCredential, setRefreshingCredential] = useState(false);
-  const [localSnapshot, setLocalSnapshot] = useState<LocalSecuritySnapshot | null>(
-    null
-  );
+  const [localSnapshot, setLocalSnapshot] =
+    useState<LocalSecuritySnapshot | null>(null);
 
   const localKeyRef = useRef<string>("");
   const sessionKeyRef = useRef<string>("");
@@ -352,7 +351,14 @@ export function SecurityProvider({ user, children }: SecurityProviderProps) {
     } finally {
       setRefreshingCredential(false);
     }
-  }, [isBiometricAvailable, localSnapshot, lock, persistLocalSnapshot, settings, user]);
+  }, [
+    isBiometricAvailable,
+    localSnapshot,
+    lock,
+    persistLocalSnapshot,
+    settings,
+    user,
+  ]);
 
   const unlockWithBiometrics = useCallback(async () => {
     if (!settings.biometricEnabled) {
@@ -415,7 +421,12 @@ export function SecurityProvider({ user, children }: SecurityProviderProps) {
       });
       return false;
     }
-  }, [localSnapshot, persistLocalSnapshot, persistSessionUnlock, settings.biometricEnabled]);
+  }, [
+    localSnapshot,
+    persistLocalSnapshot,
+    persistSessionUnlock,
+    settings.biometricEnabled,
+  ]);
 
   const value = useMemo<SecurityContextValue>(
     () => ({
@@ -453,7 +464,9 @@ export function SecurityProvider({ user, children }: SecurityProviderProps) {
   );
 
   return (
-    <SecurityContext.Provider value={value}>{children}</SecurityContext.Provider>
+    <SecurityContext.Provider value={value}>
+      {children}
+    </SecurityContext.Provider>
   );
 }
 

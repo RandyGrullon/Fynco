@@ -53,8 +53,7 @@ export function AppLockScreen() {
     }
   };
 
-  const showBiometricOption =
-    settings.biometricEnabled && isBiometricAvailable;
+  const showBiometricOption = settings.biometricEnabled && isBiometricAvailable;
 
   return (
     <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-background/90 backdrop-blur-sm">
@@ -112,11 +111,7 @@ export function AppLockScreen() {
                   className="text-center text-lg tracking-[0.4em]"
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isUnlocking}
-              >
+              <Button type="submit" className="w-full" disabled={isUnlocking}>
                 <ShieldCheck className="mr-2 h-5 w-5" />
                 Desbloquear con PIN
               </Button>

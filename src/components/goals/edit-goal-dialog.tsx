@@ -380,87 +380,113 @@ export function EditGoalDialog({
                 Cancel
               </Button>
 
-            <div className="space-y-4 rounded-lg border p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                    <Lock className="h-5 w-5 text-muted-foreground" />
+              <div className="space-y-4 rounded-lg border p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <Lock className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Protección con PIN</p>
+                      <p className="text-sm text-muted-foreground">
+                        Oculta los datos de esta meta hasta que ingreses el PIN
+                        configurado.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">Protección con PIN</p>
-                    <p className="text-sm text-muted-foreground">
-                      Oculta los datos de esta meta hasta que ingreses el PIN configurado.
-                    </p>
-                  </div>
+                  <Switch
+                    checked={protectWithPin}
+                    onCheckedChange={(checked) => {
+                      setProtectWithPin(checked);
+                      setPinError(null);
+                      if (!checked) {
+                        setPinValue("");
+                        setPinConfirmValue("");
+                        setPinHint(goal.security?.hint || "");
+                      }
+                    }}
+                    disabled={loading}
+                  />
                 </div>
-                <Switch
-                  checked={protectWithPin}
-                  onCheckedChange={(checked) => {
-                    setProtectWithPin(checked);
-                    setPinError(null);
-                    if (!checked) {
-                      setPinValue("");
-                      setPinConfirmValue("");
-                      setPinHint(goal.security?.hint || "");
-                    }
-                  }}
-                  disabled={loading}
-                />
-              </div>
 
-              {protectWithPin && (
-                <div className="grid gap-3">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-goal-pin">PIN</Label>
-                    <Input
-                      id="edit-goal-pin"
-                      inputMode="numeric"
-                      value={pinValue}
-                      onChange={(event) => {
-                        const value = event.target.value.replace(/[^0-9]/g, "");
-                        setPinValue(value.slice(0, 12));
-                        setPinError(null);
-                      }}
-                      placeholder={initialSecurityEnabled ? "Ingresa un nuevo PIN" : "••••"}
-                      disabled={loading}
-                    />
+                {protectWithPin && (
+                  <div className="grid gap-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-goal-pin">PIN</Label>
+                      <Input
+                        id="edit-goal-pin"
+                        inputMode="numeric"
+                        value={pinValue}
+                        onChange={(event) => {
+                          const value = event.target.value.replace(
+                            /[^0-9]/g,
+                            ""
+                          );
+                          setPinValue(value.slice(0, 12));
+                          setPinError(null);
+                        }}
+                        placeholder={
+                          initialSecurityEnabled
+                            ? "Ingresa un nuevo PIN"
+                            : "••••"
+                        }
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-goal-pin-confirm">
+                        Confirmar PIN
+                      </Label>
+                      <Input
+                        id="edit-goal-pin-confirm"
+                        inputMode="numeric"
+                        value={pinConfirmValue}
+                        onChange={(event) => {
+                          const value = event.target.value.replace(
+                            /[^0-9]/g,
+                            ""
+                          );
+                          setPinConfirmValue(value.slice(0, 12));
+                          setPinError(null);
+                        }}
+                        placeholder={
+                          initialSecurityEnabled
+                            ? "Confirma el nuevo PIN"
+                            : "••••"
+                        }
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-goal-pin-hint">
+                        Pista (opcional)
+                      </Label>
+                      <Input
+                        id="edit-goal-pin-hint"
+                        value={pinHint}
+                        onChange={(event) =>
+                          setPinHint(event.target.value.slice(0, 60))
+                        }
+                        placeholder="Esta pista se mostrará al intentar desbloquear"
+                        disabled={
+                          loading ||
+                          (initialSecurityEnabled &&
+                            !pinValue &&
+                            !pinConfirmValue)
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {initialSecurityEnabled
+                          ? "Ingresa el PIN actual o uno nuevo para actualizar la pista."
+                          : "Configura un PIN de 4 a 12 dígitos numéricos."}
+                      </p>
+                    </div>
+                    {pinError && (
+                      <p className="text-sm text-destructive">{pinError}</p>
+                    )}
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-goal-pin-confirm">Confirmar PIN</Label>
-                    <Input
-                      id="edit-goal-pin-confirm"
-                      inputMode="numeric"
-                      value={pinConfirmValue}
-                      onChange={(event) => {
-                        const value = event.target.value.replace(/[^0-9]/g, "");
-                        setPinConfirmValue(value.slice(0, 12));
-                        setPinError(null);
-                      }}
-                      placeholder={initialSecurityEnabled ? "Confirma el nuevo PIN" : "••••"}
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-goal-pin-hint">Pista (opcional)</Label>
-                    <Input
-                      id="edit-goal-pin-hint"
-                      value={pinHint}
-                      onChange={(event) => setPinHint(event.target.value.slice(0, 60))}
-                      placeholder="Esta pista se mostrará al intentar desbloquear"
-                      disabled={loading || (initialSecurityEnabled && !pinValue && !pinConfirmValue)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {initialSecurityEnabled
-                        ? "Ingresa el PIN actual o uno nuevo para actualizar la pista."
-                        : "Configura un PIN de 4 a 12 dígitos numéricos."}
-                    </p>
-                  </div>
-                  {pinError && (
-                    <p className="text-sm text-destructive">{pinError}</p>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             </DialogClose>
             <Button type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save Changes"}
