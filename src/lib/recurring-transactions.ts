@@ -15,6 +15,36 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { Account, getAccountById } from "./accounts";
+import type { Transaction } from "./transactions";
+
+const RECURRING_CATCH_UP_LIMIT = 730;
+
+type AddTransactionInput = Omit<Transaction, "id" | "userId">;
+type AddTransactionResult = {
+  success: boolean;
+  id?: string;
+  error?: string;
+};
+type AddTransactionFn = (
+  transaction: AddTransactionInput,
+  userId: string
+) => Promise<AddTransactionResult>;
+
+const TRANSACTION_CATEGORY_VALUES: Transaction["category"][] = [
+  "Food",
+  "Transport",
+  "Shopping",
+  "Salary",
+  "Utilities",
+  "Entertainment",
+  "Investment",
+  "Gift",
+  "Refund",
+  "Other",
+];
+
+const RECURRING_METHOD_INCOME: Transaction["method"] = "Direct Deposit";
+const RECURRING_METHOD_EXPENSE: Transaction["method"] = "Bank Transfer";
 
 export type RecurrenceFrequency =
   | "daily"
@@ -73,18 +103,21 @@ export async function addRecurringTransaction(
       getRecurringTransactionsCollection(userId);
     const now = Timestamp.now();
 
-    // Calculate next process date based on start date and frequency
-    const nextProcessDate = calculateNextProcessDate(
-      new Date(
-        transaction.startDate instanceof Timestamp
-          ? transaction.startDate.toDate()
-          : typeof transaction.startDate === "string"
-          ? new Date(transaction.startDate)
-          : transaction.startDate
-      ),
-      transaction.frequency,
-      transaction.payOnWeekends ?? true
-    );
+    const parsedStartDate = parseDate(transaction.startDate);
+    if (!parsedStartDate) {
+      return {
+        success: false,
+        error: "Invalid start date provided for recurring transaction",
+      };
+    }
+
+    // Calculate next process date based on start date and frequency (unadjusted for weekends)
+    const nextProcessDate =
+      calculateNextProcessDate(
+        parsedStartDate,
+        transaction.frequency,
+        transaction.payOnWeekends ?? true
+      ) || startOfDay(parsedStartDate);
 
     const docRef = await addDoc(recurringTransactionsCollection, {
       ...transaction,
@@ -109,6 +142,8 @@ export async function updateRecurringTransaction(
   userId: string
 ) {
   try {
+    await processDueRecurringTransactions(userId);
+
     const recurringTransactionRef = doc(
       db,
       "users",
@@ -120,35 +155,38 @@ export async function updateRecurringTransaction(
     const updateData = { ...transaction, updatedAt: now };
 
     // If frequency or start date changed, recalculate next process date
-    if (transaction.frequency || transaction.startDate) {
+    if (
+      transaction.frequency ||
+      transaction.startDate ||
+      transaction.isActive === true
+    ) {
       // Get current transaction data to merge with updates
       const currentDoc = await getDoc(recurringTransactionRef);
       if (currentDoc.exists()) {
         const currentData = currentDoc.data() as RecurringTransaction;
 
-        const startDate = transaction.startDate
-          ? transaction.startDate instanceof Date
-            ? transaction.startDate
-            : typeof transaction.startDate === "string"
-            ? new Date(transaction.startDate)
-            : (transaction.startDate as Timestamp).toDate()
-          : currentData.startDate instanceof Timestamp
-          ? currentData.startDate.toDate()
-          : typeof currentData.startDate === "string"
-          ? new Date(currentData.startDate)
-          : (currentData.startDate as Date);
+        const startDate = parseDate(
+          transaction.startDate ?? currentData.startDate
+        );
 
         const frequency = transaction.frequency || currentData.frequency;
         const payOnWeekends =
           transaction.payOnWeekends ?? currentData.payOnWeekends ?? true;
 
-        const nextProcessDate = calculateNextProcessDate(
-          startDate,
-          frequency,
-          payOnWeekends
-        );
-        if (nextProcessDate) {
-          updateData.nextProcessDate = Timestamp.fromDate(nextProcessDate);
+        if (startDate) {
+          const referenceDate =
+            transaction.isActive === true
+              ? new Date()
+              : parseDate(currentData.nextProcessDate) ?? startDate;
+          const nextProcessDate = calculateNextProcessDate(
+            startDate,
+            frequency,
+            payOnWeekends,
+            referenceDate
+          );
+          updateData.nextProcessDate = nextProcessDate
+            ? Timestamp.fromDate(nextProcessDate)
+            : null;
         }
       }
     }
@@ -182,6 +220,8 @@ export async function getRecurringTransactions(
   userId: string
 ): Promise<RecurringTransactionWithAccount[]> {
   try {
+    await processDueRecurringTransactions(userId);
+
     const recurringTransactionsCollection =
       getRecurringTransactionsCollection(userId);
     const q = query(
@@ -253,6 +293,8 @@ export async function getRecurringTransaction(
   id: string
 ): Promise<RecurringTransactionWithAccount | null> {
   try {
+    await processDueRecurringTransactions(userId);
+
     const recurringTransactionRef = doc(
       db,
       "users",
@@ -318,77 +360,269 @@ export async function getRecurringTransaction(
   }
 }
 
-// Helper function to calculate the next process date based on frequency
+export async function processDueRecurringTransactions(
+  userId: string
+): Promise<number> {
+  if (!userId) {
+    return 0;
+  }
+
+  const recurringTransactionsCollection =
+    getRecurringTransactionsCollection(userId);
+  const activeQuery = query(
+    recurringTransactionsCollection,
+    where("isActive", "==", true)
+  );
+
+  const snapshot = await getDocs(activeQuery);
+  if (snapshot.empty) {
+    return 0;
+  }
+
+  const today = startOfDay(new Date());
+  let processedCount = 0;
+
+  let addTransactionFn: AddTransactionFn | null = null;
+
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data() as RecurringTransaction;
+
+    if (!data.accountId || !data.amount || data.amount <= 0) {
+      continue;
+    }
+
+    const startDate = parseDate(data.startDate);
+    if (!startDate) {
+      continue;
+    }
+
+    const payOnWeekends = data.payOnWeekends ?? true;
+    const endDate = parseDate(data.endDate);
+
+    const lastScheduledOccurrence = parseDate(data.lastProcessed);
+    let scheduledPointer: Date | null = null;
+
+    if (lastScheduledOccurrence) {
+      scheduledPointer = addFrequency(lastScheduledOccurrence, data.frequency);
+    }
+
+    if (!scheduledPointer) {
+      scheduledPointer = parseDate(data.nextProcessDate);
+    }
+
+    if (!scheduledPointer) {
+      scheduledPointer = calculateNextProcessDate(
+        startDate,
+        data.frequency,
+        payOnWeekends,
+        today
+      );
+    }
+
+    if (!scheduledPointer) {
+      continue;
+    }
+
+    scheduledPointer = startOfDay(scheduledPointer);
+
+    let iterations = 0;
+    let processedForDoc = false;
+    let lastScheduledProcessed: Date | null = null;
+
+    while (
+      scheduledPointer &&
+      scheduledPointer <= today &&
+      (!endDate || scheduledPointer <= endDate) &&
+      iterations < RECURRING_CATCH_UP_LIMIT
+    ) {
+      if (!addTransactionFn) {
+        const module = await import("./transactions");
+        addTransactionFn = module.addTransaction as AddTransactionFn;
+      }
+
+      const addTransaction = addTransactionFn;
+      if (!addTransaction) {
+        console.error("Recurring processing: addTransaction not available");
+        break;
+      }
+
+      const executionDate = adjustForWeekends(
+        new Date(scheduledPointer),
+        payOnWeekends
+      );
+
+      try {
+        const category = TRANSACTION_CATEGORY_VALUES.includes(
+          data.category as Transaction["category"]
+        )
+          ? (data.category as Transaction["category"])
+          : ("Other" as Transaction["category"]);
+
+        const method =
+          data.type === "income"
+            ? RECURRING_METHOD_INCOME
+            : RECURRING_METHOD_EXPENSE;
+
+        const sourceDescription =
+          (data.description && data.description.trim().length > 0
+            ? data.description
+            : undefined) ||
+          `Recurring ${data.type === "income" ? "income" : "expense"}`;
+
+        const result = await addTransaction(
+          {
+            amount: data.amount,
+            type: data.type,
+            category,
+            date: executionDate,
+            source: sourceDescription,
+            method,
+            accountId: data.accountId,
+          },
+          userId
+        );
+
+        if (!result.success) {
+          console.error(
+            "Failed to record recurring transaction:",
+            result.error
+          );
+          break;
+        }
+
+        processedCount += 1;
+        processedForDoc = true;
+        lastScheduledProcessed = scheduledPointer;
+        iterations += 1;
+
+        scheduledPointer = addFrequency(scheduledPointer, data.frequency);
+      } catch (error) {
+        console.error("Error processing recurring transaction:", error);
+        break;
+      }
+    }
+
+    if (processedForDoc) {
+      const updatePayload: Record<string, any> = {
+        updatedAt: Timestamp.now(),
+        lastProcessed: lastScheduledProcessed
+          ? Timestamp.fromDate(lastScheduledProcessed)
+          : null,
+        nextProcessDate:
+          scheduledPointer && (!endDate || scheduledPointer <= endDate)
+            ? Timestamp.fromDate(scheduledPointer)
+            : null,
+      };
+
+      if (
+        updatePayload.nextProcessDate === null &&
+        endDate &&
+        today > endDate
+      ) {
+        updatePayload.isActive = false;
+      }
+
+      await updateDoc(docSnap.ref, updatePayload);
+    } else if (endDate && today > endDate) {
+      await updateDoc(docSnap.ref, {
+        isActive: false,
+        nextProcessDate: null,
+        updatedAt: Timestamp.now(),
+      });
+    }
+  }
+
+  return processedCount;
+}
+
 function calculateNextProcessDate(
   startDate: Date,
   frequency: RecurrenceFrequency,
-  payOnWeekends: boolean = true
+  _payOnWeekends: boolean = true,
+  referenceDate: Date = new Date()
 ): Date | null {
-  const now = new Date();
-  const result = new Date(startDate);
+  const normalizedStart = startOfDay(startDate);
+  const normalizedReference = startOfDay(referenceDate);
 
-  // If start date is in the future, that's the next process date
-  if (startDate > now) {
-    return adjustForWeekends(startDate, payOnWeekends);
+  let candidate = normalizedStart;
+  let iterations = 0;
+
+  while (
+    candidate < normalizedReference &&
+    iterations < RECURRING_CATCH_UP_LIMIT
+  ) {
+    candidate = addFrequency(candidate, frequency);
+    iterations += 1;
   }
 
-  // Start from the start date and find the next occurrence based on frequency
+  return candidate;
+}
+
+function addFrequency(baseDate: Date, frequency: RecurrenceFrequency): Date {
+  const next = startOfDay(baseDate);
+
   switch (frequency) {
     case "daily":
-      // Move to the next day from now
-      result.setDate(now.getDate() + 1);
+      next.setDate(next.getDate() + 1);
       break;
-
     case "weekly":
-      // Find the next occurrence of the same day of week
-      const dayOfWeek = startDate.getDay();
-      let daysToAdd = dayOfWeek - now.getDay();
-      if (daysToAdd <= 0) daysToAdd += 7;
-      result.setDate(now.getDate() + daysToAdd);
+      next.setDate(next.getDate() + 7);
       break;
-
     case "biweekly":
-      // Similar to weekly but with 14 days interval
-      // Calculate days since start
-      const msDiff = now.getTime() - startDate.getTime();
-      const daysDiff = Math.floor(msDiff / (1000 * 60 * 60 * 24));
-      const biweeklyCycles = Math.floor(daysDiff / 14);
-      const nextBiweeklyDate = new Date(startDate);
-      nextBiweeklyDate.setDate(startDate.getDate() + (biweeklyCycles + 1) * 14);
-      return adjustForWeekends(nextBiweeklyDate, payOnWeekends);
-
-    case "monthly":
-      // Move to the same day next month
-      result.setMonth(now.getMonth() + 1);
-      result.setDate(
-        Math.min(
-          startDate.getDate(),
-          getDaysInMonth(result.getFullYear(), result.getMonth())
-        )
-      );
+      next.setDate(next.getDate() + 14);
       break;
-
-    case "quarterly":
-      // Move to the same day 3 months later
-      result.setMonth(now.getMonth() + 3);
-      result.setDate(
-        Math.min(
-          startDate.getDate(),
-          getDaysInMonth(result.getFullYear(), result.getMonth())
-        )
-      );
+    case "monthly": {
+      const day = baseDate.getDate();
+      next.setDate(1);
+      next.setMonth(next.getMonth() + 1);
+      const daysInMonth = getDaysInMonth(next.getFullYear(), next.getMonth());
+      next.setDate(Math.min(day, daysInMonth));
       break;
-
-    case "yearly":
-      // Move to the same day/month next year
-      result.setFullYear(now.getFullYear() + 1);
+    }
+    case "quarterly": {
+      const day = baseDate.getDate();
+      next.setDate(1);
+      next.setMonth(next.getMonth() + 3);
+      const daysInMonth = getDaysInMonth(next.getFullYear(), next.getMonth());
+      next.setDate(Math.min(day, daysInMonth));
       break;
-
+    }
+    case "yearly": {
+      const day = baseDate.getDate();
+      const month = baseDate.getMonth();
+      next.setFullYear(next.getFullYear() + 1, month, 1);
+      const daysInMonth = getDaysInMonth(next.getFullYear(), month);
+      next.setDate(Math.min(day, daysInMonth));
+      break;
+    }
     default:
-      return null;
+      break;
   }
 
-  return adjustForWeekends(result, payOnWeekends);
+  return startOfDay(next);
+}
+
+function startOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function parseDate(value?: Date | Timestamp | string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value instanceof Timestamp) {
+    return value.toDate();
+  }
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
 }
 
 // Helper to get days in month (accounting for leap years)

@@ -18,6 +18,7 @@ import {
   startAfter,
 } from "firebase/firestore";
 import { recordTransactionCreation } from "@/lib/movements";
+import { processDueRecurringTransactions } from "./recurring-transactions";
 
 export type Transaction = {
   id?: string;
@@ -215,12 +216,14 @@ export async function getTransactions(
     return [];
   }
   try {
+    await processDueRecurringTransactions(userId);
+
     const transactionsCollection = getTransactionsCollection(userId);
     // Default to limiting to 100 transactions for better performance
     const defaultLimit = count || 100;
     const q = query(
-      transactionsCollection, 
-      orderBy("date", "desc"), 
+      transactionsCollection,
+      orderBy("date", "desc"),
       limit(defaultLimit)
     );
 
@@ -252,8 +255,10 @@ export async function getTransactionsPaginated(
   }
 
   try {
+    await processDueRecurringTransactions(userId);
+
     const transactionsCollection = getTransactionsCollection(userId);
-    
+
     let q = query(
       transactionsCollection,
       orderBy("date", "desc"),
@@ -272,10 +277,10 @@ export async function getTransactionsPaginated(
     const querySnapshot = await getDocs(q);
     const docs = querySnapshot.docs;
     const hasMore = docs.length > pageSize;
-    
+
     // Remove the extra document if present
     const transactionDocs = hasMore ? docs.slice(0, -1) : docs;
-    
+
     const transactions = transactionDocs.map((doc) => {
       const data = doc.data();
       return {
@@ -285,11 +290,18 @@ export async function getTransactionsPaginated(
       } as Transaction;
     });
 
-    const newLastDoc = transactionDocs.length > 0 ? transactionDocs[transactionDocs.length - 1] : null;
+    const newLastDoc =
+      transactionDocs.length > 0
+        ? transactionDocs[transactionDocs.length - 1]
+        : null;
 
     return { transactions, lastDoc: newLastDoc, hasMore };
   } catch (error) {
-    console.error("Error getting paginated transactions for user", userId, error);
+    console.error(
+      "Error getting paginated transactions for user",
+      userId,
+      error
+    );
     return { transactions: [], lastDoc: null, hasMore: false };
   }
 }
