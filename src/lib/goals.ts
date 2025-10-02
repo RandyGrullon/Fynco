@@ -17,8 +17,17 @@ import {
 } from "firebase/firestore";
 import { Account, updateAccount } from "@/lib/accounts";
 import { recordGoalCreation, recordGoalFundsAdded } from "@/lib/movements";
+import { computePinHash, verifyPin } from "@/lib/security";
 
 export type GoalStatus = "active" | "completed" | "canceled";
+
+export type GoalSecuritySettings = {
+  enabled: boolean;
+  pinHash?: string | null;
+  pinSalt?: string | null;
+  hint?: string | null;
+  updatedAt?: Date | Timestamp | string;
+};
 
 export type Goal = {
   id?: string;
@@ -33,6 +42,7 @@ export type Goal = {
   updatedAt: Date | Timestamp | string;
   status: GoalStatus;
   description?: string;
+  security?: GoalSecuritySettings;
 };
 
 function getGoalsCollection(userId: string) {
@@ -68,6 +78,13 @@ export async function addGoal(
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
       description: goalData.description || "",
+      security: {
+        enabled: false,
+        pinHash: null,
+        pinSalt: null,
+        hint: null,
+        updatedAt: Timestamp.now(),
+      },
       ...(goalData.deadline && { deadline: goalData.deadline }),
       ...(goalData.accountId && { accountId: goalData.accountId }),
     };
@@ -147,6 +164,7 @@ export async function getGoals(userId: string) {
 
     return snapshot.docs.map((doc) => {
       const data = doc.data();
+      const securityData = data.security as GoalSecuritySettings | undefined;
       return {
         id: doc.id,
         ...data,
@@ -164,6 +182,15 @@ export async function getGoals(userId: string) {
               ? data.deadline.toDate()
               : data.deadline,
         }),
+        security: securityData
+          ? {
+              ...securityData,
+              updatedAt:
+                securityData.updatedAt instanceof Timestamp
+                  ? securityData.updatedAt.toDate()
+                  : securityData.updatedAt,
+            }
+          : { enabled: false, pinHash: null, pinSalt: null, hint: null },
       } as Goal;
     });
   } catch (error) {
@@ -182,6 +209,7 @@ export async function getGoal(userId: string, goalId: string) {
     }
 
     const data = snapshot.data();
+    const securityData = data.security as GoalSecuritySettings | undefined;
     return {
       id: snapshot.id,
       ...data,
@@ -199,6 +227,15 @@ export async function getGoal(userId: string, goalId: string) {
             ? data.deadline.toDate()
             : data.deadline,
       }),
+      security: securityData
+        ? {
+            ...securityData,
+            updatedAt:
+              securityData.updatedAt instanceof Timestamp
+                ? securityData.updatedAt.toDate()
+                : securityData.updatedAt,
+          }
+        : { enabled: false, pinHash: null, pinSalt: null, hint: null },
     } as Goal;
   } catch (error) {
     console.error("Error getting goal:", error);
@@ -328,6 +365,72 @@ export async function deleteGoal(userId: string, goalId: string) {
     console.error("Error deleting goal:", error);
     throw error;
   }
+}
+
+export async function setGoalPin(
+  userId: string,
+  goalId: string,
+  pin: string,
+  options?: { hint?: string | null }
+) {
+  if (!pin || pin.length < 4 || pin.length > 12) {
+    throw new Error("El PIN debe tener entre 4 y 12 dígitos.");
+  }
+
+  const goalRef = doc(db, "users", userId, "goals", goalId);
+  const { salt, hash } = await computePinHash(pin);
+
+  await updateDoc(goalRef, {
+    security: {
+      enabled: true,
+      pinHash: hash,
+      pinSalt: salt,
+      hint: options?.hint ?? null,
+      updatedAt: Timestamp.now(),
+    },
+    updatedAt: Timestamp.now(),
+  });
+
+  return { success: true };
+}
+
+export async function removeGoalPin(userId: string, goalId: string) {
+  const goalRef = doc(db, "users", userId, "goals", goalId);
+
+  await updateDoc(goalRef, {
+    security: {
+      enabled: false,
+      pinHash: null,
+      pinSalt: null,
+      hint: null,
+      updatedAt: Timestamp.now(),
+    },
+    updatedAt: Timestamp.now(),
+  });
+
+  return { success: true };
+}
+
+export async function verifyGoalPin(
+  userId: string,
+  goalId: string,
+  pin: string
+): Promise<boolean> {
+  const goalRef = doc(db, "users", userId, "goals", goalId);
+  const snapshot = await getDoc(goalRef);
+
+  if (!snapshot.exists()) {
+    throw new Error("Meta no encontrada");
+  }
+
+  const data = snapshot.data() as Goal;
+  const security = data.security as GoalSecuritySettings | undefined;
+
+  if (!security?.enabled || !security.pinSalt || !security.pinHash) {
+    return false;
+  }
+
+  return verifyPin(pin, security.pinSalt, security.pinHash);
 }
 
 export async function updateGoalProgress(

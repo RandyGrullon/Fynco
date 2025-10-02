@@ -14,9 +14,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Target, Plus } from "lucide-react";
+import { Target, Plus, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { GoalStatus, addGoal } from "@/lib/goals";
+import { GoalStatus, addGoal, setGoalPin } from "@/lib/goals";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Account, getAccounts } from "@/lib/accounts";
 import { useEffect } from "react";
 import { CalendarIcon } from "lucide-react";
@@ -40,6 +39,7 @@ import {
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountType } from "@/lib/accounts";
+import { Switch } from "@/components/ui/switch";
 
 interface AddGoalDialogProps {
   onGoalAdded?: () => void;
@@ -76,6 +76,11 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
     targetAmount?: string;
     account?: string;
   }>({});
+  const [protectWithPin, setProtectWithPin] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirmValue, setPinConfirmValue] = useState("");
+  const [pinHint, setPinHint] = useState("");
+  const [pinError, setPinError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && open) {
@@ -124,6 +129,19 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
       return;
     }
 
+    if (protectWithPin) {
+      if (!/^[0-9]{4,12}$/.test(pinValue)) {
+        setPinError("El PIN debe tener entre 4 y 12 dígitos.");
+        return;
+      }
+
+      if (pinValue !== pinConfirmValue) {
+        setPinError("Los PIN no coinciden.");
+        return;
+      }
+    }
+
+    setPinError(null);
     setLoading(true);
     try {
       const createNewAccount = accountOption === "new";
@@ -170,6 +188,12 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
         accountData
       );
 
+      if (protectWithPin && result.goalId) {
+        await setGoalPin(user.uid, result.goalId, pinValue, {
+          hint: pinHint || null,
+        });
+      }
+
       toast({
         title: "Goal Added",
         description: "Your goal has been successfully added",
@@ -207,6 +231,11 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
     setNewAccountBalance("0");
     setNewAccountType("savings");
     setNewAccountDescription("");
+    setProtectWithPin(false);
+    setPinValue("");
+    setPinConfirmValue("");
+    setPinHint("");
+    setPinError(null);
   };
 
   return (
@@ -464,6 +493,86 @@ export function AddGoalDialog({ onGoalAdded, children }: AddGoalDialogProps) {
                   </div>
                 </TabsContent>
               </Tabs>
+            </div>
+
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                    <Lock className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Protege esta meta con PIN</p>
+                    <p className="text-sm text-muted-foreground">
+                      Oculta los montos y el progreso hasta que ingreses un PIN.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={protectWithPin}
+                  onCheckedChange={(checked) => {
+                    setProtectWithPin(checked);
+                    if (!checked) {
+                      setPinValue("");
+                      setPinConfirmValue("");
+                      setPinHint("");
+                      setPinError(null);
+                    }
+                  }}
+                  disabled={loading}
+                />
+              </div>
+
+              {protectWithPin && (
+                <div className="grid gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="goal-pin">PIN</Label>
+                    <Input
+                      id="goal-pin"
+                      inputMode="numeric"
+                      value={pinValue}
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/[^0-9]/g, "");
+                        setPinValue(value.slice(0, 12));
+                        setPinError(null);
+                      }}
+                      placeholder="••••"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="goal-pin-confirm">Confirmar PIN</Label>
+                    <Input
+                      id="goal-pin-confirm"
+                      inputMode="numeric"
+                      value={pinConfirmValue}
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/[^0-9]/g, "");
+                        setPinConfirmValue(value.slice(0, 12));
+                        setPinError(null);
+                      }}
+                      placeholder="••••"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="goal-pin-hint">Pista (opcional)</Label>
+                    <Input
+                      id="goal-pin-hint"
+                      value={pinHint}
+                      onChange={(event) => setPinHint(event.target.value.slice(0, 60))}
+                      placeholder="Algo que te ayude a recordar tu PIN"
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      La pista se mostrará cuando intentes desbloquear esta meta.
+                    </p>
+                  </div>
+                  {pinError && (
+                    <p className="text-sm text-destructive">{pinError}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

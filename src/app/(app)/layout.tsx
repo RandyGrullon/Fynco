@@ -6,6 +6,8 @@ import { AppProviders } from "@/contexts/app-providers";
 import { FinancialChatBot } from "@/components/financial-chat-bot";
 import { RouteGuard } from "@/components/security/route-guard";
 import { AuthMonitor } from "@/components/security/auth-monitor";
+import { SecurityProvider } from "@/contexts/security-context";
+import { AppSecurityGate } from "@/components/security/app-security-gate";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -75,21 +77,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppProviders>
       <AuthMonitor />
-      <RouteGuard>
-        <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-          <div className="hidden border-r bg-muted/40 md:block">
-            <AppSidebar />
-          </div>
-          <div className="flex flex-col">
-            <AppHeader />
-            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
-              {children}
-            </main>
-          </div>
-          {/* Financial Chat Bot - Only show when user is authenticated */}
-          <FinancialChatBot />
-        </div>
-      </RouteGuard>
+      <SecurityProvider user={user}>
+        <RouteGuard>
+          <AppSecurityGate>
+            <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+              <div className="hidden border-r bg-muted/40 md:block">
+                <AppSidebar />
+              </div>
+              <div className="flex flex-col">
+                <AppHeader />
+                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
+                  {children}
+                </main>
+              </div>
+              {/* Financial Chat Bot - Only show when user is authenticated */}
+              <FinancialChatBot />
+            </div>
+          </AppSecurityGate>
+        </RouteGuard>
+      </SecurityProvider>
     </AppProviders>
   );
 }

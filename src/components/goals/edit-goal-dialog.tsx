@@ -15,7 +15,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
-import { Goal, GoalStatus, updateGoal } from "@/lib/goals";
+import {
+  Goal,
+  GoalStatus,
+  removeGoalPin,
+  setGoalPin,
+  updateGoal,
+} from "@/lib/goals";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -26,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Account, getAccounts } from "@/lib/accounts";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,6 +41,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 
 interface EditGoalDialogProps {
   goal: Goal;
@@ -75,12 +82,28 @@ export function EditGoalDialog({
   );
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const initialSecurityEnabled = goal.security?.enabled ?? false;
+  const [protectWithPin, setProtectWithPin] = useState(initialSecurityEnabled);
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirmValue, setPinConfirmValue] = useState("");
+  const [pinHint, setPinHint] = useState(goal.security?.hint || "");
+  const [pinError, setPinError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && open) {
       loadAccounts();
     }
   }, [user, open]);
+
+  useEffect(() => {
+    if (open) {
+      setProtectWithPin(goal.security?.enabled ?? false);
+      setPinHint(goal.security?.hint || "");
+      setPinValue("");
+      setPinConfirmValue("");
+      setPinError(null);
+    }
+  }, [open, goal.security?.enabled, goal.security?.hint]);
 
   const loadAccounts = async () => {
     if (!user) return;
@@ -128,6 +151,28 @@ export function EditGoalDialog({
       return;
     }
 
+    const hadSecurity = goal.security?.enabled ?? false;
+    const wantsNewPin =
+      protectWithPin && (!hadSecurity || pinValue || pinConfirmValue);
+
+    if (protectWithPin && wantsNewPin) {
+      if (!/^[0-9]{4,12}$/.test(pinValue)) {
+        setPinError("El PIN debe tener entre 4 y 12 dígitos.");
+        return;
+      }
+
+      if (pinValue !== pinConfirmValue) {
+        setPinError("Los PIN no coinciden.");
+        return;
+      }
+    }
+
+    if (protectWithPin && wantsNewPin) {
+      setPinError(null);
+    }
+
+    setPinError(null);
+
     setLoading(true);
     try {
       await updateGoal(user.uid, goal.id, {
@@ -140,6 +185,19 @@ export function EditGoalDialog({
         status,
         accountId,
       });
+
+      if (protectWithPin) {
+        if (wantsNewPin && goal.id) {
+          await setGoalPin(user.uid, goal.id, pinValue, {
+            hint: pinHint || null,
+          });
+        } else if (!wantsNewPin && goal.security?.hint !== pinHint) {
+          // If hint changed but no new PIN provided, reset local state to stored hint
+          setPinHint(goal.security?.hint || "");
+        }
+      } else if (hadSecurity && goal.id) {
+        await removeGoalPin(user.uid, goal.id);
+      }
 
       toast({
         title: "Goal Updated",
@@ -321,6 +379,88 @@ export function EditGoalDialog({
               <Button type="button" variant="outline" disabled={loading}>
                 Cancel
               </Button>
+
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+                    <Lock className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Protección con PIN</p>
+                    <p className="text-sm text-muted-foreground">
+                      Oculta los datos de esta meta hasta que ingreses el PIN configurado.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={protectWithPin}
+                  onCheckedChange={(checked) => {
+                    setProtectWithPin(checked);
+                    setPinError(null);
+                    if (!checked) {
+                      setPinValue("");
+                      setPinConfirmValue("");
+                      setPinHint(goal.security?.hint || "");
+                    }
+                  }}
+                  disabled={loading}
+                />
+              </div>
+
+              {protectWithPin && (
+                <div className="grid gap-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-goal-pin">PIN</Label>
+                    <Input
+                      id="edit-goal-pin"
+                      inputMode="numeric"
+                      value={pinValue}
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/[^0-9]/g, "");
+                        setPinValue(value.slice(0, 12));
+                        setPinError(null);
+                      }}
+                      placeholder={initialSecurityEnabled ? "Ingresa un nuevo PIN" : "••••"}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-goal-pin-confirm">Confirmar PIN</Label>
+                    <Input
+                      id="edit-goal-pin-confirm"
+                      inputMode="numeric"
+                      value={pinConfirmValue}
+                      onChange={(event) => {
+                        const value = event.target.value.replace(/[^0-9]/g, "");
+                        setPinConfirmValue(value.slice(0, 12));
+                        setPinError(null);
+                      }}
+                      placeholder={initialSecurityEnabled ? "Confirma el nuevo PIN" : "••••"}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-goal-pin-hint">Pista (opcional)</Label>
+                    <Input
+                      id="edit-goal-pin-hint"
+                      value={pinHint}
+                      onChange={(event) => setPinHint(event.target.value.slice(0, 60))}
+                      placeholder="Esta pista se mostrará al intentar desbloquear"
+                      disabled={loading || (initialSecurityEnabled && !pinValue && !pinConfirmValue)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {initialSecurityEnabled
+                        ? "Ingresa el PIN actual o uno nuevo para actualizar la pista."
+                        : "Configura un PIN de 4 a 12 dígitos numéricos."}
+                    </p>
+                  </div>
+                  {pinError && (
+                    <p className="text-sm text-destructive">{pinError}</p>
+                  )}
+                </div>
+              )}
+            </div>
             </DialogClose>
             <Button type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save Changes"}

@@ -10,6 +10,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { updateProfile } from "firebase/auth";
 import { useState, useEffect } from "react";
@@ -27,7 +37,18 @@ import { addDoc, collection } from "firebase/firestore";
 import { useCurrency } from "@/contexts/currency-context";
 import { availableCurrencies } from "@/lib/currency";
 import { useTheme } from "@/contexts/theme-context";
-import { Monitor, Moon, Sun } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Fingerprint,
+  KeyRound,
+  Loader2,
+  Monitor,
+  Moon,
+  Shield,
+  Sun,
+} from "lucide-react";
+import { useSecurity } from "@/contexts/security-context";
 
 const GmailIcon = () => (
   <svg
@@ -135,6 +156,27 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [salaryLoading, setSalaryLoading] = useState(false);
   const [currencyUpdateLoading, setCurrencyUpdateLoading] = useState(false);
+
+  const {
+    settings: securitySettings,
+    enableAppLock,
+    disableAppLock,
+    updatePin: updateSecurityPin,
+    clearPin,
+    registerBiometricCredential,
+    isBiometricAvailable,
+    refreshingCredential,
+    localSnapshot,
+  } = useSecurity();
+
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [removePinDialogOpen, setRemovePinDialogOpen] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirmValue, setPinConfirmValue] = useState("");
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const biometricConfigured =
+    securitySettings.biometricEnabled && !!localSnapshot?.credentialId;
 
   // Campos para la configuración del salario
   const [salaryAmount, setSalaryAmount] = useState("");
@@ -383,6 +425,125 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAppLockToggle = async (enabled: boolean) => {
+    if (!user) return;
+
+    if (enabled && !securitySettings.pinEnabled && !biometricConfigured) {
+      toast({
+        variant: "destructive",
+        title: "Configura un método de seguridad",
+        description:
+          "Activa FaceID/huella o crea un PIN antes de habilitar el bloqueo.",
+      });
+      resetPinDialog();
+      setPinDialogOpen(true);
+      return;
+    }
+
+    setSecurityLoading(true);
+    try {
+      if (enabled) {
+        await enableAppLock({ requirePin: securitySettings.pinEnabled });
+        toast({
+          title: "Bloqueo activado",
+          description:
+            "Tu cuenta ahora solicitará un método de seguridad al ingresar.",
+          className: "bg-accent text-accent-foreground",
+        });
+      } else {
+        await disableAppLock();
+        toast({
+          title: "Bloqueo desactivado",
+          description: "Ya no se solicitará PIN ni biometría al entrar.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error?.message || "No se pudo actualizar el bloqueo de la app.",
+      });
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
+  const resetPinDialog = () => {
+    setPinValue("");
+    setPinConfirmValue("");
+    setPinError(null);
+  };
+
+  const handlePinSave = async () => {
+    if (!pinValue || !pinConfirmValue) {
+      setPinError("Completa ambos campos para guardar el PIN.");
+      return;
+    }
+
+    if (pinValue !== pinConfirmValue) {
+      setPinError("Los PIN no coinciden.");
+      return;
+    }
+
+    if (!/^[0-9]{4,12}$/.test(pinValue)) {
+      setPinError("El PIN debe tener entre 4 y 12 dígitos numéricos.");
+      return;
+    }
+
+    setSecurityLoading(true);
+    try {
+      await updateSecurityPin(pinValue);
+      setPinDialogOpen(false);
+      resetPinDialog();
+    } catch (error: any) {
+      setPinError(
+        error?.message || "No se pudo actualizar el PIN. Intenta nuevamente."
+      );
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
+  const handlePinRemove = async () => {
+    setSecurityLoading(true);
+    try {
+      await clearPin();
+      toast({
+        title: "PIN eliminado",
+        description: "Ya no se solicitará el PIN como método de seguridad.",
+      });
+      setRemovePinDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error?.message ||
+          "No se pudo eliminar el PIN. Intenta de nuevo más tarde.",
+      });
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
+  const handleRegisterBiometric = async () => {
+    setSecurityLoading(true);
+    try {
+      const success = await registerBiometricCredential();
+      if (!success) {
+        toast({
+          variant: "destructive",
+          title: "No se pudo configurar",
+          description:
+            "Revisa los permisos de FaceID/huella y vuelve a intentarlo.",
+        });
+      }
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -426,6 +587,135 @@ export default function SettingsPage() {
               {loading ? "Saving..." : "Update Profile"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Seguridad y acceso</CardTitle>
+          <CardDescription>
+            Protege tu información con PIN, FaceID o huella dactilar antes de
+            entrar a la aplicación.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium">Bloqueo de aplicación</p>
+                <p className="text-sm text-muted-foreground">
+                  Solicita un método de seguridad adicional cada vez que abras
+                  Fynco en este dispositivo.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={securitySettings.appLockEnabled}
+              onCheckedChange={(checked) => handleAppLockToggle(checked)}
+              disabled={securityLoading || refreshingCredential}
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-3 rounded-lg border p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <KeyRound className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-semibold">PIN de 4-12 dígitos</p>
+                  <p className="text-sm text-muted-foreground">
+                    {securitySettings.pinEnabled
+                      ? "Actualmente tienes un PIN activo."
+                      : "Configura un PIN numérico como método alterno."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    resetPinDialog();
+                    setPinDialogOpen(true);
+                  }}
+                  disabled={securityLoading}
+                >
+                  {securitySettings.pinEnabled ? "Actualizar PIN" : "Configurar PIN"}
+                </Button>
+                {securitySettings.pinEnabled && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setRemovePinDialogOpen(true)}
+                    disabled={securityLoading}
+                  >
+                    Quitar PIN
+                  </Button>
+                )}
+              </div>
+              {securitySettings.pinEnabled ? (
+                <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4" />
+                  PIN activo
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4" />
+                  Sin PIN configurado
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-lg border p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Fingerprint className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-semibold">FaceID / Huella</p>
+                  <p className="text-sm text-muted-foreground">
+                    Usa los sensores biométricos del dispositivo para desbloquear
+                    al instante.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  onClick={handleRegisterBiometric}
+                  disabled={
+                    securityLoading || refreshingCredential || !isBiometricAvailable
+                  }
+                >
+                  {biometricConfigured ? "Actualizar biometría" : "Activar biometría"}
+                </Button>
+                {!isBiometricAvailable && (
+                  <span className="text-sm text-muted-foreground">
+                    No disponible en este dispositivo.
+                  </span>
+                )}
+              </div>
+              {biometricConfigured ? (
+                <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4" /> Configurada para este dispositivo
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4" />
+                  Registra tu biometría en este dispositivo para activarla.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            El PIN se cifra antes de guardarse en la nube. La autenticación
+            biométrica se almacena localmente y deberás configurarla en cada
+            dispositivo.
+          </p>
         </CardContent>
       </Card>
 
@@ -474,6 +764,110 @@ export default function SettingsPage() {
 
       {/* Nueva sección para la configuración de tema */}
       <ThemeSection />
+
+      <Dialog
+        open={pinDialogOpen}
+        onOpenChange={(open) => {
+          setPinDialogOpen(open);
+          if (!open) {
+            resetPinDialog();
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{securitySettings.pinEnabled ? "Actualizar PIN" : "Crear PIN"}</DialogTitle>
+            <DialogDescription>
+              Define un PIN numérico de 4 a 12 dígitos. Se solicitará cuando
+              abras Fynco si el bloqueo está activo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="pin">Nuevo PIN</Label>
+              <Input
+                id="pin"
+                inputMode="numeric"
+                value={pinValue}
+                disabled={securityLoading}
+                placeholder="••••"
+                onChange={(event) => {
+                  const value = event.target.value.replace(/[^0-9]/g, "");
+                  setPinValue(value.slice(0, 12));
+                  setPinError(null);
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pin-confirm">Confirmar PIN</Label>
+              <Input
+                id="pin-confirm"
+                inputMode="numeric"
+                value={pinConfirmValue}
+                disabled={securityLoading}
+                placeholder="••••"
+                onChange={(event) => {
+                  const value = event.target.value.replace(/[^0-9]/g, "");
+                  setPinConfirmValue(value.slice(0, 12));
+                  setPinError(null);
+                }}
+              />
+            </div>
+            {pinError && (
+              <p className="text-sm text-destructive">{pinError}</p>
+            )}
+          </div>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={securityLoading}>
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button onClick={handlePinSave} disabled={securityLoading}>
+              {securityLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Guardando
+                </span>
+              ) : (
+                "Guardar PIN"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={removePinDialogOpen} onOpenChange={setRemovePinDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar PIN</DialogTitle>
+            <DialogDescription>
+              Si quitas el PIN, solo la biometría (si está configurada) podrá
+              proteger tu cuenta.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={securityLoading}>
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handlePinRemove}
+              disabled={securityLoading}
+            >
+              {securityLoading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Eliminando
+                </span>
+              ) : (
+                "Quitar PIN"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Nueva sección para la configuración de salario automático */}
 
