@@ -1,26 +1,48 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Filter, Search, RotateCcw, Activity } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  CalendarIcon,
+  Filter,
+  Search,
+  RotateCcw,
+  Activity,
+} from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { 
-  Movement, 
-  MovementType, 
-  getMovements, 
-  getMovementsByType, 
+import {
+  Movement,
+  MovementType,
+  getMovements,
+  getMovementsByType,
   getMovementsByDateRange,
   getMovementTypeLabel,
-  getMovementTypeIcon 
+  getMovementTypeIcon,
 } from "@/lib/movements";
 import { useCurrencyFormatter } from "@/hooks/use-currency-formatter";
 import { useAuth } from "@/hooks/use-auth";
@@ -34,7 +56,7 @@ interface ActivityListProps {
 
 const movementTypes: MovementType[] = [
   "account_created",
-  "account_updated", 
+  "account_updated",
   "account_deleted",
   "transaction_created",
   "transaction_updated",
@@ -46,17 +68,23 @@ const movementTypes: MovementType[] = [
   "goal_funds_added",
   "recurring_transaction_created",
   "recurring_transaction_updated",
-  "recurring_transaction_deleted"
+  "recurring_transaction_deleted",
 ];
 
-export function ActivityList({ activities: propActivities, onRefresh, className }: ActivityListProps) {
+export function ActivityList({
+  activities: propActivities,
+  onRefresh,
+  className,
+}: ActivityListProps) {
   const { user } = useAuth();
   const formatCurrency = useCurrencyFormatter();
-  
-  const [activities, setActivities] = useState<Movement[]>(propActivities || []);
+
+  const [activities, setActivities] = useState<Movement[]>(
+    propActivities || []
+  );
   const [loading, setLoading] = useState(!propActivities);
   const [filteredActivities, setFilteredActivities] = useState<Movement[]>([]);
-  
+
   // Filters state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -70,7 +98,7 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
 
   const loadActivities = async () => {
     if (!user?.uid) return;
-    
+
     try {
       setLoading(true);
       const { movements } = await getMovements(user.uid, 100);
@@ -84,7 +112,7 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
 
   const handleFilterByType = async (type: MovementType) => {
     if (!user?.uid) return;
-    
+
     try {
       setLoading(true);
       const movements = await getMovementsByType(user.uid, type);
@@ -98,7 +126,7 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
 
   const handleFilterByDateRange = async (from: Date, to: Date) => {
     if (!user?.uid) return;
-    
+
     try {
       setLoading(true);
       const movements = await getMovementsByDateRange(user.uid, from, to);
@@ -115,26 +143,38 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(activity =>
-        activity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        getMovementTypeLabel(activity.type).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (activity.metadata?.accountName && activity.metadata.accountName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (activity.metadata?.goalName && activity.metadata.goalName.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(
+        (activity) =>
+          activity.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          getMovementTypeLabel(activity.type)
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (activity.metadata?.accountName &&
+            activity.metadata.accountName
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())) ||
+          (activity.metadata?.goalName &&
+            activity.metadata.goalName
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()))
       );
     }
 
     // Type filter
     if (selectedType !== "all") {
-      filtered = filtered.filter(activity => activity.type === selectedType);
+      filtered = filtered.filter((activity) => activity.type === selectedType);
     }
 
     // Date range filter
     if (dateFrom || dateTo) {
-      filtered = filtered.filter(activity => {
-        const activityDate = activity.timestamp instanceof Timestamp 
-          ? activity.timestamp.toDate() 
-          : new Date(activity.timestamp);
-        
+      filtered = filtered.filter((activity) => {
+        const activityDate =
+          activity.timestamp instanceof Timestamp
+            ? activity.timestamp.toDate()
+            : new Date(activity.timestamp);
+
         if (dateFrom && activityDate < dateFrom) return false;
         if (dateTo && activityDate > dateTo) return false;
         return true;
@@ -196,8 +236,10 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
       goal_updated: "bg-teal-100 text-teal-800 border-teal-200",
       goal_deleted: "bg-red-100 text-red-800 border-red-200",
       goal_funds_added: "bg-cyan-100 text-cyan-800 border-cyan-200",
-      recurring_transaction_created: "bg-violet-100 text-violet-800 border-violet-200",
-      recurring_transaction_updated: "bg-pink-100 text-pink-800 border-pink-200",
+      recurring_transaction_created:
+        "bg-violet-100 text-violet-800 border-violet-200",
+      recurring_transaction_updated:
+        "bg-pink-100 text-pink-800 border-pink-200",
       recurring_transaction_deleted: "bg-red-100 text-red-800 border-red-200",
     };
     return colors[type] || "bg-gray-100 text-gray-800 border-gray-200";
@@ -215,15 +257,17 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
         <CardContent>
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-                  <div>
-                    <div className="w-32 h-4 bg-gray-200 rounded animate-pulse mb-1" />
-                    <div className="w-24 h-3 bg-gray-200 rounded animate-pulse" />
+              <div key={i} className="p-3 md:p-4 border rounded-lg">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+                  <div className="flex items-start gap-3 md:items-center">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-200 rounded-full animate-pulse" />
+                    <div className="flex-1">
+                      <div className="w-32 h-4 bg-gray-200 rounded animate-pulse mb-2" />
+                      <div className="w-24 h-3 bg-gray-200 rounded animate-pulse mb-2" />
+                      <div className="w-20 h-3 bg-gray-200 rounded animate-pulse" />
+                    </div>
                   </div>
                 </div>
-                <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
               </div>
             ))}
           </div>
@@ -251,7 +295,7 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
             </Button>
           </div>
         </CardHeader>
-        
+
         {showFilters && (
           <CardContent className="pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -300,7 +344,9 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateFrom ? format(dateFrom, "PPP", { locale: es }) : "Fecha inicio"}
+                      {dateFrom
+                        ? format(dateFrom, "PPP", { locale: es })
+                        : "Fecha inicio"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -308,7 +354,9 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
                       mode="single"
                       selected={dateFrom}
                       onSelect={setDateFrom}
-                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -328,7 +376,9 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateTo ? format(dateTo, "PPP", { locale: es }) : "Fecha fin"}
+                      {dateTo
+                        ? format(dateTo, "PPP", { locale: es })
+                        : "Fecha fin"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -336,7 +386,9 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
                       mode="single"
                       selected={dateTo}
                       onSelect={setDateTo}
-                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -345,20 +397,22 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
             </div>
 
             {/* Filter Actions */}
-            <div className="flex gap-2 mt-4">
-              <Button 
-                variant="secondary" 
+            <div className="flex flex-col gap-2 mt-4 sm:flex-row sm:gap-2">
+              <Button
+                variant="secondary"
                 onClick={clearFilters}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full sm:w-auto"
+                size="sm"
               >
                 <RotateCcw className="h-4 w-4" />
                 Limpiar Filtros
               </Button>
               {onRefresh && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={onRefresh}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 w-full sm:w-auto"
+                  size="sm"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Actualizar
@@ -379,7 +433,9 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
                 Actividades Recientes
               </CardTitle>
               <CardDescription>
-                {filteredActivities.length} {filteredActivities.length === 1 ? 'actividad' : 'actividades'} encontrada{filteredActivities.length === 1 ? '' : 's'}
+                {filteredActivities.length}{" "}
+                {filteredActivities.length === 1 ? "actividad" : "actividades"}{" "}
+                encontrada{filteredActivities.length === 1 ? "" : "s"}
               </CardDescription>
             </div>
           </div>
@@ -397,51 +453,61 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
             <div className="space-y-3">
               {currentActivities.map((activity) => {
                 const icon = getMovementTypeIcon(activity.type);
-                const activityDate = activity.timestamp instanceof Timestamp 
-                  ? activity.timestamp.toDate() 
-                  : new Date(activity.timestamp);
+                const activityDate =
+                  activity.timestamp instanceof Timestamp
+                    ? activity.timestamp.toDate()
+                    : new Date(activity.timestamp);
 
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="p-3 md:p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-lg">
-                        {icon}
-                      </div>
-                      
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium truncate">{activity.description}</p>
-                          <Badge 
-                            variant="outline" 
-                            className={cn("text-xs", getActivityColor(activity.type))}
-                          >
-                            {getMovementTypeLabel(activity.type)}
-                          </Badge>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4">
+                      <div className="flex items-start gap-3 md:items-center">
+                        <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center text-sm md:text-lg">
+                          {icon}
                         </div>
-                        
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-muted-foreground">
-                          <span>
-                            {format(activityDate, "PPP 'a las' p", { locale: es })}
-                          </span>
-                          
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2 mb-2">
+                            <p className="font-medium text-sm md:text-base">
+                              {activity.description}
+                            </p>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-xs w-fit",
+                                getActivityColor(activity.type)
+                              )}
+                            >
+                              {getMovementTypeLabel(activity.type)}
+                            </Badge>
+                          </div>
+
+                          <div className="text-xs md:text-sm text-muted-foreground mb-2">
+                            {format(activityDate, "PPP 'a las' p", {
+                              locale: es,
+                            })}
+                          </div>
+
                           {activity.metadata && (
-                            <div className="flex flex-wrap gap-2 text-xs">
+                            <div className="flex flex-wrap gap-1 md:gap-2">
                               {activity.metadata.accountName && (
-                                <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
                                   📊 {activity.metadata.accountName}
                                 </span>
                               )}
                               {activity.metadata.goalName && (
-                                <span className="bg-green-50 text-green-700 px-2 py-1 rounded">
+                                <span className="bg-green-50 text-green-700 px-2 py-1 rounded text-xs">
                                   🎯 {activity.metadata.goalName}
                                 </span>
                               )}
                               {activity.metadata.amount && (
-                                <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded font-mono">
-                                  {formatCurrency.formatCurrency(activity.metadata.amount)}
+                                <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded font-mono text-xs">
+                                  {formatCurrency.formatCurrency(
+                                    activity.metadata.amount
+                                  )}
                                 </span>
                               )}
                             </div>
@@ -457,27 +523,36 @@ export function ActivityList({ activities: propActivities, onRefresh, className 
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                Página {currentPage} de {totalPages} 
-                ({startIndex + 1}-{Math.min(endIndex, filteredActivities.length)} de {filteredActivities.length} actividades)
+            <div className="flex flex-col gap-3 mt-6 pt-4 border-t sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+              <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+                Página {currentPage} de {totalPages}
+                <br className="sm:hidden" />
+                <span className="sm:inline"> </span>({startIndex + 1}-
+                {Math.min(endIndex, filteredActivities.length)} de{" "}
+                {filteredActivities.length} actividades)
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center sm:justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
+                  className="flex-1 sm:flex-none min-h-[36px] sm:min-h-[32px]"
                 >
-                  Anterior
+                  <span className="sm:hidden">←</span>
+                  <span className="hidden sm:inline">Anterior</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
                   disabled={currentPage === totalPages}
+                  className="flex-1 sm:flex-none min-h-[36px] sm:min-h-[32px]"
                 >
-                  Siguiente
+                  <span className="sm:hidden">→</span>
+                  <span className="hidden sm:inline">Siguiente</span>
                 </Button>
               </div>
             </div>

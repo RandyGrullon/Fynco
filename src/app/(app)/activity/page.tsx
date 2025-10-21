@@ -21,7 +21,7 @@ export default function ActivityPage() {
 
   const loadActivities = async () => {
     if (!user?.uid) return;
-    
+
     try {
       setLoading(true);
       const { movements: activitiesData } = await getMovements(user.uid, 50);
@@ -35,7 +35,7 @@ export default function ActivityPage() {
 
   const handleRefresh = async () => {
     if (!user?.uid) return;
-    
+
     try {
       setRefreshing(true);
       const { movements: activitiesData } = await getMovements(user.uid, 50);
@@ -49,17 +49,17 @@ export default function ActivityPage() {
 
   const handleMigration = async () => {
     if (!user?.uid) return;
-    
+
     try {
       setMigrating(true);
-      
+
       toast({
         title: "Migración iniciada",
         description: "Procesando datos existentes...",
       });
 
       await migrateAllExistingData(user.uid);
-      
+
       toast({
         title: "Migración completada",
         description: "Todos los datos han sido procesados exitosamente.",
@@ -71,7 +71,8 @@ export default function ActivityPage() {
       console.error("Migration error:", error);
       toast({
         title: "Error en la migración",
-        description: "Hubo un problema al procesar los datos. Inténtalo de nuevo.",
+        description:
+          "Hubo un problema al procesar los datos. Inténtalo de nuevo.",
         variant: "destructive",
       });
     } finally {
@@ -85,19 +86,19 @@ export default function ActivityPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 md:p-6">
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <Skeleton className="h-8 w-40 mb-2" />
-              <Skeleton className="h-5 w-64" />
+              <Skeleton className="h-6 w-40 mb-2 md:h-8 md:w-40" />
+              <Skeleton className="h-4 w-48 md:h-5 md:w-64" />
             </div>
             <div className="flex gap-2">
-              <Skeleton className="h-10 w-32" />
-              <Skeleton className="h-10 w-10" />
+              <Skeleton className="h-9 w-24 md:h-10 md:w-32" />
+              <Skeleton className="h-9 w-9 md:h-10 md:w-10" />
             </div>
           </div>
-          
+
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="p-4 border rounded-lg">
@@ -120,35 +121,41 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="container mx-auto p-4 md:p-6">
+      <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between md:gap-2">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Activity className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold">Actividad Financiera</h1>
+            <Activity className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+            <h1 className="text-2xl md:text-3xl font-bold">
+              Actividad Financiera
+            </h1>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Registro completo de todas tus actividades financieras
           </p>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 flex-wrap">
           <ActivityInfoModal />
-          
+
           <Button
             variant="outline"
             onClick={handleMigration}
             disabled={migrating}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-sm"
+            size="sm"
           >
             {migrating ? (
               <RotateCcw className="h-4 w-4 animate-spin" />
             ) : (
               <Database className="h-4 w-4" />
             )}
-            {migrating ? "Procesando..." : "Migrar Datos"}
+            <span className="hidden sm:inline">
+              {migrating ? "Procesando..." : "Migrar Datos"}
+            </span>
+            <span className="sm:hidden">{migrating ? "..." : "Migrar"}</span>
           </Button>
-          
+
           <Button
             variant="outline"
             size="icon"
@@ -156,15 +163,14 @@ export default function ActivityPage() {
             disabled={refreshing}
             className="flex-shrink-0"
           >
-            <RotateCcw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            <RotateCcw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
           </Button>
         </div>
       </div>
 
-      <ActivityList
-        activities={activities} 
-        onRefresh={loadActivities}
-      />
+      <ActivityList activities={activities} onRefresh={loadActivities} />
     </div>
   );
 }
