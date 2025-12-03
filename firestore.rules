@@ -1,5 +1,7 @@
 // Firestore Security Rules - Enhanced Security for Fynco
 // Copy this content to your Firebase Console -> Firestore Database -> Rules
+// 
+// VERSION 2.0 - Includes validation for encrypted data structure
 
 rules_version = '2';
 service cloud.firestore {
@@ -16,6 +18,27 @@ service cloud.firestore {
     
     function validateUserData() {
       return resource.data.userId == request.auth.uid;
+    }
+    
+    // Helper function to validate encrypted data structure
+    function isValidEncryptedData(data) {
+      return data is map && 
+             'encrypted' in data && 
+             'iv' in data && 
+             'version' in data &&
+             data.encrypted is string &&
+             data.iv is string &&
+             data.version is number;
+    }
+    
+    // Helper function to validate that sensitive fields are encrypted
+    function hasEncryptedFields(data, fields) {
+      return fields.hasAll(data.keys()) 
+        ? fields.toSet().hasAll(
+            data.keys().toSet().intersection(fields.toSet())
+              .hasOnly(data.keys().toSet().filter(k => isValidEncryptedData(data[k])))
+          )
+        : true;
     }
     
     // Users collection - users can only access their own data

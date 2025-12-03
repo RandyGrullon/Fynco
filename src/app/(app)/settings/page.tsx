@@ -47,8 +47,10 @@ import {
   Moon,
   Shield,
   Sun,
+  FileText,
 } from "lucide-react";
 import { useSecurity } from "@/contexts/security-context";
+import { DangerZoneSection } from "@/components/settings/DangerZoneSection";
 
 const GmailIcon = () => (
   <svg
@@ -923,6 +925,37 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sección Legal */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Legal & Privacy</CardTitle>
+          <CardDescription>Read our terms and privacy policy</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" asChild className="justify-start">
+              <a href="/legal/terms" target="_blank" rel="noopener noreferrer">
+                <FileText className="mr-2 h-4 w-4" />
+                Terms & Conditions
+              </a>
+            </Button>
+            <Button variant="outline" asChild className="justify-start">
+              <a
+                href="/legal/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Privacy Policy
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Zona de Peligro - Eliminación de cuenta */}
+      <DangerZoneSection />
     </div>
   );
 }
