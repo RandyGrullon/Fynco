@@ -48,13 +48,10 @@ export function DangerZoneSection() {
   const { toast } = useToast();
   const router = useRouter();
   const securityContext = useSecurity();
-
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
   const [deleteStep, setDeleteStep] = useState<"confirm" | "pin" | "final">(
     "confirm"
   );
-
   const [confirmPhrase, setConfirmPhrase] = useState("");
   const [pinInput, setPinInput] = useState("");
   const [loading, setLoading] = useState(false);
