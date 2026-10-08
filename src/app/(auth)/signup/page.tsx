@@ -1,196 +1,197 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { auth, db } from "@/lib/firebase";
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    role="img"
-    aria-label="Google"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
-    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l-2.32 2.32c-.76-.76-1.76-1.28-3.587-1.28-3.067 0-5.547 2.587-5.547 5.76s2.48 5.76 5.547 5.76c3.307 0 4.787-2.187 5.067-3.28H12.48z" />
-  </svg>
-);
+import { useRouter, useSearchParams } from "next/navigation";
+import { MailCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Field } from "@/components/forms/fields";
+import { getSupabase } from "@/lib/supabase/client";
+import { MIN_PASSWORD, authErrorMessage, isEmail, safeNext } from "../_components/auth-helpers";
+import { FormError, GoogleButton, OrDivider, PasswordInput, textLinkClass } from "../_components/auth-ui";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={<FormSkeleton />}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function callbackUrl(next: string | null) {
+  return `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ""}`;
+}
+
+function SignupForm() {
   const router = useRouter();
-  const { toast } = useToast();
+  const params = useSearchParams();
+  const next = safeNext(params.get("next"));
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
-  const handleEmailSignUp = async (e: React.FormEvent) => {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    if (!name.trim()) return setError("Escribe tu nombre.");
+    if (!isEmail(email)) return setError("Escribe un correo válido.");
+    if (password.length < MIN_PASSWORD) return setError(`La contraseña debe tener al menos ${MIN_PASSWORD} caracteres.`);
+    if (!accepted) return setError("Para crear tu cuenta, acepta los Términos y la Política de privacidad.");
+    setError(null);
+    setBusy(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      await updateProfile(userCredential.user, { displayName: name });
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        uid: userCredential.user.uid,
-        displayName: name,
-        email: email,
-        createdAt: serverTimestamp(),
+      const { data, error: authError } = await getSupabase().auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { full_name: name.trim() }, emailRedirectTo: callbackUrl(next) },
       });
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign Up Failed",
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
+      if (authError) {
+        setBusy(false);
+        return setError(authErrorMessage(authError));
+      }
+      if (data.session) {
+        router.replace(next ?? "/inicio");
+        router.refresh();
+        return;
+      }
+      setBusy(false);
+      setSentTo(email.trim());
+    } catch (err) {
+      setBusy(false);
+      setError(authErrorMessage(err));
     }
-  };
+  }
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-      await setDoc(
-        doc(db, "users", user.uid),
-        {
-          uid: user.uid,
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          createdAt: serverTimestamp(),
-        },
-        { merge: true }
-      ); // Merge to avoid overwriting existing data on login
-      router.push("/dashboard");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Google Sign In Failed",
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (sentTo) return <CheckEmail email={sentTo} next={next} onBack={() => setSentTo(null)} />;
+
+  const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
   return (
-    <div className="w-full max-w-md">
-      <div className="flex flex-col items-center text-center mb-8">
-        <img src="/logo.png" alt="Fynco" className="h-16 w-auto mb-2" />
-        <h1 className="text-3xl font-headline font-bold">
-          Create your Fynco account
-        </h1>
-        <p className="text-muted-foreground">
-          Start tracking your finances in seconds
+    <div className="flex flex-col gap-6">
+      <div className="text-center">
+        <h1 className="text-2xl font-extrabold tracking-tight">Crea tu cuenta</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">Organiza tu dinero y divide gastos con tu gente.</p>
+      </div>
+
+      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        <Field label="Nombre" htmlFor="signup-name">
+          <Input id="signup-name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="Cómo te ven tus amigos" />
+        </Field>
+        <Field label="Correo" htmlFor="signup-email">
+          <Input
+            id="signup-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@correo.com"
+          />
+        </Field>
+        <Field label="Contraseña" htmlFor="signup-password" hint={`Mínimo ${MIN_PASSWORD} caracteres.`}>
+          <PasswordInput
+            id="signup-password"
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+            invalid={password.length > 0 && password.length < MIN_PASSWORD}
+          />
+        </Field>
+
+        <div className="flex items-start gap-3 py-1">
+          <Checkbox id="signup-terms" checked={accepted} onCheckedChange={(v) => setAccepted(v === true)} className="mt-0.5 h-5 w-5 rounded-md" />
+          <label htmlFor="signup-terms" className="text-sm leading-snug text-muted-foreground">
+            Acepto los{" "}
+            <Link href="/legal/terminos" target="_blank" className="font-semibold text-primary underline-offset-4 hover:underline">
+              Términos
+            </Link>{" "}
+            y la{" "}
+            <Link href="/legal/privacidad" target="_blank" className="font-semibold text-primary underline-offset-4 hover:underline">
+              Política de privacidad
+            </Link>
+            .
+          </label>
+        </div>
+
+        {error && <FormError>{error}</FormError>}
+        <Button type="submit" disabled={busy}>
+          {busy ? "Creando cuenta…" : "Crear cuenta"}
+        </Button>
+      </form>
+
+      <OrDivider />
+      <GoogleButton next={next} onError={setError} disabled={busy || !accepted} />
+      {!accepted && <p className="-mt-3 text-center text-xs text-muted-foreground">Acepta los términos para continuar con Google.</p>}
+
+      <p className="text-center text-sm text-muted-foreground">
+        ¿Ya tienes cuenta?{" "}
+        <Link href={loginHref} className={textLinkClass}>
+          Entra
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+function CheckEmail({ email, next, onBack }: { email: string; next: string | null; onBack: () => void }) {
+  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  async function resend() {
+    setState("sending");
+    setError(null);
+    try {
+      const { error: authError } = await getSupabase().auth.resend({ type: "signup", email, options: { emailRedirectTo: callbackUrl(next) } });
+      if (authError) throw authError;
+      setState("sent");
+    } catch (err) {
+      setState("idle");
+      setError(authErrorMessage(err));
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-5 text-center" aria-live="polite">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card text-primary">
+        <MailCheck className="h-7 w-7" />
+      </span>
+      <div>
+        <h1 className="text-2xl font-extrabold tracking-tight">Revisa tu correo</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Te enviamos un enlace a <span className="font-semibold text-foreground">{email}</span> para confirmar tu cuenta. Ábrelo desde este dispositivo y listo.
         </p>
       </div>
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>
-            Choose your preferred sign up method
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-1 gap-2">
-            <Button
-              variant="outline"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-            >
-              <GoogleIcon className="mr-2 h-4 w-4" />
-              Sign up with Google
-            </Button>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <form onSubmit={handleEmailSignUp}>
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid gap-2 mt-4">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid gap-2 mt-4">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full mt-6" disabled={loading}>
-              {loading ? "Creating Account..." : "Create Account"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="underline text-primary hover:text-primary/80"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+      <p className="text-xs text-muted-foreground">¿No te llegó? Revisa la carpeta de spam o pide otro.</p>
+      {error && <FormError className="w-full">{error}</FormError>}
+      <div className="flex w-full flex-col gap-2.5">
+        <Button variant="secondary" onClick={resend} disabled={state !== "idle"}>
+          {state === "sending" ? "Enviando…" : state === "sent" ? "Enlace reenviado" : "Reenviar enlace"}
+        </Button>
+        <Button variant="ghost" onClick={onBack}>
+          Usar otro correo
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function FormSkeleton() {
+  return (
+    <div className="flex flex-col gap-4" role="status" aria-label="Cargando">
+      <Skeleton className="mx-auto h-8 w-44" />
+      <Skeleton className="h-12 w-full rounded-lg" />
+      <Skeleton className="h-12 w-full rounded-lg" />
+      <Skeleton className="h-12 w-full rounded-lg" />
+      <Skeleton className="h-12 w-full rounded-xl" />
     </div>
   );
 }

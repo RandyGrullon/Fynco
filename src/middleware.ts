@@ -1,48 +1,53 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { SUPABASE_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/supabase/env";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+const PUBLIC_PATHS = ["/login", "/signup", "/recuperar", "/auth", "/legal", "/configurar", "/unirse"];
+const AUTH_ONLY_PATHS = ["/login", "/signup", "/recuperar"];
 
-  // Bloquear acceso directo a rutas de transacciones eliminadas
-  if (pathname.startsWith("/transactions")) {
-    console.warn(
-      `Middleware: Blocking access to removed transactions route: ${pathname}`
-    );
+function isPublic(pathname: string) {
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
-    const dashboardUrl = new URL("/dashboard", request.url);
-    dashboardUrl.searchParams.set("blocked", "transactions-removed");
+export async function middleware(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
 
-    return NextResponse.redirect(dashboardUrl);
+  if (!isSupabaseConfigured) {
+    if (pathname.startsWith("/configurar") || pathname.startsWith("/legal")) return NextResponse.next();
+    return NextResponse.redirect(new URL("/configurar", request.url));
   }
 
-  // Bloquear rutas que podrían contener IDs de usuarios no válidos
-  // Esto es una capa adicional de seguridad
-  const protectedPatterns = [
-    /^\/api\/.*\/[a-zA-Z0-9]{20,}/, // APIs con IDs largos
-    /^\/users\/[a-zA-Z0-9]{20,}/, // Rutas de usuarios directas
-  ];
+  let response = NextResponse.next({ request });
+  const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+      },
+    },
+  });
 
-  if (protectedPatterns.some((pattern) => pattern.test(pathname))) {
-    console.warn(`Middleware: Blocking suspicious route pattern: ${pathname}`);
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Refresca el token y valida la sesión (no usar getSession aquí).
+  const { data } = await supabase.auth.getClaims();
+  const signedIn = Boolean(data?.claims?.sub);
+
+  if (!signedIn && !isPublic(pathname) && !pathname.startsWith("/api")) {
+    const url = new URL("/login", request.url);
+    if (pathname !== "/") url.searchParams.set("next", `${pathname}${search}`);
+    return NextResponse.redirect(url);
   }
 
-  // Permitir que todas las demás rutas pasen - Firebase Auth maneja
-  // la autenticación del lado del cliente
-  return NextResponse.next();
+  if (signedIn && AUTH_ONLY_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.redirect(new URL("/inicio", request.url));
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico|json|txt)$).*)"],
 };

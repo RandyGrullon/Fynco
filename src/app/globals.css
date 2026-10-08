@@ -2,60 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Nocturno: oscuro, un solo acento lima. Canales RGB para permitir opacidad (bg-primary/10). */
 @layer base {
   :root {
-    --background: 210 25% 96%;
-    --foreground: 224 71% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 207 88% 61%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 92%;
-    --secondary-foreground: 224 71% 4%;
-    --muted: 210 40% 92%;
-    --muted-foreground: 215 25% 45%;
-    --accent: 122 39% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 20% 88%;
-    --input: 210 20% 92%;
-    --ring: 207 88% 61%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
-
-  .dark {
-    --background: 224 71% 4%;
-    --foreground: 210 40% 98%;
-    --card: 224 71% 6%;
-    --card-foreground: 210 40% 98%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 207 88% 61%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 122 39% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 207 88% 61%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --background: 14 16 19; /* #0E1013 */
+    --foreground: 242 243 245; /* #F2F3F5 */
+    --nav: 20 23 27; /* #14171B */
+    --card: 23 26 31; /* #171A1F */
+    --card-foreground: 242 243 245;
+    --popover: 23 26 31;
+    --popover-foreground: 242 243 245;
+    --primary: 200 240 90; /* #C8F05A */
+    --primary-foreground: 14 16 19;
+    --primary-soft: 29 33 23; /* #1D2117 */
+    --secondary: 38 42 49; /* #262A31 */
+    --secondary-foreground: 242 243 245;
+    --muted: 30 34 40; /* #1E2228 */
+    --muted-foreground: 154 160 170; /* #9AA0AA */
+    --subtle: 107 113 124; /* #6B717C, solo texto grande */
+    --accent: 38 42 49;
+    --accent-foreground: 242 243 245;
+    --positive: 200 240 90;
+    --negative: 255 138 122; /* #FF8A7A */
+    --destructive: 255 138 122;
+    --destructive-foreground: 14 16 19;
+    --border: 38 42 49;
+    --input: 38 42 49;
+    --ring: 200 240 90;
+    color-scheme: dark;
   }
 }
 
@@ -63,9 +37,29 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    @apply bg-background text-foreground;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "tnum" 1;
+  }
+  ::selection {
+    @apply bg-primary text-primary-foreground;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
   }
 }

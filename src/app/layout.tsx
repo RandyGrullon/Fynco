@@ -1,71 +1,41 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
-import IOSInstallBanner from "../components/ios-install-banner";
+import { QueryProvider } from "@/components/providers/query-provider";
+import { SITE_URL } from "@/lib/supabase/env";
+
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Fynco",
-  description: "Personal finance tracking made easy.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: "Fynco", template: "%s · Fynco" },
+  description: "Tu cartera personal, tus gastos compartidos y un asistente financiero en un solo lugar.",
   manifest: "/manifest.json",
-  themeColor: "#000000",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
+  applicationName: "Fynco",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Fynco" },
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Fynco",
-  },
+  openGraph: { title: "Fynco", description: "Cartera personal, gastos compartidos y asistente financiero.", url: SITE_URL, siteName: "Fynco", locale: "es_DO" },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0E1013",
+  colorScheme: "dark",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-          rel="stylesheet"
-        />
-        <link rel="manifest" href="/manifest.json" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/favicon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/favicon-16x16.png"
-        />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Fynco" />
-        <meta name="theme-color" content="#000000" />
-      </head>
-      <body className="font-body antialiased">
-        {children}
-        {/* iOS doesn't show an install prompt; show a small helper for Safari users */}
-        <IOSInstallBanner />
+    <html lang="es" className={`dark ${manrope.variable}`}>
+      <body className="min-h-dvh font-sans">
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );
