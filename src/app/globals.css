@@ -49,6 +49,144 @@
   }
 }
 
+/* ---------------------------------------------------------------------
+   Intro al abrir la app (~1.8 s): el logo se arma y la moneda se separa.
+   --------------------------------------------------------------------- */
+.intro-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgb(var(--background));
+  animation: intro-out 0.42s cubic-bezier(0.4, 0, 0.2, 1) 1.38s forwards;
+}
+html[data-intro="skip"] .intro-splash {
+  display: none;
+}
+.intro-tile {
+  animation: intro-tile 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+.intro-stem,
+.intro-top,
+.intro-arm,
+.intro-coin,
+.intro-ring {
+  transform-box: fill-box;
+}
+.intro-stem {
+  transform-origin: 50% 100%;
+  animation: intro-grow-y 0.36s cubic-bezier(0.3, 0.9, 0.3, 1) 0.14s both;
+}
+.intro-top {
+  transform-origin: 0% 50%;
+  animation: intro-grow-x 0.32s cubic-bezier(0.3, 0.9, 0.3, 1) 0.4s both;
+}
+.intro-arm {
+  transform-origin: 0% 50%;
+  animation: intro-grow-x 0.28s cubic-bezier(0.3, 0.9, 0.3, 1) 0.6s both;
+}
+.intro-coin {
+  transform-origin: 50% 50%;
+  animation: intro-coin 0.52s cubic-bezier(0.2, 1.3, 0.4, 1) 0.78s both;
+}
+.intro-ring {
+  /* invisible hasta que la moneda llega: sin relleno hacia atrás */
+  opacity: 0;
+  transform-origin: 50% 50%;
+  animation: intro-ring 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) 1.06s forwards;
+}
+.intro-word {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: rgb(var(--foreground));
+  animation: intro-word 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) 0.92s both;
+}
+
+@keyframes intro-tile {
+  from {
+    opacity: 0;
+    transform: scale(0.78) rotate(-6deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes intro-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes intro-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes intro-coin {
+  0% {
+    opacity: 0;
+    transform: translateX(-96px) scale(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(10px) scale(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+@keyframes intro-ring {
+  from {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.8);
+  }
+}
+@keyframes intro-word {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    letter-spacing: 0.24em;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: -0.02em;
+  }
+}
+@keyframes intro-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-splash * {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+  }
+  .intro-splash {
+    animation: intro-out 0.3s ease 0.5s forwards;
+  }
+}
+
 @layer utilities {
   .tabular {
     font-variant-numeric: tabular-nums;
