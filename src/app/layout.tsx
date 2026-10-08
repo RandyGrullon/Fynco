@@ -15,12 +15,22 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Fynco" },
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.svg", type: "image/svg+xml" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
     apple: "/apple-touch-icon.png",
   },
-  openGraph: { title: "Fynco", description: "Cartera personal, gastos compartidos y asistente financiero.", url: SITE_URL, siteName: "Fynco", locale: "es_DO" },
+  openGraph: {
+    title: "Fynco",
+    description: "Tu cartera, tus gastos compartidos y tu asistente financiero.",
+    url: SITE_URL,
+    siteName: "Fynco",
+    locale: "es_DO",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Fynco" }],
+  },
+  twitter: { card: "summary_large_image", title: "Fynco", description: "Tu cartera, tus gastos compartidos y tu asistente financiero.", images: ["/og.png"] },
 };
 
 export const viewport: Viewport = {

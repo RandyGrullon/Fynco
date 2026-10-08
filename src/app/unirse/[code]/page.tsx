@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getServerUser } from "@/lib/supabase/server";
 import { JoinGroup } from "./join-group";
+import { LogoMark } from "@/components/brand";
 
 export const metadata = { title: "Unirse a un grupo" };
 
@@ -12,7 +13,7 @@ export default async function UnirsePage({ params }: { params: Promise<{ code: s
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-6 py-12">
-      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-lg font-extrabold text-primary-foreground">F</span>
+      <LogoMark size={48} />
       {user ? (
         <JoinGroup code={code} />
       ) : (

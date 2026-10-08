@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { LogoMark } from "@/components/brand";
 
 export const metadata = { title: "Configurar" };
 
@@ -8,7 +9,7 @@ export default function ConfigurarPage() {
   if (isSupabaseConfigured) redirect("/inicio");
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center gap-6 px-6 py-12">
-      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-lg font-extrabold text-primary-foreground">F</span>
+      <LogoMark size={48} />
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight">Falta conectar Supabase</h1>
         <p className="mt-2 text-muted-foreground">Agrega estas variables de entorno (en Vercel → Settings → Environment Variables, o en <code>.env.local</code>) y vuelve a desplegar.</p>

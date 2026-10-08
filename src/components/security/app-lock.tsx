@@ -8,6 +8,7 @@ import { useHasPin, useProfile } from "@/hooks/queries";
 import { verifyPin } from "@/lib/data/profile";
 import { getSupabase } from "@/lib/supabase/client";
 import { useUser } from "@/components/providers/session-provider";
+import { LogoMark } from "@/components/brand";
 
 const IDLE_MS = 5 * 60_000;
 const key = (uid: string) => `fynco:unlocked:${uid}`;
@@ -135,7 +136,7 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
 export function Splash() {
   return (
     <div className="flex min-h-dvh items-center justify-center" role="status" aria-label="Cargando">
-      <span className="flex h-12 w-12 animate-pulse items-center justify-center rounded-xl bg-primary text-lg font-extrabold text-primary-foreground">F</span>
+      <LogoMark size={48} className="animate-pulse" />
     </div>
   );
 }

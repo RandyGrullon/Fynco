@@ -15,6 +15,7 @@ import { loadConversation, newId, saveConversation, toApiMessages, type UIMessag
 import { DraftCard, useDraftActions, type DraftActions } from "./draft-card";
 import { RichText } from "./rich-text";
 import { formatClock, useVoiceRecorder, type VoiceRecorder } from "./use-voice-recorder";
+import { LogoMark } from "@/components/brand";
 
 const SUGGESTIONS = ["¿Cuánto gasté en comida este mes?", "¿Quién me debe?", "Registra 850 de almuerzo en efectivo", "¿Cómo voy con mis metas?"];
 
@@ -35,11 +36,7 @@ function messageForStatus(status: number) {
 }
 
 function FMark({ className }: { className?: string }) {
-  return (
-    <span aria-hidden="true" className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[13px] font-extrabold text-primary-foreground", className)}>
-      F
-    </span>
-  );
+  return <LogoMark size={28} className={className} />;
 }
 
 export function AssistantChat() {

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useSheets } from "./sheets";
 import { cn } from "@/lib/utils";
+import { LogoMark } from "@/components/brand";
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -87,7 +88,7 @@ export function SideNav() {
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-nav px-4 py-6 md:flex">
       <Link href="/inicio" className="mb-8 flex items-center gap-2.5 px-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-[15px] font-extrabold text-primary-foreground">F</span>
+        <LogoMark size={36} />
         <span className="text-xl font-extrabold tracking-tight">Fynco</span>
       </Link>
       <button
