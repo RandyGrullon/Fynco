@@ -48,11 +48,14 @@ interface GeminiResponse {
 export class GeminiError extends Error {
   readonly status: number;
   readonly code: string;
-  constructor(status: number, code: string, message: string) {
+  /** Diagnóstico para logs (estado HTTP y motivo de Google). Nunca contenido del usuario. */
+  detail: string;
+  constructor(status: number, code: string, message: string, detail = "") {
     super(message);
     this.name = "GeminiError";
     this.status = status;
     this.code = code;
+    this.detail = detail;
   }
 }
 
@@ -69,15 +72,17 @@ export const GEMINI_MESSAGES = {
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
 const BLOCK_REASONS = new Set(["SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "RECITATION", "IMAGE_SAFETY"]);
 
-function mapHttpError(status: number, apiMessage: string): GeminiError {
-  if (status === 429) return new GeminiError(429, "rate_limited", GEMINI_MESSAGES.rateLimited);
-  if (status === 401 || status === 403 || status === 404) return new GeminiError(503, "misconfigured", GEMINI_MESSAGES.misconfigured);
-  if (status === 400) {
-    if (/api key|api_key|permission/i.test(apiMessage)) return new GeminiError(503, "misconfigured", GEMINI_MESSAGES.misconfigured);
-    return new GeminiError(400, "bad_request", GEMINI_MESSAGES.badRequest);
+function mapHttpError(status: number, apiMessage: string, detail: string): GeminiError {
+  const keyProblem = /api[ _]?key|API_KEY|leaked|SERVICE_DISABLED|has not been used|billing/i.test(apiMessage);
+  if (status === 429) return new GeminiError(429, "rate_limited", GEMINI_MESSAGES.rateLimited, detail);
+  // Modelo retirado o no habilitado para esta cuenta: se puede probar el siguiente modelo.
+  if (!keyProblem && (status === 404 || (status === 403 && /model/i.test(apiMessage)))) {
+    return new GeminiError(503, "model_unavailable", GEMINI_MESSAGES.misconfigured, detail);
   }
-  if (status === 504) return new GeminiError(504, "timeout", GEMINI_MESSAGES.timeout);
-  return new GeminiError(503, "unavailable", GEMINI_MESSAGES.unavailable);
+  if (status === 401 || status === 403 || (status === 400 && keyProblem)) return new GeminiError(503, "misconfigured", GEMINI_MESSAGES.misconfigured, detail);
+  if (status === 400) return new GeminiError(400, "bad_request", GEMINI_MESSAGES.badRequest, detail);
+  if (status === 504) return new GeminiError(504, "timeout", GEMINI_MESSAGES.timeout, detail);
+  return new GeminiError(503, "unavailable", GEMINI_MESSAGES.unavailable, detail);
 }
 
 export interface GenerateOptions {
@@ -115,13 +120,17 @@ export async function generateContent({ apiKey, model, body, timeoutMs, signal }
 
   if (!res.ok) {
     let apiMessage = "";
+    let detail = `http=${res.status} model=${name}`;
     try {
-      const err = (await res.json()) as { error?: { message?: string; status?: string } };
+      const err = (await res.json()) as { error?: { message?: string; status?: string; details?: { reason?: string }[] } };
       apiMessage = `${err.error?.status ?? ""} ${err.error?.message ?? ""}`;
+      const reason = err.error?.details?.find((d) => d.reason)?.reason;
+      // El mensaje de Google no incluye datos del usuario; se recorta por si acaso.
+      detail += ` google=${err.error?.status ?? "?"}${reason ? ` reason=${reason}` : ""} msg="${(err.error?.message ?? "").slice(0, 160)}"`;
     } catch {
       // cuerpo no JSON
     }
-    throw mapHttpError(res.status, apiMessage);
+    throw mapHttpError(res.status, apiMessage, detail);
   }
 
   try {
@@ -133,7 +142,8 @@ export async function generateContent({ apiKey, model, body, timeoutMs, signal }
 
 export interface ToolLoopOptions {
   apiKey: string;
-  model: string;
+  /** Modelos en orden de preferencia: si uno no está disponible para la cuenta, se usa el siguiente. */
+  models: string[];
   systemInstruction: string;
   contents: GeminiContent[];
   tools: FunctionDeclaration[];
@@ -144,7 +154,8 @@ export interface ToolLoopOptions {
   deadline?: number;
   /** Tiempo máximo por llamada. */
   callTimeoutMs?: number;
-  generationConfig?: Record<string, unknown>;
+  /** Configuración de generación según el modelo (el razonamiento se configura distinto en 2.5 y 3.x). */
+  generationConfig?: (model: string) => Record<string, unknown>;
   signal?: AbortSignal;
 }
 
@@ -152,6 +163,7 @@ export interface ToolLoopResult {
   text: string;
   rounds: number;
   toolCalls: number;
+  model: string;
 }
 
 const MAX_CALLS_PER_ROUND = 6;
@@ -173,6 +185,8 @@ export async function runToolLoop(opts: ToolLoopOptions): Promise<ToolLoopResult
   const deadline = opts.deadline ?? Date.now() + 27_000;
   const callTimeout = opts.callTimeoutMs ?? 25_000;
   const contents = [...opts.contents];
+  const models = opts.models.length ? opts.models : ["gemini-3.8-flash"];
+  let modelIndex = 0;
   let toolCalls = 0;
 
   for (let round = 1; round <= maxRounds; round++) {
@@ -181,19 +195,31 @@ export async function runToolLoop(opts: ToolLoopOptions): Promise<ToolLoopResult
     // En la última ronda (o con poco tiempo) se obliga a contestar con texto.
     const forceText = round === maxRounds || remaining < 7000;
 
-    const res = await generateContent({
-      apiKey: opts.apiKey,
-      model: opts.model,
-      timeoutMs: Math.min(callTimeout, remaining - 500),
-      signal: opts.signal,
-      body: {
-        systemInstruction: { parts: [{ text: opts.systemInstruction }] },
-        contents,
-        tools: [{ functionDeclarations: opts.tools }],
-        toolConfig: { functionCallingConfig: { mode: forceText ? "NONE" : "AUTO" } },
-        generationConfig: opts.generationConfig,
-      },
-    });
+    const model = models[modelIndex];
+    let res: GeminiResponse;
+    try {
+      res = await generateContent({
+        apiKey: opts.apiKey,
+        model,
+        timeoutMs: Math.min(callTimeout, remaining - 500),
+        signal: opts.signal,
+        body: {
+          systemInstruction: { parts: [{ text: opts.systemInstruction }] },
+          contents,
+          tools: [{ functionDeclarations: opts.tools }],
+          toolConfig: { functionCallingConfig: { mode: forceText ? "NONE" : "AUTO" } },
+          generationConfig: opts.generationConfig?.(model),
+        },
+      });
+    } catch (e) {
+      // Solo se cambia de modelo antes de la primera respuesta (las firmas de razonamiento son por modelo).
+      if (e instanceof GeminiError && e.code === "model_unavailable" && round === 1 && modelIndex < models.length - 1) {
+        modelIndex++;
+        round--;
+        continue;
+      }
+      throw e;
+    }
 
     if (res.promptFeedback?.blockReason) throw new GeminiError(422, "blocked", GEMINI_MESSAGES.blocked);
     const candidate = res.candidates?.[0];
@@ -206,7 +232,7 @@ export async function runToolLoop(opts: ToolLoopOptions): Promise<ToolLoopResult
     if (!calls.length || forceText) {
       // Llamada mal formada: un reintento si quedan rondas.
       if (!calls.length && candidate.finishReason === "MALFORMED_FUNCTION_CALL" && !forceText) continue;
-      return { text: textOf(parts), rounds: round, toolCalls };
+      return { text: textOf(parts), rounds: round, toolCalls, model };
     }
 
     // Se devuelven las partes tal cual (incluye thoughtSignature si viene).
@@ -231,5 +257,5 @@ export async function runToolLoop(opts: ToolLoopOptions): Promise<ToolLoopResult
     contents.push({ role: "user", parts: responses });
   }
 
-  return { text: "", rounds: maxRounds, toolCalls };
+  return { text: "", rounds: maxRounds, toolCalls, model: models[modelIndex] };
 }

@@ -203,6 +203,7 @@ export function AssistantChat() {
       <div className="h-20 md:h-28" aria-hidden="true" />
 
       <Composer onSend={(t) => send(t)} voice={voice} pending={pending} />
+      {actions.recurringEditor}
     </div>
   );
 }

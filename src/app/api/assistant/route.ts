@@ -10,6 +10,19 @@ import { createToolbox, validDate } from "@/lib/assistant/tools";
 import { MAX_AUDIO_CHARS, MAX_HISTORY, MAX_TEXT, VOICE_PLACEHOLDER, type AssistantErrorBody, type AssistantResponse } from "@/lib/assistant/types";
 
 export const runtime = "nodejs";
+
+const DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-2.5-flash"];
+
+/** Gemini 3 usa thinkingLevel y temperatura 1.0 (recomendado); Gemini 2.5 usa thinkingBudget. */
+function generationConfigFor(model: string): Record<string, unknown> {
+  if (/^gemini-2\./.test(model)) {
+    const env = Number(process.env.GEMINI_THINKING_BUDGET);
+    const thinkingBudget = process.env.GEMINI_THINKING_BUDGET?.trim() && Number.isFinite(env) ? env : 0;
+    return { temperature: 0.3, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget } };
+  }
+  const level = process.env.GEMINI_THINKING_LEVEL?.trim() || "low";
+  return { maxOutputTokens: 2048, thinkingConfig: { thinkingLevel: level } };
+}
 export const maxDuration = 30;
 export const dynamic = "force-dynamic";
 
@@ -58,7 +71,7 @@ function systemPrompt(p: { today: string; currency: string; name: string; contex
     `- Escribe los montos como las herramientas (por ejemplo ${currencySymbol(p.currency)} 1,250.50).`,
     "- Nunca inventes cifras. Para cualquier dato del usuario (saldos, gastos, deudas, metas, recurrentes) llama primero a una herramienta y usa solo lo que devuelva. Si no hay datos, dilo.",
     "- Convierte tú las fechas relativas (ayer, la semana pasada, este mes, en enero) a YYYY-MM-DD antes de llamar a las herramientas.",
-    "- Para registrar algo usa propose_transaction (gasto o ingreso propio) o propose_shared_expense (dividir con un grupo o amigo). Eso solo crea un borrador: di que revise la tarjeta y toque Confirmar. Nunca digas que ya quedó guardado.",
+    "- Puedes HACER acciones por el usuario, siempre como borrador que él aprueba con un toque: propose_transaction (gasto o ingreso propio), propose_shared_expense (dividir con un grupo o amigo), propose_transfer (mover dinero entre cuentas o aportar/retirar de una meta), propose_settlement (registrar que pagó o le pagaron una deuda compartida) y propose_recurring (crear un gasto o ingreso fijo). Puedes preparar varios borradores en una misma respuesta. Di que revise la tarjeta y toque Confirmar. Nunca digas que ya quedó guardado.",
     "- Si falta el monto, pregúntalo. Si no dicen cuenta o categoría, usa la predeterminada o la más lógica sin preguntar.",
     "- Solo ayudas con finanzas personales y con esta app. Si piden otra cosa, explica con amabilidad que solo puedes ayudar con sus finanzas.",
     "- No des asesoría de inversión personalizada (qué comprar o vender, dónde invertir su dinero). Puedes explicar conceptos generales y sugerir un asesor certificado.",
@@ -158,13 +171,12 @@ export async function POST(req: Request) {
     }
     if (!contents.length || contents[contents.length - 1].role !== "user") return fail(400, "Escribe un mensaje para empezar.");
 
-    const model = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";
-    const budgetEnv = Number(process.env.GEMINI_THINKING_BUDGET);
-    const thinkingBudget = Number.isFinite(budgetEnv) && process.env.GEMINI_THINKING_BUDGET?.trim() ? budgetEnv : /gemini-2\.5-flash/.test(model) ? 0 : undefined;
+    // Google limitó los Gemini 2.5 a cuentas que ya los usaban (sep 2026): 3.x primero, con respaldos.
+    const models = [...new Set([process.env.GEMINI_MODEL?.trim(), ...DEFAULT_MODELS].filter((m): m is string => Boolean(m)))];
 
     const result = await runToolLoop({
       apiKey,
-      model,
+      models,
       systemInstruction: systemPrompt({ today, currency, name, context, hasAudio: Boolean(body.audio) }),
       contents,
       tools: toolbox.declarations,
@@ -173,11 +185,7 @@ export async function POST(req: Request) {
       deadline,
       callTimeoutMs: 25_000,
       signal: req.signal,
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 1024,
-        ...(thinkingBudget !== undefined ? { thinkingConfig: { thinkingBudget } } : {}),
-      },
+      generationConfig: generationConfigFor,
     });
 
     const { reply: text, transcript } = splitTranscript(result.text);
@@ -192,7 +200,8 @@ export async function POST(req: Request) {
     return NextResponse.json(response, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     if (e instanceof GeminiError) {
-      console.error("[asistente] gemini:", e.code);
+      // Solo diagnóstico de Google (estado, motivo, modelo); nunca el contenido del usuario.
+      console.error("[asistente] gemini:", e.code, e.detail);
       return fail(e.status, e.message);
     }
     console.error("[asistente] error interno");

@@ -72,24 +72,26 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   rule?: RecurringRule;
+  /** Valores iniciales para una regla nueva (p. ej. desde el asistente). */
+  preset?: Partial<RecurringInput>;
 }
 
 type Errors = Partial<Record<"amount" | "description" | "account" | "end", string>>;
 
-export function RecurringPanel({ open, onOpenChange, rule }: Props) {
+export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
   const m = useRecurringMutations();
   const editing = Boolean(rule);
   const today = todayISO();
 
-  const [kind, setKind] = useState<"expense" | "income">(rule?.kind ?? "expense");
-  const [amount, setAmount] = useState(rule ? centsToInput(rule.amount) : "");
-  const [description, setDescription] = useState(rule?.description ?? "");
-  const [categoryId, setCategoryId] = useState<string | null>(rule?.category_id ?? null);
-  const [accountId, setAccountId] = useState<string | null>(rule?.account_id ?? null);
-  const [frequency, setFrequency] = useState<Recurrence>(rule?.frequency ?? "monthly");
-  const [startOn, setStartOn] = useState(rule?.start_on ?? today);
+  const [kind, setKind] = useState<"expense" | "income">(rule?.kind ?? preset?.kind ?? "expense");
+  const [amount, setAmount] = useState(rule ? centsToInput(rule.amount) : preset?.amount ? centsToInput(preset.amount) : "");
+  const [description, setDescription] = useState(rule?.description ?? preset?.description ?? "");
+  const [categoryId, setCategoryId] = useState<string | null>(rule?.category_id ?? preset?.category_id ?? null);
+  const [accountId, setAccountId] = useState<string | null>(rule?.account_id ?? preset?.account_id ?? null);
+  const [frequency, setFrequency] = useState<Recurrence>(rule?.frequency ?? preset?.frequency ?? "monthly");
+  const [startOn, setStartOn] = useState(rule?.start_on ?? preset?.start_on ?? today);
   const [endOn, setEndOn] = useState(rule?.end_on ?? "");
   const [policy, setPolicy] = useState<WeekendPolicy>(rule?.weekend_policy ?? "keep");
   const [active, setActive] = useState(rule?.active ?? true);

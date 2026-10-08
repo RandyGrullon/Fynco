@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/money";
 import { pairwiseDebts, simplifyDebts, splitEqual } from "@/lib/split";
 import type { AccountType, Debt, Group, GroupMember, MemberBalance, Settlement, SharedExpense, TxKind } from "@/lib/types";
 import type { FunctionDeclaration } from "./gemini";
-import type { Draft, DraftShare, SharedExpenseDraft, TransactionDraft } from "./types";
+import type { Draft, DraftShare, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "./types";
 
 export type ServerSupabase = Awaited<ReturnType<typeof createSupabaseServer>>;
 
@@ -232,6 +232,60 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         paid_by: { type: "STRING", description: "'me' si pagó el usuario (por defecto) o el nombre de quien pagó." },
       },
       required: ["group", "description", "amount"],
+    },
+  },
+  {
+    name: "propose_transfer",
+    description:
+      "Prepara un BORRADOR de transferencia entre cuentas del usuario (también para aportar o retirar dinero de una meta de ahorro). No guarda nada; el usuario confirma.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        amount: { type: "NUMBER", description: "Monto que sale, en unidades de la moneda de la cuenta de origen." },
+        from_account: { type: "STRING", description: "Cuenta de origen. Si no se dice, la predeterminada." },
+        to_account: { type: "STRING", description: "Cuenta de destino (omítela si el destino es una meta)." },
+        goal: { type: "STRING", description: "Nombre de la meta si el usuario quiere aportar a ella (destino = su cuenta)." },
+        withdraw_from_goal: { type: "BOOLEAN", description: "true si quiere SACAR dinero de la meta (la meta es el origen)." },
+        to_amount: { type: "NUMBER", description: "Solo si las monedas son distintas: lo que llega al destino." },
+        description: { type: "STRING", description: "Concepto corto, opcional." },
+        date: { type: "STRING", description: "Fecha YYYY-MM-DD. Por defecto hoy." },
+      },
+      required: ["amount"],
+    },
+  },
+  {
+    name: "propose_settlement",
+    description:
+      "Prepara un BORRADOR para registrar un pago de deuda compartida (saldar): el usuario le pagó a alguien o alguien le pagó al usuario. Si no se da el monto, usa lo que se deben. No guarda nada; el usuario confirma.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        person: { type: "STRING", description: "Nombre de la otra persona." },
+        direction: { type: "STRING", format: "enum", enum: ["i_paid", "they_paid"], description: "i_paid = el usuario le pagó a la persona; they_paid = la persona le pagó al usuario." },
+        amount: { type: "NUMBER", description: "Monto pagado. Si se omite, la deuda pendiente entre ambos." },
+        group: { type: "STRING", description: "Grupo, si el usuario lo menciona." },
+        account: { type: "STRING", description: "Cuenta del usuario donde sale o entra el dinero (opcional)." },
+        date: { type: "STRING", description: "Fecha YYYY-MM-DD. Por defecto hoy." },
+      },
+      required: ["person", "direction"],
+    },
+  },
+  {
+    name: "propose_recurring",
+    description:
+      "Prepara un BORRADOR de ingreso o gasto recurrente (salario, alquiler, suscripciones) para que el usuario lo confirme. No guarda nada.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        kind: { type: "STRING", format: "enum", enum: ["expense", "income"], description: "expense = gasto fijo, income = ingreso fijo." },
+        amount: { type: "NUMBER", description: "Monto de cada cobro o pago." },
+        description: { type: "STRING", description: "Descripción corta, p. ej. Netflix." },
+        frequency: { type: "STRING", format: "enum", enum: ["daily", "weekly", "biweekly", "monthly", "quarterly", "yearly"], description: "Frecuencia. biweekly = quincenal." },
+        start_date: { type: "STRING", description: "Primera fecha YYYY-MM-DD. Por defecto hoy." },
+        category: { type: "STRING", description: "Categoría, si aplica." },
+        account: { type: "STRING", description: "Cuenta. Por defecto la predeterminada." },
+      },
+      required: ["kind", "amount", "description", "frequency"],
     },
   },
 ];
@@ -843,6 +897,170 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     };
   }
 
+  async function proposeTransfer(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const amount = toCents(args.amount);
+    if (!amount) return { error: "El monto debe ser un número mayor que cero." };
+    const accs = (await accounts()).filter((a) => !a.archived_at);
+    if (accs.length < 2) return { error: "El usuario necesita al menos dos cuentas para transferir." };
+
+    let goalName: string | null = null;
+    let goalAccount: AccountLite | undefined;
+    const goalQuery = str(args.goal, 60);
+    if (goalQuery) {
+      type GoalRow = { name: string; account_id: string | null; status: string };
+      const goals = check((await supabase.from("goals").select("name, account_id, status").neq("status", "archived")) as { data: GoalRow[] | null; error: unknown });
+      const goal = bestMatch(goals, goalQuery, (g) => [g.name]);
+      if (!goal) return { error: `No encontré la meta "${goalQuery}".`, goals: goals.map((g) => g.name) };
+      goalAccount = accs.find((a) => a.id === goal.account_id);
+      if (!goalAccount) return { error: `La meta "${goal.name}" no tiene una cuenta vinculada.` };
+      goalName = goal.name;
+    }
+
+    const withdraw = args.withdraw_from_goal === true;
+    const fromName = str(args.from_account, 60);
+    const toName = str(args.to_account, 60);
+    let from = withdraw && goalAccount ? goalAccount : fromName ? findAccount(accs, fromName) : undefined;
+    let to = !withdraw && goalAccount ? goalAccount : toName ? findAccount(accs, toName) : undefined;
+    if (fromName && !from) return { error: `No encontré la cuenta "${fromName}".`, accounts: accs.map((a) => a.name) };
+    if (toName && !to) return { error: `No encontré la cuenta "${toName}".`, accounts: accs.map((a) => a.name) };
+    from ??= defaultAccount(accs.filter((a) => a.id !== to?.id));
+    to ??= withdraw ? defaultAccount(accs.filter((a) => a.id !== from?.id)) : undefined;
+    if (!to) return { error: "¿A qué cuenta va el dinero?", accounts: accs.map((a) => a.name) };
+    if (!from || from.id === to.id) return { error: "Las cuentas de origen y destino deben ser distintas." };
+
+    const cross = from.currency !== to.currency;
+    const toAmount = cross ? toCents(args.to_amount) : null;
+    const date = validDate(args.date) ?? today;
+    const description = str(args.description) || (goalName ? (withdraw ? `Retiro de ${goalName}` : `Aporte a ${goalName}`) : `${from.name} → ${to.name}`);
+    const draft: TransferDraft = {
+      type: "transfer",
+      id: crypto.randomUUID(),
+      from_account_id: from.id,
+      from_account_name: from.name,
+      to_account_id: to.id,
+      to_account_name: to.name,
+      amount,
+      currency: from.currency,
+      to_currency: to.currency,
+      to_amount: toAmount,
+      description,
+      occurred_on: date,
+      goal_name: goalName,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: { from: from.name, to: to.name, amount: fmt(amount, from.currency), received: toAmount ? fmt(toAmount, to.currency) : null, date, description },
+      warnings: cross && !toAmount ? [`Las monedas son distintas (${from.currency} → ${to.currency}); el usuario debe indicar cuánto llegó al editar.`] : [],
+      instruction: "Aún NO está hecho. Dile al usuario que revise la tarjeta y toque Confirmar.",
+    };
+  }
+
+  async function proposeSettlement(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const person = str(args.person, 60);
+    if (!person) return { error: "¿Con quién es el pago?" };
+    const iPaid = args.direction !== "they_paid";
+    const [grps, details, accs] = await Promise.all([activeGroups(), groupDetails(), accounts()]);
+    const groupQuery = str(args.group, 60);
+    const candidates = groupQuery ? grps.filter((g) => bestMatch([g], groupQuery, (x) => [x.display])) : grps;
+
+    // Grupos donde está esa persona, con la deuda pendiente entre ambos en la dirección pedida.
+    const options = candidates
+      .map((g) => {
+        const other = bestMatch(
+          g.members.filter((m) => !m.left_at && m.id !== g.me?.id),
+          person,
+          (m) => [m.display_name, m.display_name.split(" ")[0]],
+        );
+        if (!other || !g.me) return null;
+        const detail = details.get(g.id);
+        const debts: Debt[] = g.simplify_debts || !detail ? simplifyDebts(g.balances) : pairwiseDebts(detail.expenses, detail.settlements);
+        const fromId = iPaid ? g.me.id : other.id;
+        const toId = iPaid ? other.id : g.me.id;
+        const owed = debts.find((d) => d.from === fromId && d.to === toId)?.amount ?? 0;
+        return { g, other, owed };
+      })
+      .filter((x): x is NonNullable<typeof x> => Boolean(x))
+      .sort((a, b) => b.owed - a.owed);
+
+    if (!options.length) return { error: `No encontré a "${person}" en tus grupos.` };
+    const pick = options[0];
+    const amount = toCents(args.amount) ?? (pick.owed > 0 ? pick.owed : null);
+    if (!amount) {
+      return { error: `No hay deuda pendiente ${iPaid ? `tuya con ${pick.other.display_name}` : `de ${pick.other.display_name} contigo`} en ${pick.g.display}. Pregunta el monto si igual quiere registrar el pago.` };
+    }
+
+    const accName = str(args.account, 60);
+    const inCurrency = accs.filter((a) => !a.archived_at && a.currency === pick.g.currency);
+    const account = (accName ? findAccount(inCurrency, accName) : undefined) ?? defaultAccount(inCurrency);
+    const me = pick.g.me!;
+    const draft: SettlementDraft = {
+      type: "settlement",
+      id: crypto.randomUUID(),
+      group_id: pick.g.id,
+      group_name: pick.g.display,
+      currency: pick.g.currency,
+      from_member_id: iPaid ? me.id : pick.other.id,
+      from_name: iPaid ? "Tú" : pick.other.display_name,
+      to_member_id: iPaid ? pick.other.id : me.id,
+      to_name: iPaid ? pick.other.display_name : "Tú",
+      i_pay: iPaid,
+      amount,
+      account_id: account?.id ?? null,
+      account_name: account?.name ?? null,
+      occurred_on: validDate(args.date) ?? today,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: { group: pick.g.display, from: draft.from_name, to: draft.to_name, amount: fmt(amount, pick.g.currency), pending_before: fmt(pick.owed, pick.g.currency), account: draft.account_name },
+      instruction: "Aún NO está registrado. Dile al usuario que revise la tarjeta y toque Confirmar.",
+    };
+  }
+
+  async function proposeRecurring(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const kind = args.kind === "income" ? "income" : args.kind === "expense" ? "expense" : null;
+    if (!kind) return { error: "Indica si es un gasto (expense) o un ingreso (income)." };
+    const amount = toCents(args.amount);
+    if (!amount) return { error: "El monto debe ser un número mayor que cero." };
+    const FREQS = ["daily", "weekly", "biweekly", "monthly", "quarterly", "yearly"] as const;
+    const frequency = FREQS.find((f) => f === args.frequency);
+    if (!frequency) return { error: "Indica la frecuencia: daily, weekly, biweekly, monthly, quarterly o yearly." };
+
+    const [accs, cats] = await Promise.all([accounts(), categories()]);
+    const accName = str(args.account, 60);
+    const account = (accName ? findAccount(accs, accName) : undefined) ?? defaultAccount(accs);
+    const description = str(args.description) || (kind === "income" ? "Ingreso fijo" : "Gasto fijo");
+    const category = findCategory(cats, kind, str(args.category, 40), description) ?? null;
+    const startOn = validDate(args.start_date) ?? today;
+    const draft: RecurringDraft = {
+      type: "recurring",
+      id: crypto.randomUUID(),
+      kind,
+      amount,
+      currency: account?.currency ?? currency,
+      description,
+      category_id: category?.id ?? null,
+      category_name: category?.name ?? null,
+      account_id: account?.id ?? null,
+      account_name: account?.name ?? null,
+      frequency,
+      start_on: startOn,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: { kind: kind === "income" ? "ingreso fijo" : "gasto fijo", amount: fmt(amount, draft.currency), description, frequency, start: startOn, account: draft.account_name },
+      instruction: "Aún NO está creado. Dile al usuario que revise la tarjeta y toque Confirmar.",
+    };
+  }
+
   // -------------------------------------------------------------------------------------------
   async function execute(name: string, args: Record<string, unknown>): Promise<unknown> {
     try {
@@ -859,6 +1077,12 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
           return await proposeTransaction(args);
         case "propose_shared_expense":
           return await proposeSharedExpense(args);
+        case "propose_transfer":
+          return await proposeTransfer(args);
+        case "propose_settlement":
+          return await proposeSettlement(args);
+        case "propose_recurring":
+          return await proposeRecurring(args);
         default:
           return { error: `La herramienta ${name} no existe.` };
       }

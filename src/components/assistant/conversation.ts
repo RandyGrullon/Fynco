@@ -61,8 +61,18 @@ export function saveConversation(userId: string, messages: UIMessage[]) {
 function describeDraft(d: UIDraft) {
   const x = d.draft;
   const status = d.status === "saved" ? "guardado" : "sin confirmar";
-  if (x.type === "transaction") return `${x.kind === "income" ? "ingreso" : "gasto"} de ${formatMoney(x.amount, x.currency)} «${x.description}» (${status})`;
-  return `gasto compartido en ${x.group_name} de ${formatMoney(x.amount, x.currency)} «${x.description}» (${status})`;
+  switch (x.type) {
+    case "transaction":
+      return `${x.kind === "income" ? "ingreso" : "gasto"} de ${formatMoney(x.amount, x.currency)} «${x.description}» (${status})`;
+    case "shared_expense":
+      return `gasto compartido en ${x.group_name} de ${formatMoney(x.amount, x.currency)} «${x.description}» (${status})`;
+    case "transfer":
+      return `transferencia de ${formatMoney(x.amount, x.currency)} de ${x.from_account_name} a ${x.to_account_name} (${status})`;
+    case "settlement":
+      return `pago de ${x.from_name} a ${x.to_name} por ${formatMoney(x.amount, x.currency)} en ${x.group_name} (${status})`;
+    case "recurring":
+      return `${x.kind === "income" ? "ingreso" : "gasto"} recurrente ${x.frequency} de ${formatMoney(x.amount, x.currency)} «${x.description}» (${status})`;
+  }
 }
 
 const clip = (s: string) => (s.length > MAX_TEXT ? s.slice(0, MAX_TEXT) : s);

@@ -50,7 +50,61 @@ export interface SharedExpenseDraft {
   shares: DraftShare[];
 }
 
-export type Draft = TransactionDraft | SharedExpenseDraft;
+/** Mover dinero entre cuentas propias (incluye aportar o retirar de una meta). */
+export interface TransferDraft {
+  type: "transfer";
+  id: string;
+  from_account_id: string;
+  from_account_name: string;
+  to_account_id: string;
+  to_account_name: string;
+  /** Centavos que salen (moneda de origen). */
+  amount: number;
+  currency: string;
+  to_currency: string;
+  /** Solo si las monedas difieren: lo que llega a destino. null = falta indicarlo. */
+  to_amount: number | null;
+  description: string;
+  occurred_on: string;
+  goal_name: string | null;
+}
+
+/** Registrar un pago entre miembros de un grupo (saldar deuda). */
+export interface SettlementDraft {
+  type: "settlement";
+  id: string;
+  group_id: string;
+  group_name: string;
+  currency: string;
+  from_member_id: string;
+  from_name: string;
+  to_member_id: string;
+  to_name: string;
+  /** El usuario es quien paga (sale de su cuenta) o quien recibe. */
+  i_pay: boolean;
+  amount: number;
+  account_id: string | null;
+  account_name: string | null;
+  occurred_on: string;
+}
+
+/** Crear un ingreso o gasto recurrente. */
+export interface RecurringDraft {
+  type: "recurring";
+  id: string;
+  kind: "expense" | "income";
+  amount: number;
+  currency: string;
+  description: string;
+  category_id: string | null;
+  category_name: string | null;
+  account_id: string | null;
+  account_name: string | null;
+  frequency: "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "yearly";
+  start_on: string;
+}
+
+export type Draft = TransactionDraft | SharedExpenseDraft | TransferDraft | SettlementDraft | RecurringDraft;
 
 export interface AssistantAudio {
   mimeType: "audio/wav";
