@@ -8,7 +8,7 @@ Tu cartera personal, tus gastos compartidos (estilo Splitwise) y un asistente fi
 - Next.js 15 (App Router) · React 18 · Tailwind (tema "Nocturno")
 - Supabase: Auth, Postgres con RLS, RPCs y Realtime
 - TanStack Query
-- Asistente con Google Gemini (function calling, voz)
+- Asistente con Groq (gpt-oss-120b + Whisper) o Google Gemini, con function calling y voz
 
 ## Dominio
 `fynco.grullonb.com` → CNAME en Namecheap hacia el valor que da Vercel (`vercel domains verify fynco.grullonb.com`).
@@ -24,9 +24,11 @@ Solo hay que poner las variables de entorno y correr el SQL una vez.
    |---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto de Supabase |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Llave anon (o `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) |
-   | `GEMINI_API_KEY` | Asistente (ya existe en Vercel) |
+   | `GROQ_API_KEY` | Asistente (recomendado): Groq con `openai/gpt-oss-120b` y Whisper para la voz. Si existe, se usa en vez de Gemini |
+   | `GEMINI_API_KEY` | Asistente alternativo (Gemini 3.x) si no hay llave de Groq |
    | `NEXT_PUBLIC_SITE_URL` | Opcional. Por defecto `https://fynco.grullonb.com` |
-   | `GEMINI_MODEL` | Opcional. Por defecto `gemini-2.5-flash` |
+   | `GROQ_MODEL` | Opcional. Por defecto `openai/gpt-oss-120b` (respaldos: `qwen/qwen3.8-27b`, `openai/gpt-oss-20b`) |
+   | `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.8-flash` (respaldos 3.7 / 3.5 / 2.5) |
    | `GEMINI_THINKING_BUDGET` | Opcional. Tokens de razonamiento; por defecto `0` en los modelos flash (respuesta más rápida) |
 
 3. **Auth en Supabase** → Authentication → URL Configuration:

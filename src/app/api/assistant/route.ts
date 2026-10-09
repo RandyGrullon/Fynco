@@ -6,6 +6,7 @@ import { getServerUser } from "@/lib/supabase/server";
 import { monthRange, parseDate } from "@/lib/dates";
 import { currencySymbol } from "@/lib/money";
 import { GeminiError, runToolLoop, type GeminiContent, type GeminiPart } from "@/lib/assistant/gemini";
+import { GROQ_DEFAULT_MODELS, runGroqToolLoop, transcribeWithGroq, type GroqMessage } from "@/lib/assistant/groq";
 import { createToolbox, validDate } from "@/lib/assistant/tools";
 import { MAX_AUDIO_CHARS, MAX_HISTORY, MAX_TEXT, VOICE_PLACEHOLDER, type AssistantErrorBody, type AssistantResponse } from "@/lib/assistant/types";
 
@@ -108,8 +109,10 @@ export async function POST(req: Request) {
   const { supabase, user } = await getServerUser();
   if (!user) return fail(401, "Tu sesión expiró. Vuelve a entrar.");
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return fail(503, "El asistente todavía no está disponible. Intenta más tarde.");
+  // Proveedor: Groq si hay llave (rápido, con Whisper para la voz); si no, Gemini.
+  const groqKey = process.env.GROQ_API_KEY?.trim();
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!groqKey && !apiKey) return fail(503, "El asistente todavía no está disponible. Intenta más tarde.");
 
   let raw: unknown;
   try {
@@ -141,6 +144,47 @@ export async function POST(req: Request) {
       context = "(No se pudo cargar el contexto; usa las herramientas.)";
     }
 
+    if (groqKey) {
+      // Voz: Whisper transcribe y el modelo actúa sobre el texto.
+      let transcript: string | undefined;
+      if (body.audio) {
+        transcript = await transcribeWithGroq(groqKey, body.audio.data, req.signal);
+        if (!transcript) return fail(400, "No te entendí en la nota de voz. Intenta de nuevo, más cerca del micrófono.");
+      }
+      const history: GroqMessage[] = [];
+      for (const m of body.messages) {
+        const text = m.text.trim();
+        if (!text || text === VOICE_PLACEHOLDER) continue;
+        const role = m.role === "model" ? "assistant" : "user";
+        const last = history[history.length - 1];
+        if (last && last.role === role) last.content = `${last.content}\n\n${text}`;
+        else history.push({ role, content: text } as GroqMessage);
+      }
+      if (transcript) history.push({ role: "user", content: `(Nota de voz) ${transcript}` });
+      while (history.length && history[0].role === "assistant") history.shift();
+      if (!history.length || history[history.length - 1].role !== "user") return fail(400, "Escribe un mensaje para empezar.");
+
+      const groqModels = [...new Set([process.env.GROQ_MODEL?.trim(), ...GROQ_DEFAULT_MODELS].filter((m): m is string => Boolean(m)))];
+      const result = await runGroqToolLoop({
+        apiKey: groqKey,
+        models: groqModels,
+        messages: [{ role: "system", content: systemPrompt({ today, currency, name, context, hasAudio: false }) }, ...history],
+        tools: toolbox.declarations,
+        executeTool: toolbox.execute,
+        maxRounds: 5,
+        deadline,
+        callTimeoutMs: 20_000,
+        signal: req.signal,
+      });
+      const drafts = toolbox.drafts;
+      const reply =
+        result.text ||
+        (drafts.length ? "Te dejé el borrador abajo. Revísalo y toca Confirmar para guardarlo." : "No supe qué responder. ¿Me lo dices de otra forma?");
+      const response: AssistantResponse = { reply, drafts, ...(transcript ? { transcript } : {}) };
+      return NextResponse.json(response, { headers: { "cache-control": "no-store" } });
+    }
+
+    // ---------- Gemini ----------
     // Historial → contents (alternando roles, empezando por el usuario).
     const contents: GeminiContent[] = [];
     for (const m of body.messages) {
@@ -175,7 +219,7 @@ export async function POST(req: Request) {
     const models = [...new Set([process.env.GEMINI_MODEL?.trim(), ...DEFAULT_MODELS].filter((m): m is string => Boolean(m)))];
 
     const result = await runToolLoop({
-      apiKey,
+      apiKey: apiKey!,
       models,
       systemInstruction: systemPrompt({ today, currency, name, context, hasAudio: Boolean(body.audio) }),
       contents,
@@ -200,8 +244,8 @@ export async function POST(req: Request) {
     return NextResponse.json(response, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     if (e instanceof GeminiError) {
-      // Solo diagnóstico de Google (estado, motivo, modelo); nunca el contenido del usuario.
-      console.error("[asistente] gemini:", e.code, e.detail);
+      // Solo diagnóstico del proveedor (estado, motivo, modelo); nunca el contenido del usuario.
+      console.error("[asistente] ia:", e.code, e.detail);
       return fail(e.status, e.message);
     }
     console.error("[asistente] error interno");
