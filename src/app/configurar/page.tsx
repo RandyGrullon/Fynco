@@ -17,7 +17,7 @@ export default function ConfigurarPage() {
       <pre className="overflow-x-auto rounded-xl border border-secondary bg-card p-4 text-sm leading-relaxed">
         {`NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # o NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-GEMINI_API_KEY=...                     # para el asistente`}
+GROQ_API_KEY=gsk_...                   # para el asistente (o GEMINI_API_KEY)`}
       </pre>
       <p className="text-sm text-muted-foreground">
         La primera vez, ejecuta <code>supabase/migrations/20261008000001_init.sql</code> en Supabase → SQL Editor.
