@@ -130,11 +130,11 @@ function AccountRow({ account: a }: { account: Account }) {
     >
       <Monogram text={accountMonogram(a.name)} />
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2">
-          <span className={cn("truncate text-[15px] font-semibold", a.archived_at && "text-muted-foreground")}>{a.name}</span>
-          {a.is_default && <span className="shrink-0 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-bold text-primary">Predeterminada</span>}
+        <span className={cn("block truncate text-[15px] font-semibold", a.archived_at && "text-muted-foreground")}>{a.name}</span>
+        <span className="block truncate text-xs text-muted-foreground">
+          {a.is_default && <span className="font-semibold text-primary">Predeterminada · </span>}
+          {meta}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">{meta}</span>
       </span>
       <Money amount={a.balance} currency={a.currency} masked={privateAccounts.has(a.id)} className={cn("text-[15px] font-bold", a.balance < 0 && "text-negative")} />
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />

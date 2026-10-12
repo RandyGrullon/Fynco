@@ -126,7 +126,7 @@ function Group({ detail }: { detail: GroupDetail }) {
       </Tabs>
 
       {!group.archived_at && (
-        <div className="sticky bottom-[calc(max(env(safe-area-inset-bottom),0.75rem)+4.75rem)] z-20 -mx-5 grid grid-cols-2 gap-2.5 border-t border-muted bg-background/95 px-5 py-3 backdrop-blur md:bottom-4 md:mx-0 md:rounded-2xl md:border md:px-3">
+        <div className="sticky bottom-[calc(max(env(safe-area-inset-bottom),0.75rem)+4.75rem)] z-20 -mx-5 grid grid-cols-2 gap-2.5 border-t border-muted bg-background/95 px-5 py-3 backdrop-blur after:absolute after:inset-x-0 after:top-full after:h-6 after:bg-background md:bottom-4 md:mx-0 md:rounded-2xl md:border md:px-3 md:after:hidden">
           <Button variant="secondary" onClick={() => sheets.open({ type: "settle", groupId: group.id })} disabled={!debts.length}>
             Saldar cuentas
           </Button>

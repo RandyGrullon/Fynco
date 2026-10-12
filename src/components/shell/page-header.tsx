@@ -34,7 +34,7 @@ export function PageHeader({
       )}
       <div className={cn("min-w-0 flex-1", center && "text-center")}>
         <h1 className={cn("truncate font-extrabold tracking-tight", center ? "text-base" : "text-2xl md:text-3xl")}>{title}</h1>
-        {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
+        {subtitle && <p className="line-clamp-2 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : back && center ? <span className="w-11" /> : null}
     </header>
@@ -47,7 +47,7 @@ export function SectionTitle({ children, href, action, className }: { children: 
     <div className={cn("flex items-baseline justify-between gap-3", className)}>
       <h2 className="text-[15px] font-bold">{children}</h2>
       {href && action && (
-        <Link href={href} className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <Link href={href} className="-my-3 inline-block py-3 pl-3 text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {action}
         </Link>
       )}

@@ -114,7 +114,7 @@ export function MemberAvatar({ name, seed, size = 32, isMe, ring, className }: A
         height: size,
         fontSize: Math.max(10, Math.round(size * 0.36)),
         background: isMe ? undefined : colorFor(seed ?? name),
-        boxShadow: ring ? `0 0 0 3px ${ring}` : undefined,
+        boxShadow: ring ? `0 0 0 2px ${ring}` : undefined,
       }}
       title={name}
       aria-hidden="true"
@@ -137,15 +137,18 @@ export function AvatarStack({
 }) {
   const shown = people.slice(0, max);
   const extra = people.length - shown.length;
+  const overlap = Math.round(size * 0.14);
   return (
     <span className="flex items-center">
       {shown.map((p, i) => (
-        <MemberAvatar key={p.key} name={p.name} seed={p.key} isMe={p.isMe} size={size} ring={ring} className={i ? "-ml-2" : ""} />
+        <span key={p.key} className="inline-flex" style={i ? { marginLeft: -overlap } : undefined}>
+          <MemberAvatar name={p.name} seed={p.key} isMe={p.isMe} size={size} ring={ring} />
+        </span>
       ))}
       {extra > 0 && (
         <span
-          className="-ml-2 inline-flex items-center justify-center rounded-full bg-secondary text-[11px] font-bold text-foreground"
-          style={{ width: size, height: size, boxShadow: `0 0 0 3px ${ring}` }}
+          className="inline-flex items-center justify-center rounded-full bg-secondary text-[11px] font-bold text-foreground"
+          style={{ width: size, height: size, marginLeft: -overlap, boxShadow: `0 0 0 2px ${ring}` }}
         >
           +{extra}
         </span>
