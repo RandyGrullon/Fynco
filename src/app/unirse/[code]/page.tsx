@@ -12,7 +12,7 @@ export default async function UnirsePage({ params }: { params: Promise<{ code: s
   const next = `/unirse/${encodeURIComponent(code)}`;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-6 py-12">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-6 pb-12 pt-[max(env(safe-area-inset-top),3rem)]">
       <LogoMark size={48} />
       {user ? (
         <JoinGroup code={code} />

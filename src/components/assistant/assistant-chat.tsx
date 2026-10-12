@@ -172,7 +172,7 @@ export function AssistantChat() {
       <PageHeader
         title="Asistente"
         subtitle="Tus finanzas, en tus palabras"
-        className="sticky top-0 z-20 -mx-5 bg-background/95 px-5 backdrop-blur md:-mx-8 md:px-8"
+        className="top-safe sticky z-20 -mx-5 bg-background/95 px-5 backdrop-blur md:-mx-8 md:px-8"
         actions={
           <Button variant="secondary" size="icon" aria-label="Nueva conversación" title="Nueva conversación" onClick={reset} disabled={!messages.length && !pending && !error}>
             <SquarePen />

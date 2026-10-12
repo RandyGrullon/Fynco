@@ -103,7 +103,7 @@ export function TransactionList({ transactions, grouped = true, emptyText = "Sin
     <div className="flex flex-col">
       {groups.map((g) => (
         <section key={g.day || "all"} aria-label={g.day ? dayLabel(g.day) : undefined}>
-          {g.day && <h3 className="sticky top-0 z-10 bg-background/95 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground backdrop-blur">{dayLabel(g.day)}</h3>}
+          {g.day && <h3 className="top-safe sticky z-10 bg-background/95 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground backdrop-blur">{dayLabel(g.day)}</h3>}
           <ul>
             {g.items.map((t) => (
               <li key={t.id}>

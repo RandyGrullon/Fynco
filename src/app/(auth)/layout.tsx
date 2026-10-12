@@ -3,7 +3,7 @@ import { LogoMark } from "@/components/brand";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col px-5 pb-6 pt-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col px-5 pb-6 pt-[max(env(safe-area-inset-top),2.5rem)]">
       <div className="flex flex-1 flex-col justify-center gap-8 pb-8">
         <div className="flex items-center justify-center gap-2.5">
           <LogoMark size={44} />

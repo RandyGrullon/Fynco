@@ -23,7 +23,7 @@ const PanelContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] flex-col rounded-t-3xl border border-border bg-background shadow-2xl outline-none",
+        "fixed inset-x-0 bottom-0 z-50 flex max-h-[min(92dvh,calc(100dvh_-_env(safe-area-inset-top)_-_1rem))] flex-col rounded-t-3xl border border-border bg-background shadow-2xl outline-none",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom data-[state=open]:duration-300",
         "md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-full md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:data-[state=closed]:slide-out-to-bottom-4 md:data-[state=open]:slide-in-from-bottom-4",
         className,

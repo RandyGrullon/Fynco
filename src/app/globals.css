@@ -200,4 +200,14 @@ html[data-intro="skip"] .intro-splash {
   .pb-safe {
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
   }
+  /* App instalada en iPhone: la barra de estado es translúcida y la página empieza debajo de ella. */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .top-safe {
+    top: env(safe-area-inset-top);
+  }
+  .h-safe-top {
+    height: env(safe-area-inset-top);
+  }
 }

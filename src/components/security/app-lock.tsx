@@ -107,7 +107,7 @@ function LockScreen({ name, onUnlock }: { name: string; onUnlock: () => void }) 
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 py-10">
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 pb-10 pt-[max(env(safe-area-inset-top),2.5rem)]">
       <div className="flex flex-col items-center gap-3 text-center">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card text-primary">
           <Lock className="h-6 w-6" />
