@@ -45,29 +45,34 @@ interface Props {
   account?: Account;
   /** Se llama después de eliminar la cuenta (p. ej. para salir de su detalle). */
   onDeleted?: () => void;
+  /** Valores iniciales al crear (p. ej. desde un borrador del asistente). */
+  preset?: Partial<AccountInput>;
 }
 
-type Errors = Partial<Record<"name" | "opening" | "last4" | "statementDay" | "dueDay", string>>;
+type Errors = Partial<Record<"name" | "opening" | "last4" | "statementDay" | "dueDay" | "limit", string>>;
 
 const dayInput = (v: string) => v.replace(/\D/g, "").slice(0, 2);
 /** "" → null; 1-31 → número; otra cosa → NaN. */
 const parseDay = (v: string) => (v.trim() ? (/^\d{1,2}$/.test(v) && Number(v) >= 1 && Number(v) <= 31 ? Number(v) : NaN) : null);
 
-export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) {
+export function AccountPanel({ open, onOpenChange, account, onDeleted, preset }: Props) {
   const { data: profile } = useProfile();
   const m = useAccountMutations();
   const qc = useQueryClient();
   const editing = Boolean(account);
 
-  const [name, setName] = useState(account?.name ?? "");
-  const [type, setType] = useState<AccountType>(account?.type ?? "checking");
-  const [currency, setCurrency] = useState(account?.currency ?? profile?.default_currency ?? "DOP");
-  const [opening, setOpening] = useState(account && account.opening_balance !== 0 ? centsToInput(account.opening_balance) : "");
-  const [isDebt, setIsDebt] = useState(account ? account.opening_balance < 0 : false);
-  const [institution, setInstitution] = useState(account?.institution ?? "");
-  const [last4, setLast4] = useState(account?.last4 ?? "");
-  const [statementDay, setStatementDay] = useState(account?.statement_day ? String(account.statement_day) : "");
-  const [dueDay, setDueDay] = useState(account?.payment_due_day ? String(account.payment_due_day) : "");
+  const initial = account ?? preset;
+  const initialOpening = initial?.opening_balance ?? 0;
+  const [name, setName] = useState(initial?.name ?? "");
+  const [type, setType] = useState<AccountType>(initial?.type ?? "checking");
+  const [currency, setCurrency] = useState(initial?.currency ?? profile?.default_currency ?? "DOP");
+  const [opening, setOpening] = useState(initialOpening !== 0 ? centsToInput(Math.abs(initialOpening)) : "");
+  const [isDebt, setIsDebt] = useState(initialOpening < 0 || (!account && initial?.type === "credit"));
+  const [institution, setInstitution] = useState(initial?.institution ?? "");
+  const [last4, setLast4] = useState(initial?.last4 ?? "");
+  const [statementDay, setStatementDay] = useState(initial?.statement_day ? String(initial.statement_day) : "");
+  const [dueDay, setDueDay] = useState(initial?.payment_due_day ? String(initial.payment_due_day) : "");
+  const [creditLimit, setCreditLimit] = useState(initial?.credit_limit ? centsToInput(initial.credit_limit) : "");
   const [errors, setErrors] = useState<Errors>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -77,6 +82,7 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
   const isCard = type === "credit";
   const cut = parseDay(statementDay);
   const due = parseDay(dueDay);
+  const limitCents = creditLimit.trim() ? parseMoney(creditLimit) : null;
   const preview = isCard ? cardDates(Number.isNaN(cut) ? null : cut, Number.isNaN(due) ? null : due, todayISO()) : null;
 
   function changeType(t: AccountType) {
@@ -95,6 +101,7 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
     if (digits && !/^\d{4}$/.test(digits)) next.last4 = "Escribe exactamente 4 números.";
     if (isCard && Number.isNaN(cut)) next.statementDay = "Un día del 1 al 31.";
     if (isCard && Number.isNaN(due)) next.dueDay = "Un día del 1 al 31.";
+    if (isCard && creditLimit.trim() && !(limitCents && limitCents > 0)) next.limit = "El límite no es un número válido.";
     setErrors(next);
     if (Object.keys(next).length || openingCents === null) return;
 
@@ -112,6 +119,8 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
         : account?.statement_day || account?.payment_due_day
           ? { statement_day: null, payment_due_day: null }
           : {}),
+      // El límite solo se envía si hay uno o si hay que borrar el anterior.
+      ...(isCard && limitCents ? { credit_limit: limitCents } : account?.credit_limit ? { credit_limit: null } : {}),
     };
     try {
       if (account) await m.update.mutateAsync({ id: account.id, patch: input });
@@ -248,6 +257,18 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
 
           {isCard && (
             <div className="flex flex-col gap-2">
+              <Field label="Límite de crédito (opcional)" htmlFor="acc-limit" error={errors.limit}>
+                <Input
+                  id="acc-limit"
+                  value={creditLimit}
+                  onChange={(e) => setCreditLimit(e.target.value.replace(/[^\d.,]/g, ""))}
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="Ej. 50,000"
+                  className="tabular"
+                  aria-invalid={Boolean(errors.limit)}
+                />
+              </Field>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Día de corte" htmlFor="acc-cut" error={errors.statementDay}>
                   <Input

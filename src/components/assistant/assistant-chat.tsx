@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertCircle, Mic, RotateCw, SquarePen } from "lucide-react";
+import { AlertCircle, CheckCheck, Loader2, Mic, RotateCw, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shell/page-header";
 import { useUser } from "@/components/providers/session-provider";
 import { todayISO } from "@/lib/dates";
+import { toast } from "@/hooks/use-toast";
 import { VOICE_PLACEHOLDER, type AssistantErrorBody, type AssistantRequest, type AssistantResponse } from "@/lib/assistant/types";
 import type { WavResult } from "@/lib/assistant/wav";
 import { cn } from "@/lib/utils";
@@ -204,6 +205,7 @@ export function AssistantChat() {
 
       <Composer onSend={(t) => send(t)} voice={voice} pending={pending} />
       {actions.recurringEditor}
+      {actions.accountEditor}
     </div>
   );
 }
@@ -279,6 +281,25 @@ function UserBubble({ message }: { message: UIMessage }) {
 }
 
 function AssistantMessage({ message, actions, onSaved }: { message: UIMessage; actions: DraftActions; onSaved: (draftId: string) => void }) {
+  const [bulk, setBulk] = useState(false);
+  const pendingDrafts = message.drafts?.filter((d) => d.status !== "saved") ?? [];
+
+  /** Guarda uno por uno; si alguno falla, los demás siguen. */
+  async function confirmAll() {
+    if (bulk) return;
+    setBulk(true);
+    const total = pendingDrafts.length;
+    let saved = 0;
+    for (const item of pendingDrafts) {
+      if (await actions.confirm(item)) {
+        saved++;
+        onSaved(item.draft.id);
+      }
+    }
+    setBulk(false);
+    toast(saved === total ? { title: `Listo: ${saved} guardados` } : { title: `Guardé ${saved} de ${total}`, description: "Revisa los que quedaron pendientes." });
+  }
+
   return (
     <div className="flex gap-3">
       <FMark className="mt-0.5" />
@@ -287,7 +308,13 @@ function AssistantMessage({ message, actions, onSaved }: { message: UIMessage; a
         <div className="text-[15px] leading-relaxed">
           <RichText text={message.text} />
         </div>
-        {message.drafts?.map((d) => <DraftCard key={d.draft.id} item={d} actions={actions} onSaved={() => onSaved(d.draft.id)} />)}
+        {message.drafts?.map((d) => <DraftCard key={d.draft.id} item={d} actions={actions} locked={bulk} onSaved={() => onSaved(d.draft.id)} />)}
+        {pendingDrafts.length >= 2 && (
+          <Button type="button" className="h-12" onClick={confirmAll} disabled={bulk || !actions.ready}>
+            {bulk ? <Loader2 className="animate-spin" aria-hidden="true" /> : <CheckCheck aria-hidden="true" />}
+            Confirmar todos ({pendingDrafts.length})
+          </Button>
+        )}
       </div>
     </div>
   );

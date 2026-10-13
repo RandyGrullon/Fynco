@@ -50,7 +50,10 @@ function mapHttpError(status: number, body: string, model: string): GeminiError 
   } catch {
     // cuerpo no JSON
   }
-  if (status === 429) return new GeminiError(429, "rate_limited", GEMINI_MESSAGES.rateLimited, detail);
+  // 429, o 413 por pasar el límite de tokens por minuto del plan.
+  if (status === 429 || (status === 413 && /rate_limit|tokens per minute|TPM/i.test(`${code} ${message}`))) {
+    return new GeminiError(429, "rate_limited", GEMINI_MESSAGES.rateLimited, detail);
+  }
   if (status === 401 || status === 403) return new GeminiError(503, "misconfigured", GEMINI_MESSAGES.misconfigured, detail);
   if (status === 404 || code === "model_not_found" || /model .*(does not exist|not found|decommissioned)/i.test(message)) {
     return new GeminiError(503, "model_unavailable", GEMINI_MESSAGES.misconfigured, detail);
@@ -148,7 +151,9 @@ export async function runGroqToolLoop(opts: GroqLoopOptions): Promise<{ text: st
         model,
       )) as typeof res;
     } catch (e) {
-      if (e instanceof GeminiError && e.code === "model_unavailable" && round === 1 && modelIndex < opts.models.length - 1) {
+      // Cada modelo tiene su propio cupo por minuto: si uno se llena, sigue el siguiente con la misma conversación.
+      const retryable = e instanceof GeminiError && (e.code === "rate_limited" || (e.code === "model_unavailable" && round === 1));
+      if (retryable && modelIndex < opts.models.length - 1) {
         modelIndex++;
         round--;
         continue;

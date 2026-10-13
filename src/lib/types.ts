@@ -33,6 +33,8 @@ export interface Account {
   /** Tarjetas de crédito: día del mes del corte y día límite de pago (1-31). */
   statement_day?: number | null;
   payment_due_day?: number | null;
+  /** Tarjetas: límite de crédito en centavos. */
+  credit_limit?: number | null;
   /** opening_balance + suma del libro (vista account_balances) */
   balance: number;
 }

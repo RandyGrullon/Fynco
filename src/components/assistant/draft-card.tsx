@@ -7,10 +7,11 @@ import { Money } from "@/components/money";
 import { MemberAvatar } from "@/components/visuals";
 import { useSheets } from "@/components/shell/sheets";
 import { RecurringPanel } from "@/components/recurring/recurring-panel";
-import { useAccounts, useRecurringMutations, useSharedMutations, useTransactionMutations } from "@/hooks/queries";
+import { ACCOUNT_TYPE_LABEL, AccountPanel } from "@/components/accounts/account-panel";
+import { useAccountMutations, useAccounts, useRecurringMutations, useSharedMutations, useTransactionMutations } from "@/hooks/queries";
 import { toast } from "@/hooks/use-toast";
 import { dayLabel, shortDate } from "@/lib/dates";
-import type { Draft, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "@/lib/assistant/types";
+import type { AccountDraft, Draft, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "@/lib/assistant/types";
 import type { Account } from "@/lib/types";
 import type { UIDraft } from "./conversation";
 
@@ -32,8 +33,10 @@ export function useDraftActions() {
   const tx = useTransactionMutations();
   const shared = useSharedMutations();
   const recurring = useRecurringMutations();
+  const accountM = useAccountMutations();
   const sheets = useSheets();
   const [editingRecurring, setEditingRecurring] = useState<RecurringDraft | null>(null);
+  const [editingAccount, setEditingAccount] = useState<AccountDraft | null>(null);
 
   const active = accounts.filter((a) => !a.archived_at);
   const defaultAccount = active.find((a) => a.is_default) ?? active[0];
@@ -106,6 +109,10 @@ export function useDraftActions() {
           });
           break;
         }
+        case "account": {
+          await accountM.create.mutateAsync(accountInput(d));
+          break;
+        }
       }
       return true;
     } catch {
@@ -141,6 +148,8 @@ export function useDraftActions() {
         return sheets.open({ type: "settle", groupId: d.group_id, from: d.from_member_id, to: d.to_member_id, amount: d.amount });
       case "recurring":
         return setEditingRecurring(d);
+      case "account":
+        return setEditingAccount(d);
     }
   }
 
@@ -161,7 +170,25 @@ export function useDraftActions() {
     />
   ) : null;
 
-  return { ready, confirm, edit, accountForTransaction, accountForShared, byId, recurringEditor };
+  /** Panel de cuenta nueva para "Editar" un borrador de cuenta. */
+  const accountEditor = editingAccount ? <AccountPanel open onOpenChange={(o) => !o && setEditingAccount(null)} preset={accountInput(editingAccount)} /> : null;
+
+  return { ready, confirm, edit, accountForTransaction, accountForShared, byId, recurringEditor, accountEditor };
+}
+
+/** Datos para crear la cuenta. Los campos de tarjeta solo se envían en tarjetas. */
+function accountInput(d: AccountDraft) {
+  return {
+    name: d.name,
+    type: d.account_type,
+    currency: d.currency,
+    opening_balance: d.opening_balance,
+    institution: d.institution,
+    last4: d.last4,
+    ...(d.account_type === "credit"
+      ? { statement_day: d.statement_day, payment_due_day: d.payment_due_day, ...(d.credit_limit ? { credit_limit: d.credit_limit } : {}) }
+      : {}),
+  };
 }
 
 export type DraftActions = ReturnType<typeof useDraftActions>;
@@ -187,21 +214,24 @@ function labelFor(d: Draft) {
       return `Saldar · ${d.group_name}`;
     case "recurring":
       return d.kind === "income" ? "Ingreso recurrente" : "Gasto recurrente";
+    case "account":
+      return d.account_type === "credit" ? "Nueva tarjeta" : "Nueva cuenta";
   }
 }
 
 function titleFor(d: Draft) {
   if (d.type === "settlement") return d.i_pay ? `Le pagaste a ${d.to_name}` : `${d.from_name} te pagó`;
+  if (d.type === "account") return d.name;
   return d.description;
 }
 
-export function DraftCard({ item, actions, onSaved }: { item: UIDraft; actions: DraftActions; onSaved: () => void }) {
+export function DraftCard({ item, actions, onSaved, locked }: { item: UIDraft; actions: DraftActions; onSaved: () => void; locked?: boolean }) {
   const [busy, setBusy] = useState(false);
   const d = item.draft;
   const saved = item.status === "saved";
 
   async function confirm() {
-    if (busy || saved) return;
+    if (busy || saved || locked) return;
     setBusy(true);
     const ok = await actions.confirm(item);
     setBusy(false);
@@ -211,7 +241,7 @@ export function DraftCard({ item, actions, onSaved }: { item: UIDraft; actions: 
   const positive = (d.type === "transaction" || d.type === "recurring") && d.kind === "income";
   const neutral = d.type === "transfer" || d.type === "settlement";
   const label = labelFor(d);
-  const when = d.type === "recurring" ? `Desde ${shortDate(d.start_on)}` : dayLabel(d.occurred_on);
+  const when = d.type === "recurring" ? `Desde ${shortDate(d.start_on)}` : d.type === "account" ? (d.institution ?? "") : dayLabel(d.occurred_on);
 
   return (
     <section aria-label={saved ? `${label} guardado` : `${label} sin guardar`} className="rounded-2xl border border-secondary bg-card p-4">
@@ -222,12 +252,16 @@ export function DraftCard({ item, actions, onSaved }: { item: UIDraft; actions: 
 
       <div className="mt-3 flex items-baseline justify-between gap-3">
         <p className="min-w-0 truncate text-[15px] font-bold">{titleFor(d)}</p>
-        <Money
-          amount={neutral || positive ? d.amount : -d.amount}
-          currency={d.currency}
-          sign={positive ? "always" : neutral ? "never" : "negative"}
-          className={positive ? "text-lg font-extrabold text-positive" : "text-lg font-extrabold"}
-        />
+        {d.type === "account" ? (
+          <Money amount={d.opening_balance} currency={d.currency} className={d.opening_balance < 0 ? "text-lg font-extrabold text-negative" : "text-lg font-extrabold"} />
+        ) : (
+          <Money
+            amount={neutral || positive ? d.amount : -d.amount}
+            currency={d.currency}
+            sign={positive ? "always" : neutral ? "never" : "negative"}
+            className={positive ? "text-lg font-extrabold text-positive" : "text-lg font-extrabold"}
+          />
+        )}
       </div>
 
       {d.type === "transaction" && (
@@ -239,6 +273,7 @@ export function DraftCard({ item, actions, onSaved }: { item: UIDraft; actions: 
       {d.type === "shared_expense" && <SharedDetails d={d} account={actions.accountForShared(d)} />}
       {d.type === "transfer" && <TransferDetails d={d} />}
       {d.type === "settlement" && <SettlementDetails d={d} account={actions.byId(d.account_id)} />}
+      {d.type === "account" && <AccountDetails d={d} />}
       {d.type === "recurring" && (
         <dl className="mt-3 grid grid-cols-2 gap-3">
           <Detail label="Frecuencia">{FREQUENCY_LABEL[d.frequency]}</Detail>
@@ -253,11 +288,11 @@ export function DraftCard({ item, actions, onSaved }: { item: UIDraft; actions: 
         </p>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Button type="button" className="h-11" onClick={confirm} disabled={busy || !actions.ready}>
+          <Button type="button" className="h-11" onClick={confirm} disabled={busy || locked || !actions.ready}>
             {busy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Check aria-hidden="true" />}
             Confirmar
           </Button>
-          <Button type="button" variant="secondary" className="h-11" onClick={() => actions.edit(item)} disabled={busy}>
+          <Button type="button" variant="secondary" className="h-11" onClick={() => actions.edit(item)} disabled={busy || locked}>
             <Pencil aria-hidden="true" /> Editar
           </Button>
         </div>
@@ -288,15 +323,31 @@ function SharedDetails({ d, account }: { d: SharedExpenseDraft; account: Account
   );
 }
 
+function AccountDetails({ d }: { d: AccountDraft }) {
+  const card = d.account_type === "credit";
+  const day = (n: number | null) => (n ? `Día ${n}` : "Sin definir");
+  return (
+    <dl className="mt-3 grid grid-cols-2 gap-3">
+      <Detail label="Tipo">{ACCOUNT_TYPE_LABEL[d.account_type]}</Detail>
+      <Detail label="Banco">{d.institution ?? "Sin definir"}</Detail>
+      <Detail label="Moneda">{d.currency}</Detail>
+      {d.last4 && <Detail label="Últimos 4">···{d.last4}</Detail>}
+      {card && <Detail label="Límite">{d.credit_limit ? <Money amount={d.credit_limit} currency={d.currency} /> : "Sin definir"}</Detail>}
+      {card && <Detail label="Corte">{day(d.statement_day)}</Detail>}
+      {card && <Detail label="Pago">{day(d.payment_due_day)}</Detail>}
+    </dl>
+  );
+}
+
 function TransferDetails({ d }: { d: TransferDraft }) {
   const cross = d.currency !== d.to_currency;
   return (
     <div className="mt-3 flex flex-col gap-2">
-      <p className="flex items-center gap-2 text-sm font-semibold">
-        <span className="truncate">{d.from_account_name}</span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-label="hacia" />
-        <span className="truncate">{d.to_account_name}</span>
-      </p>
+      <dl className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+        <Detail label="Sale de">{d.from_account_name}</Detail>
+        <ArrowRight className="mb-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <Detail label="Entra a">{d.to_account_name}</Detail>
+      </dl>
       {cross && (
         <p className="text-xs text-muted-foreground">
           Llega: {d.to_amount ? <Money amount={d.to_amount} currency={d.to_currency} className="font-semibold text-foreground" /> : "falta indicarlo (toca Editar)"}

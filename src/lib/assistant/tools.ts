@@ -6,11 +6,11 @@ import type { createSupabaseServer } from "@/lib/supabase/server";
 import { cardDates } from "@/lib/card-dates";
 import { computeSharedOverview, myMember, type GroupDetail } from "@/lib/data/groups";
 import { monthRange, parseDate } from "@/lib/dates";
-import { formatMoney } from "@/lib/money";
+import { CURRENCY_CODES, formatMoney } from "@/lib/money";
 import { pairwiseDebts, simplifyDebts, splitEqual } from "@/lib/split";
 import type { AccountType, Debt, Group, GroupMember, MemberBalance, Settlement, SharedExpense, TxKind } from "@/lib/types";
 import type { FunctionDeclaration } from "./gemini";
-import type { Draft, DraftShare, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "./types";
+import type { AccountDraft, Draft, DraftShare, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "./types";
 
 export type ServerSupabase = Awaited<ReturnType<typeof createSupabaseServer>>;
 
@@ -35,6 +35,26 @@ export function norm(s: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+/**
+ * "Pagué la Visa" no es un gasto: es pasar dinero a la tarjeta. Devuelve la tarjeta
+ * que se está pagando si el texto habla de un pago y nombra una (o "tarjeta" y solo hay una).
+ */
+export function cardPaymentTarget<T extends { name: string; type: string; last4: string | null; institution: string | null; archived_at: string | null }>(
+  accounts: T[],
+  text: string,
+): T | undefined {
+  const t = norm(text);
+  if (!/\b(pago|pague|pagar|abono|abone|abonar|saldo|salde|saldar)\b/.test(t)) return undefined;
+  const cards = accounts.filter((a) => !a.archived_at && a.type === "credit");
+  if (!cards.length) return undefined;
+  const mentionsCard = /\b(tarjeta|visa|mastercard|master|amex|credito)\b/.test(t);
+  const named = cards.find(
+    (c) => (c.last4 && t.includes(c.last4)) || t.includes(norm(c.name)) || (mentionsCard && c.institution && t.includes(norm(c.institution))),
+  );
+  if (named) return named;
+  return mentionsCard && cards.length === 1 ? cards[0] : undefined;
 }
 
 function scoreName(q: string, n: string): number {
@@ -289,6 +309,60 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
       required: ["kind", "amount", "description", "frequency"],
     },
   },
+  {
+    name: "propose_account",
+    description:
+      "Prepara un BORRADOR para crear una cuenta del usuario (corriente, ahorros, efectivo, inversión) o una tarjeta de crédito. No guarda nada; el usuario confirma. ANTES de llamarla, si faltan datos pregúntalos todos en UN mensaje: tipo, banco, moneda y saldo actual; en tarjetas además límite, deuda actual, día de corte y día límite de pago (últimos 4 dígitos opcional). Si el usuario no sabe un dato o pide seguir, llámala sin él.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        type: {
+          type: "STRING",
+          format: "enum",
+          enum: ["checking", "savings", "credit", "cash", "investment", "other"],
+          description: "checking = corriente, savings = ahorros, credit = tarjeta de crédito, cash = efectivo, investment = inversión, other = préstamo u otra.",
+        },
+        name: { type: "STRING", description: "Nombre corto, p. ej. Visa BHD o Popular nómina. Si no lo dan, se arma con el banco." },
+        bank: { type: "STRING", description: "Banco o institución: Popular, Banreservas, BHD, Scotiabank, APAP, Santa Cruz, Promerica, Caribe, BDI, Cibao…" },
+        last4: { type: "STRING", description: "Últimos 4 dígitos, si los dan." },
+        currency: { type: "STRING", description: "DOP, USD o EUR. Por defecto la moneda principal." },
+        balance: { type: "NUMBER", description: "Saldo actual. En tarjetas o préstamos: lo que se debe hoy (número positivo)." },
+        credit_limit: { type: "NUMBER", description: "Solo tarjetas: límite de crédito." },
+        statement_day: { type: "INTEGER", description: "Solo tarjetas: día del mes del corte (1-31)." },
+        payment_due_day: { type: "INTEGER", description: "Solo tarjetas: día límite de pago (1-31)." },
+      },
+      required: ["type"],
+    },
+  },
+  {
+    name: "propose_batch",
+    description:
+      "Prepara VARIOS borradores de una vez (gastos, ingresos, transferencias y pagos de tarjeta) cuando el usuario manda una lista o un texto con muchas operaciones. Para cada una indica de dónde sale el dinero (débito) y a dónde entra (crédito): gasto → account = cuenta o tarjeta con que se pagó; ingreso → account = cuenta donde entró; transferencia o pago de tarjeta → from_account (sale) y to_account (entra). No guarda nada.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        items: {
+          type: "ARRAY",
+          description: "Una entrada por operación, en el orden del texto.",
+          items: {
+            type: "OBJECT",
+            properties: {
+              type: { type: "STRING", format: "enum", enum: ["expense", "income", "transfer"], description: "expense = gasto, income = ingreso, transfer = transferencia o pago de tarjeta." },
+              amount: { type: "NUMBER", description: "Monto en unidades de la moneda, mayor que cero." },
+              description: { type: "STRING", description: "Descripción corta." },
+              category: { type: "STRING", description: "Categoría, si aplica (gastos e ingresos)." },
+              account: { type: "STRING", description: "Gasto: cuenta o tarjeta con que se pagó. Ingreso: cuenta donde entró." },
+              from_account: { type: "STRING", description: "Transferencia: cuenta de donde sale." },
+              to_account: { type: "STRING", description: "Transferencia: cuenta a donde entra (p. ej. la tarjeta que se pagó)." },
+              date: { type: "STRING", description: "Fecha YYYY-MM-DD. Por defecto hoy." },
+            },
+            required: ["type", "amount"],
+          },
+        },
+      },
+      required: ["items"],
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------------------------
@@ -305,6 +379,7 @@ interface AccountLite {
   archived_at: string | null;
   statement_day?: number | null;
   payment_due_day?: number | null;
+  credit_limit?: number | null;
   balance: number;
 }
 
@@ -323,7 +398,8 @@ function check<T>(res: { data: T | null; error: unknown }): T {
   return (res.data ?? []) as T;
 }
 
-const MAX_DRAFTS = 5;
+const MAX_DRAFTS = 25;
+const ACCOUNT_TYPES = new Set(["checking", "savings", "credit", "cash", "investment", "other"]);
 
 export function createToolbox({ supabase, userId, today: todayInput, currency }: ToolboxOptions) {
   const today = validDate(todayInput) ?? format(new Date(), "yyyy-MM-dd");
@@ -349,6 +425,7 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
       const byId = new Map(check(balances as { data: { account_id: string; balance: number }[] | null; error: unknown }).map((b) => [b.account_id, Number(b.balance)]));
       return check(rows as { data: (Omit<AccountLite, "balance"> & { opening_balance: number })[] | null; error: unknown }).map(({ opening_balance, ...a }) => ({
         ...a,
+        credit_limit: a.credit_limit == null ? null : Number(a.credit_limit),
         balance: byId.get(a.id) ?? Number(opening_balance),
       }));
     });
@@ -451,6 +528,8 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
       payment_due_day: a.payment_due_day ?? null,
       next_statement_date: nextStatement,
       next_payment_due_date: nextDue,
+      credit_limit: a.credit_limit ? fmt(a.credit_limit, a.currency) : null,
+      available_credit: a.credit_limit ? fmt(a.credit_limit + Math.min(0, a.balance), a.currency) : null,
     };
   }
   function cardNote(a: AccountLite) {
@@ -785,6 +864,12 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     if (!account) warnings.push("El usuario no tiene cuentas; deberá elegir una al editar.");
 
     const description = str(args.description);
+    if (kind === "expense") {
+      const card = cardPaymentTarget(accs, `${description} ${str(args.category, 40)} ${accName}`);
+      if (card && card.id !== account?.id) {
+        return proposeTransfer({ amount: args.amount, from_account: account?.name, to_account: card.name, description: description || `Pago ${card.name}`, date: args.date });
+      }
+    }
     const category = findCategory(cats, kind, str(args.category, 40), description) ?? null;
     if (str(args.category, 40) && !category) warnings.push(`No encontré la categoría "${str(args.category, 40)}"; quedó sin categoría.`);
 
@@ -818,6 +903,95 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
       },
       warnings,
       instruction: "Aún NO está guardado. Dile al usuario que revise la tarjeta y toque Confirmar.",
+    };
+  }
+
+  async function proposeAccount(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const type = typeof args.type === "string" && ACCOUNT_TYPES.has(args.type) ? (args.type as AccountDraft["account_type"]) : null;
+    if (!type) return { error: "Indica el tipo: checking, savings, credit, cash, investment u other." };
+    const card = type === "credit";
+    const bank = str(args.bank, 60) || null;
+    const digits = str(args.last4, 12).replace(/\D/g, "");
+    const last4 = /^\d{4}$/.test(digits) ? digits : null;
+    const curRaw = str(args.currency, 3).toUpperCase();
+    const cur = CURRENCY_CODES.includes(curRaw) ? curRaw : currency;
+    const rawBalance = typeof args.balance === "number" ? args.balance : typeof args.balance === "string" ? Number(args.balance.replace(/[^\d.-]/g, "")) : 0;
+    const balanceAbs = toCents(Math.abs(rawBalance)) ?? 0;
+    // En tarjetas el saldo es deuda; en las demás se respeta el signo que den.
+    const opening = card || rawBalance < 0 ? -balanceAbs : balanceAbs;
+    const day = (v: unknown) => {
+      const n = Math.round(Number(v));
+      return Number.isFinite(n) && n >= 1 && n <= 31 ? n : null;
+    };
+    const creditLimit = card ? toCents(args.credit_limit) : null;
+    const statementDay = card ? day(args.statement_day) : null;
+    const dueDay = card ? day(args.payment_due_day) : null;
+    const label = { checking: "Cuenta", savings: "Ahorros", credit: "Tarjeta", cash: "Efectivo", investment: "Inversión", other: "Cuenta" }[type];
+    const name = str(args.name, 60) || [label, bank].filter(Boolean).join(" ");
+
+    const accs = await accounts();
+    const warnings: string[] = [];
+    if (accs.some((a) => !a.archived_at && norm(a.name) === norm(name))) warnings.push(`Ya existe una cuenta llamada "${name}".`);
+    const missing = card
+      ? [!bank && "banco", !creditLimit && "límite de crédito", !statementDay && "día de corte", !dueDay && "día límite de pago"].filter((x): x is string => Boolean(x))
+      : [!bank && type !== "cash" && "banco"].filter((x): x is string => Boolean(x));
+
+    const draft: AccountDraft = {
+      type: "account",
+      id: crypto.randomUUID(),
+      name,
+      account_type: type,
+      currency: cur,
+      institution: bank,
+      last4,
+      opening_balance: opening,
+      credit_limit: creditLimit,
+      statement_day: statementDay,
+      payment_due_day: dueDay,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: {
+        name,
+        type: TYPE_LABEL[type],
+        bank,
+        currency: cur,
+        [card ? "debt" : "balance"]: fmt(Math.abs(opening), cur),
+        ...(card ? { credit_limit: creditLimit ? fmt(creditLimit, cur) : null, statement_day: statementDay, payment_due_day: dueDay } : {}),
+      },
+      missing,
+      warnings,
+      instruction: missing.length
+        ? "Aún NO está creada. Dile que revise la tarjeta y toque Confirmar; menciona que puede completar lo que falta con Editar."
+        : "Aún NO está creada. Dile que revise la tarjeta y toque Confirmar.",
+    };
+  }
+
+  /** Varias operaciones de una vez: gastos, ingresos y transferencias. */
+  async function proposeBatch(args: Record<string, unknown>) {
+    const items = Array.isArray(args.items) ? args.items.slice(0, MAX_DRAFTS) : [];
+    if (!items.length) return { error: "Manda al menos una operación en items." };
+    const results: Record<string, unknown>[] = [];
+    for (const [i, raw] of items.entries()) {
+      const it = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+      const r: Record<string, unknown> = it.type === "transfer" ? await proposeTransfer(it) : await proposeTransaction({ ...it, kind: it.type });
+      if ("error" in r) results.push({ item: i + 1, error: r.error, ...(r.accounts ? { accounts: r.accounts } : {}) });
+      else {
+        const warnings = ((r.warnings as string[] | undefined) ?? []).filter((w) => !w.startsWith("No encontré la categoría"));
+        results.push({ item: i + 1, ...(r.draft as object), ...(warnings.length ? { warnings } : {}) });
+      }
+    }
+    const ok = results.filter((r) => !("error" in r)).length;
+    return {
+      ok: ok > 0,
+      prepared: ok,
+      failed: results.length - ok,
+      results,
+      instruction:
+        "Aún NO está guardado. Responde con una lista corta, una línea por operación: qué es, monto, y 'sale de X' o 'entra a Y' (en transferencias: de X a Y). Dile que revise y toque Confirmar todos. Solo menciona fallos si hay items con error.",
     };
   }
 
@@ -1104,6 +1278,10 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
           return await proposeSettlement(args);
         case "propose_recurring":
           return await proposeRecurring(args);
+        case "propose_account":
+          return await proposeAccount(args);
+        case "propose_batch":
+          return await proposeBatch(args);
         default:
           return { error: `La herramienta ${name} no existe.` };
       }

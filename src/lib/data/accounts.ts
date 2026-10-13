@@ -10,7 +10,12 @@ export async function fetchAccounts(): Promise<Account[]> {
   ]);
   const rows = unwrap(accounts) as AccountRow[];
   const byId = new Map((unwrap(balances) as { account_id: string; balance: number }[]).map((b) => [b.account_id, Number(b.balance)]));
-  return rows.map((a) => ({ ...a, opening_balance: Number(a.opening_balance), balance: byId.get(a.id) ?? Number(a.opening_balance) }));
+  return rows.map((a) => ({
+    ...a,
+    opening_balance: Number(a.opening_balance),
+    credit_limit: a.credit_limit == null ? null : Number(a.credit_limit),
+    balance: byId.get(a.id) ?? Number(a.opening_balance),
+  }));
 }
 
 export interface AccountInput {
@@ -22,6 +27,7 @@ export interface AccountInput {
   last4?: string | null;
   statement_day?: number | null;
   payment_due_day?: number | null;
+  credit_limit?: number | null;
 }
 
 export async function createAccount(input: AccountInput): Promise<AccountRow> {

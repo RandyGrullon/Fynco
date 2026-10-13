@@ -104,7 +104,24 @@ export interface RecurringDraft {
   start_on: string;
 }
 
-export type Draft = TransactionDraft | SharedExpenseDraft | TransferDraft | SettlementDraft | RecurringDraft;
+/** Crear una cuenta o tarjeta de crédito. */
+export interface AccountDraft {
+  type: "account";
+  id: string;
+  name: string;
+  account_type: "checking" | "savings" | "credit" | "investment" | "cash" | "other";
+  currency: string;
+  institution: string | null;
+  last4: string | null;
+  /** Centavos con signo: negativo = deuda (tarjetas). */
+  opening_balance: number;
+  /** Solo tarjetas, centavos. */
+  credit_limit: number | null;
+  statement_day: number | null;
+  payment_due_day: number | null;
+}
+
+export type Draft = TransactionDraft | SharedExpenseDraft | TransferDraft | SettlementDraft | RecurringDraft | AccountDraft;
 
 export interface AssistantAudio {
   mimeType: "audio/wav";
@@ -134,6 +151,6 @@ export interface AssistantErrorBody {
 export const VOICE_PLACEHOLDER = "[Nota de voz]";
 
 export const MAX_HISTORY = 20;
-export const MAX_TEXT = 4000;
+export const MAX_TEXT = 6000;
 export const MAX_AUDIO_CHARS = 3_000_000;
 export const MAX_RECORDING_MS = 30_000;
