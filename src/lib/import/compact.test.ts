@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chunkLines, compactStatement } from "./compact";
+import { PAGE_BREAK, chunkLines, compactStatement } from "./compact";
 
 const filler = Array.from({ length: 45 }, (_, i) => `Texto legal ${i}`).join("\n");
 
@@ -14,8 +14,21 @@ describe("compactStatement", () => {
     expect(lines).not.toContain("Gracias por preferirnos");
   });
 
-  it("quita espacios de más y líneas repetidas seguidas", () => {
-    expect(compactStatement("  a   b  \n  a b\n\nc")).toEqual(["a b", "c"]);
+  it("quita nombre, correo, teléfono y referencias largas (deja 4 dígitos)", () => {
+    const text = "RANDY EMMANUEL GRULLON BAEZ\nrandy@example.com\nTel: 8298503804\n20/08 | 19/08 74856106231006172775432 | TASTY ASIA | 1,623.39";
+    expect(compactStatement(text, { redact: ["Randy Grullón", "randy@example.com"] })).toEqual(["20/08 | 19/08 #5432 | TASTY ASIA | 1,623.39"]);
+    expect(compactStatement("Cliente: RANDY GRULLON | Cuenta No.: 7XX-XXX4821", { redact: ["Randy Grullón"] })).toEqual(["Cliente: | Cuenta No.: 7XX-XXX4821"]);
+  });
+
+  it("pega el código del comercio (MCC) a su movimiento", () => {
+    const text = "20/08 | 19/08 | SUPERMARKET | POLLENCA | 762.29\n5411 | 061552\n20/08 | 19/08 | BAR | 352.91\n5813 048384";
+    expect(compactStatement(text)).toEqual(["20/08 | 19/08 | SUPERMARKET | POLLENCA | 762.29 | MCC 5411", "20/08 | 19/08 | BAR | 352.91 | MCC 5813"]);
+  });
+
+  it("dos compras iguales el mismo día no se pierden; el encabezado repetido por página sí se quita", () => {
+    const head = "****-5263 | 65,000.00 | 0.00 | 14/09/2026 | 09/10/2026";
+    const text = [head, "20/08 | 19/08 7485610623100617277543 | TASTY ASIA | 1,623.39", "20/08 | 19/08 7485610623100617451311 | TASTY ASIA | 1,623.39", PAGE_BREAK, head, "21/08 | 21/08 | Pago Via App | -36,640.78"].join("\n");
+    expect(compactStatement(text)).toEqual([head, "20/08 | 19/08 #7543 | TASTY ASIA | 1,623.39", "20/08 | 19/08 #1311 | TASTY ASIA | 1,623.39", "21/08 | 21/08 | Pago Via App | -36,640.78"]);
   });
 });
 

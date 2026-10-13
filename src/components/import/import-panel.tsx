@@ -10,7 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Field } from "@/components/forms/fields";
 import { Money } from "@/components/money";
-import { useAccountMutations, useAccounts, useCategories, useTransactionMutations } from "@/hooks/queries";
+import { useAccountMutations, useAccounts, useCategories, useProfile, useTransactionMutations } from "@/hooks/queries";
+import { useUser } from "@/components/providers/session-provider";
 import { toast } from "@/hooks/use-toast";
 import { fetchAllTransactions } from "@/lib/data/transactions";
 import { parseDate, shortDate, todayISO } from "@/lib/dates";
@@ -56,6 +57,8 @@ function markDuplicates(rows: Row[], existing: { amount: number; occurred_on: st
 
 export function ImportPanel({ open, onOpenChange, accountId }: { open: boolean; onOpenChange: (o: boolean) => void; accountId?: string }) {
   const { data: accounts = [] } = useAccounts();
+  const { data: profile } = useProfile();
+  const user = useUser();
   const { data: categories = [] } = useCategories();
   const txM = useTransactionMutations();
   const accM = useAccountMutations();
@@ -102,7 +105,8 @@ export function ImportPanel({ open, onOpenChange, accountId }: { open: boolean; 
         return setStage({ name: "password", file, wrong: read.wrong });
       }
       if (read.kind === "text") {
-        const lines = compactStatement(read.text);
+        // Tu nombre y correo se quitan aquí, antes de mandar nada.
+        const lines = compactStatement(read.text, { redact: [profile?.display_name ?? "", user.email ?? ""] });
         if (lines.length < 3) throw new Error("No encontré texto en el archivo. Si es una foto, súbela como imagen.");
         const { chunks, truncated } = chunkLines(lines, IMPORT_LIMITS.chunkChars, IMPORT_LIMITS.chunks);
         if (truncated) extra.push("El estado es muy largo: leí solo la primera parte.");

@@ -1,6 +1,7 @@
 // Lee un estado de cuenta EN EL TELÉFONO (PDF, Excel, CSV o foto). El archivo no se sube:
 // a la IA solo va el texto de los movimientos (o la imagen, si es una foto o un PDF escaneado).
 import type { TextItem } from "pdfjs-dist/types/src/display/api";
+import { PAGE_BREAK } from "./compact";
 
 export type ReadResult =
   | { kind: "text"; text: string; pages: number }
@@ -28,7 +29,22 @@ export async function readStatementFile(file: File, password?: string): Promise<
 // ---------------------------------------------------------------------------------------------
 // PDF
 // ---------------------------------------------------------------------------------------------
+/** pdf.js usa Promise.withResolvers, que no existe en iOS anterior a 17.4. */
+export function ensurePdfPolyfills() {
+  const P = Promise as unknown as { withResolvers?: () => unknown };
+  P.withResolvers ??= () => {
+    let resolve!: (v: unknown) => void;
+    let reject!: (e: unknown) => void;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
+
 async function loadPdfJs() {
+  ensurePdfPolyfills();
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   if (!pdfjs.GlobalWorkerOptions.workerSrc) {
     pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
@@ -59,7 +75,7 @@ async function readPdf(file: File, password?: string): Promise<ReadResult> {
       const content = await page.getTextContent();
       const lines = toLines(content.items.filter((it): it is TextItem => "str" in it));
       chars += lines.reduce((n, l) => n + l.length, 0);
-      out.push(...lines);
+      out.push(...lines, PAGE_BREAK);
     }
     // Casi sin texto: es un PDF escaneado. Se mandan las páginas como imagen.
     if (chars < 40 * pages) {
@@ -74,7 +90,7 @@ async function readPdf(file: File, password?: string): Promise<ReadResult> {
 }
 
 /** Arma renglones a partir de los pedazos de texto: misma altura = mismo renglón; columnas separadas por " | ". */
-function toLines(items: TextItem[]): string[] {
+export function toLines(items: TextItem[]): string[] {
   type Piece = { x: number; y: number; w: number; s: string; h: number };
   const pieces: Piece[] = items
     .filter((it) => it.str.trim())

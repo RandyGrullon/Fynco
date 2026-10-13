@@ -106,7 +106,7 @@ const CATEGORY_HINTS: [RegExp, string][] = [
   [/freelance|proyecto|cliente|honorario|chiripa/, "freelance"],
   [/dividendo|interes|inversion/, "inversiones"],
   [/regalo/, "regalos"],
-  [/comision|cargo por|impuesto|\bdgii\b|seguro|interes|mora\b|manejo de cuenta/, "otros gastos"],
+  [/comision|cargo por|sobregiro|impuesto|\bdgii\b|seguro|interes|mora\b|manejo de cuenta/, "otros gastos"],
 ];
 
 /** Pistas de categoría a partir de palabras comunes ("almuerzo" → "comida"), en orden. */
