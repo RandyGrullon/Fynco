@@ -47,6 +47,7 @@ export function TransactionRow({
           {meta}
           {tx.source === "recurring" && " · Recurrente"}
           {(tx.source === "voice" || tx.source === "assistant") && " · Asistente"}
+          {tx.source === "email" && " · Correo del banco"}
         </span>
       </span>
       <Money

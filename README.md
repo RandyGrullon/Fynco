@@ -17,7 +17,7 @@ Tu cartera personal, tus gastos compartidos (estilo Splitwise) y un asistente fi
 
 Solo hay que poner las variables de entorno y correr el SQL una vez.
 
-1. **Base de datos:** en Supabase → SQL Editor, ejecuta en orden los archivos de [`supabase/migrations/`](supabase/migrations/): primero [`20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql) y luego cada migración nueva (p. ej. [`20261013000001_card_dates.sql`](supabase/migrations/20261013000001_card_dates.sql), fechas de corte y pago de tarjetas, [`20261014000001_credit_limit.sql`](supabase/migrations/20261014000001_credit_limit.sql), límite de crédito, y [`20261015000001_card_payments.sql`](supabase/migrations/20261015000001_card_payments.sql), pagar tarjetas y poner al día lo consumido).
+1. **Base de datos:** en Supabase → SQL Editor, ejecuta en orden los archivos de [`supabase/migrations/`](supabase/migrations/): primero [`20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql) y luego cada migración nueva (p. ej. [`20261013000001_card_dates.sql`](supabase/migrations/20261013000001_card_dates.sql), fechas de corte y pago de tarjetas, [`20261014000001_credit_limit.sql`](supabase/migrations/20261014000001_credit_limit.sql), límite de crédito, [`20261015000001_card_payments.sql`](supabase/migrations/20261015000001_card_payments.sql), pagar tarjetas y poner al día lo consumido, y [`20261016000001_gmail_import.sql`](supabase/migrations/20261016000001_gmail_import.sql), alertas del banco por Gmail).
 2. **Variables** (Vercel → Settings → Environment Variables, o `.env.local` para desarrollo):
 
    | Variable | Para qué |
@@ -30,6 +30,8 @@ Solo hay que poner las variables de entorno y correr el SQL una vez.
    | `GROQ_MODEL` | Opcional. Por defecto `openai/gpt-oss-120b` (respaldos: `qwen/qwen3.8-27b`, `openai/gpt-oss-20b`) |
    | `GEMINI_MODEL` | Opcional. Por defecto `gemini-3.8-flash` (respaldos 3.7 / 3.5 / 2.5) |
    | `GEMINI_THINKING_BUDGET` | Opcional. Tokens de razonamiento; por defecto `0` en los modelos flash (respuesta más rápida) |
+   | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Opcional. Cliente OAuth de Google para leer las alertas del banco en Gmail (ver abajo) |
+   | `GMAIL_TOKEN_KEY` | Opcional. Llave para cifrar el permiso de Gmail: `openssl rand -base64 32` (32 bytes en base64). No la cambies después: los permisos guardados dejarían de leerse |
 
 3. **Auth en Supabase** → Authentication → URL Configuration:
    - Site URL: `https://fynco.grullonb.com`
@@ -37,6 +39,25 @@ Solo hay que poner las variables de entorno y correr el SQL una vez.
    - Para "Continuar con Google", activa el proveedor Google en Authentication → Providers.
 
 Si faltan las variables, la app muestra `/configurar` con estas instrucciones en vez de fallar.
+
+### Alertas del banco por Gmail (opcional)
+
+Fynco puede leer las alertas de consumo que el banco manda a Gmail y registrar cada gasto en la cuenta cuyos **últimos 4 dígitos** coinciden.
+
+1. En [Google Cloud Console](https://console.cloud.google.com/), en el proyecto del cliente OAuth (puede ser el mismo de "Continuar con Google"):
+   - **APIs y servicios → Biblioteca:** activa **Gmail API**.
+   - **Google Auth Platform → Acceso a datos:** agrega el permiso `https://www.googleapis.com/auth/gmail.readonly`.
+   - **Público:** pásalo a **En producción**. En modo de prueba Google vence el permiso cada 7 días. Como la app no está verificada, al conectar Google muestra "Google no verificó esta app": entra en *Configuración avanzada → Ir a Fynco*. Para uso personal (menos de 100 usuarios) no hace falta la verificación.
+   - **Clientes → tu cliente web → URIs de redireccionamiento autorizados:** `https://fynco.grullonb.com/api/gmail/callback`, `https://fynco-assist.vercel.app/api/gmail/callback` y `http://localhost:9002/api/gmail/callback`. Google no acepta comodines, así que las previews de Vercel no pueden conectar Gmail.
+2. Pon `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GMAIL_TOKEN_KEY` en Vercel y vuelve a desplegar.
+3. En la app: **Ajustes → Correo del banco → Conectar**. Pon los últimos 4 dígitos en cada tarjeta y cuenta.
+
+Cómo funciona:
+- Se revisa al abrir la app (como mucho cada 10 minutos), al deslizar para recargar y con **Revisar ahora**. Solo entran correos recibidos **después de conectar**: lo anterior ya está en los saldos iniciales.
+- Las alertas del Popular (consumo, Código Cash, nómina) se leen con reglas fijas (`src/lib/gmail/parse.ts`). Lo que no encaja lo lee la IA del asistente (Groq o Gemini) y la categoría del comercio la pone por palabras clave o con la IA.
+- Un consumo en otra moneda va a la cuenta de esa moneda; si la tarjeta es de doble saldo, lo extranjero (p. ej. euros) va al saldo en dólares, convertido con la tasa del día y anotado en la nota.
+- Lo que no se puede asignar con seguridad (terminación desconocida, nómina sin monto, formato raro) queda **por revisar** en Ajustes, con el formulario ya lleno.
+- Cada correo se registra una sola vez (`email_imports`), aunque la app esté abierta en dos dispositivos.
 
 ## Desarrollo
 ```bash

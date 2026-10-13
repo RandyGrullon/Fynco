@@ -83,7 +83,7 @@ export default function PrivacidadPage() {
         </p>
       </Section>
 
-      <Section title="5. El asistente y las notas de voz">
+      <Section title="5. El asistente, las notas de voz y el correo del banco">
         <ul>
           <li>
             Cuando usas el asistente, enviamos tu pregunta y <strong>solo los datos necesarios para responderla</strong> (por ejemplo, saldos,
@@ -94,6 +94,20 @@ export default function PrivacidadPage() {
             Las <strong>notas de voz</strong> se procesan para transcribirlas y <strong>no se guardan</strong>.
           </li>
           <li>Las respuestas del asistente las genera una IA y pueden tener errores. Revísalas antes de tomar decisiones.</li>
+          <li>
+            Si conectas <strong>Gmail</strong>, Fynco pide permiso de <strong>solo lectura</strong> y busca únicamente las alertas de tu banco (por
+            defecto, las de notificaciones@popularenlinea.com) para registrar tus consumos. De cada alerta guardamos el remitente, el asunto y los datos
+            del movimiento (monto, moneda, fecha, comercio y últimos 4 dígitos); no guardamos el resto de tus correos. Si una alerta tiene un formato
+            que no reconocemos, su texto se envía a la IA solo para leer el monto y el comercio.
+          </li>
+          <li>
+            El permiso se guarda cifrado y puedes quitarlo cuando quieras en Ajustes → Correo del banco (o en tu cuenta de Google). El uso de la
+            información recibida de las API de Google cumple la{" "}
+            <a href="https://developers.google.com/terms/api-services-user-data-policy" className="underline" target="_blank" rel="noreferrer">
+              Política de datos de usuario de los servicios de API de Google
+            </a>
+            , incluidos los requisitos de uso limitado.
+          </li>
         </ul>
       </Section>
 

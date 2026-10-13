@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as accounts from "@/lib/data/accounts";
+import * as gmail from "@/lib/data/gmail";
 import * as groups from "@/lib/data/groups";
 import * as planning from "@/lib/data/planning";
 import * as profile from "@/lib/data/profile";
@@ -23,6 +24,8 @@ export const keys = {
   stats: ["stats"] as const,
   invites: ["invites"] as const,
   pin: ["pin"] as const,
+  gmail: ["gmail"] as const,
+  emailImports: ["email-imports"] as const,
 };
 
 /** Todo lo que cambia cuando se mueve dinero. */
@@ -203,5 +206,31 @@ export function useSharedMutations() {
     deleteExpense: useMutation({ mutationFn: groups.deleteSharedExpense, ...done }),
     settle: useMutation({ mutationFn: groups.recordSettlement, ...done }),
     deleteSettlement: useMutation({ mutationFn: groups.deleteSettlement, ...done }),
+  };
+}
+
+// ---------- Alertas del banco por Gmail ----------
+export function useGmailStatus() {
+  return useQuery({ queryKey: keys.gmail, queryFn: gmail.fetchGmailStatus });
+}
+
+export function useEmailImports(enabled = true) {
+  return useQuery({ queryKey: keys.emailImports, queryFn: () => gmail.fetchEmailImports("review"), enabled });
+}
+
+export function useGmailMutations() {
+  const qc = useQueryClient();
+  const money = useInvalidateMoney();
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: keys.gmail }), qc.invalidateQueries({ queryKey: keys.emailImports })]);
+  return {
+    sync: useMutation({
+      mutationFn: (force: boolean) => gmail.syncGmailNow(force),
+      onSuccess: (s) => Promise.all([refresh(), s.added ? money() : null]),
+    }),
+    disconnect: useMutation({ mutationFn: gmail.disconnectGmail, onSuccess: refresh }),
+    resolve: useMutation({
+      mutationFn: (v: { id: string; status: "added" | "ignored"; transaction_id?: string | null }) => gmail.resolveEmailImport(v.id, { status: v.status, transaction_id: v.transaction_id ?? null }),
+      onSuccess: () => qc.invalidateQueries({ queryKey: keys.emailImports }),
+    }),
   };
 }

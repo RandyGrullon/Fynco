@@ -408,6 +408,38 @@ await as(RANDY, async () => {
   await db.exec(`select set_config('request.jwt.claim.sub', '', false)`);
   check('un agente puede actuar a nombre del usuario', agent.r === 'expense' && (await balance(card)) === -30000, agent);
 }
+console.log('\nAlertas del banco (Gmail)');
+let randyVisa;
+await as(RANDY, async () => {
+  const visa = (randyVisa = (await one(`insert into accounts (name, type, last4) values ('JetBlue', 'credit', '3742') returning id`)).id);
+  const tx = await one(`insert into transactions (account_id, kind, amount, description, source) values ($1, 'expense', -2515, 'Wolt', 'email') returning id, source`, [visa]);
+  check('un gasto puede venir del correo', tx.source === 'email', tx);
+  await q(`insert into gmail_connections (google_email, refresh_token_enc) values ('randy@gmail.com', 'v1.cifrado')`);
+  const conn = await one(`select user_id, query, import_since from gmail_connections`);
+  check('conexión propia con búsqueda por defecto', conn.user_id === RANDY && conn.query.includes('popularenlinea.com') && conn.import_since !== null, conn);
+  await q(`insert into email_imports (gmail_id, received_at, status, amount, currency, card_last4, account_id, transaction_id) values ('m1', now(), 'added', 2515, 'EUR', '3742', $1, $2)`, [visa, tx.id]);
+  const dup = await fails(`insert into email_imports (gmail_id, received_at, status) values ('m1', now(), 'review')`);
+  check('el mismo correo no se importa dos veces', dup !== null, dup);
+  const skipped = await q(`insert into email_imports (gmail_id, received_at, status) values ('m1', now(), 'review') on conflict (user_id, gmail_id) do nothing returning id`);
+  check('reservar un correo ya tomado no devuelve nada', skipped.length === 0, skipped);
+  const badLast4 = await fails(`insert into email_imports (gmail_id, received_at, status, card_last4) values ('m2', now(), 'review', '12ab')`);
+  check('terminación inválida se rechaza', badLast4 !== null, badLast4);
+});
+await as(ANA, async () => {
+  const conns = await q(`select * from gmail_connections`);
+  const imports = await q(`select * from email_imports`);
+  check('Ana no ve la conexión ni los correos de Randy', conns.length === 0 && imports.length === 0, { conns, imports });
+  const own = await q(`insert into email_imports (gmail_id, received_at, status) values ('m1', now(), 'review') returning user_id`);
+  check('Ana puede tener su propio m1', own.length === 1 && own[0].user_id === ANA, own);
+  const steal = await fails(`insert into email_imports (gmail_id, received_at, status, account_id) values ('m3', now(), 'review', $1)`, [randyVisa]);
+  check('Ana no puede apuntar a cuentas ajenas', steal !== null, steal);
+  const hijack = await fails(`insert into gmail_connections (user_id, google_email, refresh_token_enc) values ($1, 'x@gmail.com', 'x')`, [RANDY]);
+  check('Ana no puede crear una conexión a nombre de Randy', hijack !== null, hijack);
+});
+await db.exec(`set role anon;`);
+const anonGmail = await fails(`select * from gmail_connections`);
+await db.exec(`reset role;`);
+check("anon no puede leer conexiones", anonGmail !== null, anonGmail);
 
 console.log(`\n${passed} ok, ${failures} fallos`);
 process.exit(failures ? 1 : 0);

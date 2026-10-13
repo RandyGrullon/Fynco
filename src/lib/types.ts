@@ -2,7 +2,7 @@
 
 export type AccountType = "checking" | "savings" | "credit" | "investment" | "cash" | "other";
 export type TxKind = "income" | "expense" | "transfer" | "shared" | "settlement";
-export type TxSource = "manual" | "voice" | "assistant" | "recurring" | "import";
+export type TxSource = "manual" | "voice" | "assistant" | "recurring" | "import" | "email";
 export type SplitMethod = "equal" | "exact" | "percent" | "shares";
 export type Recurrence = "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "yearly";
 export type WeekendPolicy = "keep" | "before" | "after";

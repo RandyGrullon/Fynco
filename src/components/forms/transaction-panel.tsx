@@ -22,16 +22,18 @@ interface Props {
   kind?: "expense" | "income";
   tx?: Transaction;
   preset?: Partial<TransactionInput>;
+  /** Se llama con el movimiento recién creado (no al editar). */
+  onSaved?: (tx: Transaction) => void;
 }
 
-export function TransactionPanel({ open, onOpenChange, kind: initialKind = "expense", tx, preset }: Props) {
+export function TransactionPanel({ open, onOpenChange, kind: initialKind = "expense", tx, preset, onSaved }: Props) {
   if (tx && (tx.kind === "shared" || tx.kind === "settlement")) {
     return <LinkedTransactionPanel open={open} onOpenChange={onOpenChange} tx={tx} />;
   }
-  return <TransactionForm open={open} onOpenChange={onOpenChange} initialKind={initialKind} tx={tx} preset={preset} />;
+  return <TransactionForm open={open} onOpenChange={onOpenChange} initialKind={initialKind} tx={tx} preset={preset} onSaved={onSaved} />;
 }
 
-function TransactionForm({ open, onOpenChange, initialKind, tx, preset }: Omit<Props, "kind"> & { initialKind: "expense" | "income" }) {
+function TransactionForm({ open, onOpenChange, initialKind, tx, preset, onSaved }: Omit<Props, "kind"> & { initialKind: "expense" | "income" }) {
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
   const m = useTransactionMutations();
@@ -74,7 +76,7 @@ function TransactionForm({ open, onOpenChange, initialKind, tx, preset }: Omit<P
     };
     try {
       if (tx) await m.update.mutateAsync({ id: tx.id, input });
-      else await m.create.mutateAsync(input);
+      else onSaved?.(await m.create.mutateAsync(input));
     } catch {
       return; // el error ya se mostró en un aviso
     }

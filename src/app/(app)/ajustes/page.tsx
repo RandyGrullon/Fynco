@@ -14,6 +14,7 @@ import { useUser } from "@/components/providers/session-provider";
 import { SettingsRow, SettingsSection, SwitchRow } from "@/components/settings/settings-ui";
 import { PinPanel, type PinMode } from "@/components/settings/pin-panel";
 import { DeleteAccountPanel } from "@/components/settings/delete-account-panel";
+import { GmailSection } from "@/components/settings/gmail-section";
 import { useAccounts, useCategories, useHasPin, useProfile, useUpdateProfile } from "@/hooks/queries";
 import { toast } from "@/hooks/use-toast";
 import { fetchAllTransactions } from "@/lib/data/transactions";
@@ -188,7 +189,10 @@ export default function AjustesPage() {
         </Link>
       </SettingsSection>
 
-      {/* d) Datos */}
+      {/* d) Correo del banco (Gmail) */}
+      <GmailSection />
+
+      {/* e) Datos */}
       <SettingsSection title="Datos">
         <SettingsRow title="Exportar todos mis movimientos (CSV)" description="Un archivo que abre Excel o Google Sheets, con todas tus cuentas.">
           <Button variant="secondary" className={rowButton} onClick={exportAll} disabled={exporting} aria-label="Exportar todos mis movimientos en CSV">
@@ -198,7 +202,7 @@ export default function AjustesPage() {
         </SettingsRow>
       </SettingsSection>
 
-      {/* e) Sesión */}
+      {/* f) Sesión */}
       <SettingsSection title="Sesión">
         <SettingsRow title="Cerrar sesión" description={email ? `Entraste como ${email}.` : undefined}>
           <Button variant="secondary" className={rowButton} onClick={signOut} disabled={signingOut}>
@@ -208,7 +212,7 @@ export default function AjustesPage() {
         </SettingsRow>
       </SettingsSection>
 
-      {/* f) Zona de peligro */}
+      {/* g) Zona de peligro */}
       <SettingsSection title="Zona de peligro" danger>
         <SettingsRow
           title="Eliminar mi cuenta"

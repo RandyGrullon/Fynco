@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
+import { syncGmailNow } from "@/lib/data/gmail";
 import { cn } from "@/lib/utils";
 
 const THRESHOLD = 72;
@@ -61,8 +62,9 @@ export function PullToRefresh() {
       setRefreshing(true);
       setPull(THRESHOLD);
       try {
-        // Marca todo como viejo y vuelve a pedir lo que está en pantalla.
-        await Promise.all([qc.invalidateQueries(), new Promise((r) => setTimeout(r, 600))]);
+        // Revisa las alertas del banco (si Gmail está conectado) y luego vuelve a pedir lo que está en pantalla.
+        await Promise.all([syncGmailNow(true).catch(() => null), new Promise((r) => setTimeout(r, 600))]);
+        await qc.invalidateQueries();
       } finally {
         g.busy = false;
         setRefreshing(false);

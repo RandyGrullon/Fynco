@@ -15,7 +15,7 @@ import { CardBalancePanel } from "@/components/accounts/card-balance-panel";
 
 export type SheetState =
   | { type: "quick" }
-  | { type: "transaction"; kind?: "expense" | "income"; tx?: Transaction; preset?: Partial<TransactionInput> }
+  | { type: "transaction"; kind?: "expense" | "income"; tx?: Transaction; preset?: Partial<TransactionInput>; onSaved?: (tx: Transaction) => void }
   | { type: "transfer"; tx?: Transaction; preset?: { from?: string; to?: string; amount?: number; description?: string } }
   | { type: "expense"; groupId?: string; expense?: SharedExpense; preset?: ExpensePreset }
   | { type: "settle"; groupId: string; from?: string; to?: string; amount?: number }

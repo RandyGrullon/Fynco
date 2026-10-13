@@ -10,6 +10,7 @@ import { IOSInstallBanner } from "@/components/ios-install-banner";
 import { SessionProvider, type SessionUser } from "@/components/providers/session-provider";
 import { keys } from "@/hooks/queries";
 import { runMyRecurring } from "@/lib/data/planning";
+import { syncGmailNow } from "@/lib/data/gmail";
 import { todayISO } from "@/lib/dates";
 
 /** Genera los recurrentes vencidos al abrir la app (idempotente en el servidor). */
@@ -33,12 +34,36 @@ function RecurringRunner() {
   return null;
 }
 
+/** Revisa las alertas del banco en Gmail al abrir la app (el servidor espera 10 min entre revisiones). */
+function GmailRunner() {
+  const qc = useQueryClient();
+  const ran = useRef(false);
+  useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+    syncGmailNow(false)
+      .then((s) => {
+        if (!s.connected) return;
+        qc.invalidateQueries({ queryKey: keys.gmail });
+        qc.invalidateQueries({ queryKey: keys.emailImports });
+        if (s.added > 0) {
+          qc.invalidateQueries({ queryKey: keys.accounts });
+          qc.invalidateQueries({ queryKey: keys.transactionsAll });
+          qc.invalidateQueries({ queryKey: keys.stats });
+        }
+      })
+      .catch(() => {});
+  }, [qc]);
+  return null;
+}
+
 export function AppShell({ user, children }: { user: SessionUser; children: React.ReactNode }) {
   return (
     <SessionProvider user={user}>
       <AppLock>
         <SheetsProvider>
           <RecurringRunner />
+          <GmailRunner />
           <PullToRefresh />
           {/* Tapa lo que pasa por debajo de la barra de estado (hora, batería) al hacer scroll. */}
           <div aria-hidden="true" className="h-safe-top pointer-events-none fixed inset-x-0 top-0 z-30 bg-background" />
