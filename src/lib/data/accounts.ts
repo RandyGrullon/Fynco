@@ -20,6 +20,8 @@ export interface AccountInput {
   opening_balance: number;
   institution?: string | null;
   last4?: string | null;
+  statement_day?: number | null;
+  payment_due_day?: number | null;
 }
 
 export async function createAccount(input: AccountInput): Promise<AccountRow> {

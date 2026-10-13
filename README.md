@@ -17,7 +17,7 @@ Tu cartera personal, tus gastos compartidos (estilo Splitwise) y un asistente fi
 
 Solo hay que poner las variables de entorno y correr el SQL una vez.
 
-1. **Base de datos:** en Supabase → SQL Editor, pega y ejecuta [`supabase/migrations/20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql).
+1. **Base de datos:** en Supabase → SQL Editor, ejecuta en orden los archivos de [`supabase/migrations/`](supabase/migrations/): primero [`20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql) y luego cada migración nueva (p. ej. [`20261013000001_card_dates.sql`](supabase/migrations/20261013000001_card_dates.sql), fechas de corte y pago de tarjetas).
 2. **Variables** (Vercel → Settings → Environment Variables, o `.env.local` para desarrollo):
 
    | Variable | Para qué |

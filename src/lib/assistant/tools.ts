@@ -3,6 +3,7 @@
 // usuario confirma en la interfaz.
 import { addDays, format, isValid, parse } from "date-fns";
 import type { createSupabaseServer } from "@/lib/supabase/server";
+import { cardDates } from "@/lib/card-dates";
 import { computeSharedOverview, myMember, type GroupDetail } from "@/lib/data/groups";
 import { monthRange, parseDate } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
@@ -159,7 +160,7 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: "get_overview",
     description:
-      "Resumen financiero actual del usuario: cuentas con saldos, ingresos y gastos de este mes, totales de lo que le deben y lo que debe en gastos compartidos, metas activas con su progreso y cobros recurrentes de los próximos 7 días.",
+      "Resumen financiero actual del usuario: cuentas con saldos (y, en tarjetas de crédito, próxima fecha de corte y fecha límite de pago), ingresos y gastos de este mes, totales de lo que le deben y lo que debe en gastos compartidos, metas activas con su progreso y cobros recurrentes de los próximos 7 días.",
   },
   {
     name: "list_transactions",
@@ -302,6 +303,8 @@ interface AccountLite {
   last4: string | null;
   is_default: boolean;
   archived_at: string | null;
+  statement_day?: number | null;
+  payment_due_day?: number | null;
   balance: number;
 }
 
@@ -336,7 +339,8 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
       const [rows, balances] = await Promise.all([
         supabase
           .from("accounts")
-          .select("id, name, type, currency, opening_balance, institution, last4, is_default, archived_at")
+          // "*" para que funcione también antes de correr migraciones con columnas nuevas.
+          .select("*")
           .eq("user_id", userId)
           .order("is_default", { ascending: false })
           .order("created_at"),
@@ -439,6 +443,22 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
   // -------------------------------------------------------------------------------------------
   // Contexto para el prompt de sistema (solo nombres, sin montos)
   // -------------------------------------------------------------------------------------------
+  /** Tarjetas: días de corte y pago, y las próximas fechas. */
+  function cardInfo(a: AccountLite) {
+    const { nextStatement, nextDue } = cardDates(a.statement_day, a.payment_due_day, today);
+    return {
+      statement_day: a.statement_day ?? null,
+      payment_due_day: a.payment_due_day ?? null,
+      next_statement_date: nextStatement,
+      next_payment_due_date: nextDue,
+    };
+  }
+  function cardNote(a: AccountLite) {
+    if (a.type !== "credit") return "";
+    const { nextStatement, nextDue } = cardDates(a.statement_day, a.payment_due_day, today);
+    return [nextStatement && `, próximo corte ${nextStatement}`, nextDue && `, pagar antes del ${nextDue}`].filter(Boolean).join("");
+  }
+
   async function contextSummary(): Promise<string> {
     // Los nombres los escriben personas (incluso otros miembros): una línea, sin marcas, acotados.
     const clean = (s: string) => s.replace(/\s+/g, " ").replace(/[<>{}\[\]`]/g, "").trim().slice(0, 60);
@@ -446,7 +466,7 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     const lines: string[] = [];
     const activeAccs = accs.filter((a) => !a.archived_at);
     lines.push(
-      `Cuentas: ${activeAccs.length ? activeAccs.map((a) => `${clean(a.name)} (${TYPE_LABEL[a.type] ?? a.type}, ${a.currency}${a.is_default ? ", predeterminada" : ""})`).join("; ") : "ninguna"}.`,
+      `Cuentas: ${activeAccs.length ? activeAccs.map((a) => `${clean(a.name)} (${TYPE_LABEL[a.type] ?? a.type}, ${a.currency}${a.is_default ? ", predeterminada" : ""}${cardNote(a)})`).join("; ") : "ninguna"}.`,
     );
     lines.push(`Categorías de gasto: ${cats.filter((c) => c.kind === "expense").map((c) => clean(c.name)).join(", ") || "ninguna"}.`);
     lines.push(`Categorías de ingreso: ${cats.filter((c) => c.kind === "income").map((c) => clean(c.name)).join(", ") || "ninguna"}.`);
@@ -531,6 +551,7 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
         balance: privateAccounts.has(a.id) ? "oculto (meta privada)" : fmt(a.balance, a.currency),
         balance_cents: privateAccounts.has(a.id) ? null : a.balance,
         is_default: a.is_default,
+        ...(a.type === "credit" ? cardInfo(a) : {}),
       })),
       net_worth: [...netWorth].map(([cur, total]) => ({ currency: cur, total: fmt(total, cur), total_cents: total })),
       this_month: {

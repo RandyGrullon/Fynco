@@ -11,6 +11,8 @@ import { Monogram, accountMonogram } from "@/components/visuals";
 import { ACCOUNT_TYPE_LABEL, AccountPanel } from "@/components/accounts/account-panel";
 import { useAccounts, useProfile } from "@/hooks/queries";
 import { sumByCurrency } from "@/lib/money";
+import { cardDates } from "@/lib/card-dates";
+import { shortDate, todayISO } from "@/lib/dates";
 import type { Account } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -122,7 +124,8 @@ export default function CuentasPage() {
 
 function AccountRow({ account: a }: { account: Account }) {
   const privateAccounts = usePrivateAccountIds();
-  const meta = [ACCOUNT_TYPE_LABEL[a.type], a.institution, a.last4 ? `···${a.last4}` : null].filter(Boolean).join(" · ");
+  const due = a.type === "credit" && !a.archived_at ? cardDates(a.statement_day, a.payment_due_day, todayISO()).nextDue : null;
+  const meta = [ACCOUNT_TYPE_LABEL[a.type], due ? `pago ${shortDate(due)}` : null, a.institution, a.last4 ? `···${a.last4}` : null].filter(Boolean).join(" · ");
   return (
     <Link
       href={`/cuentas/${a.id}`}

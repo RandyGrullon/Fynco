@@ -350,5 +350,14 @@ await as(RANDY, async () => {
   check('cambiar tu nombre lo actualiza en tus grupos', mine.length > 0 && mine.every((m) => m.display_name === 'Randy G.'), mine);
 });
 
+await as(RANDY, async () => {
+  const [card] = await q(
+    `insert into accounts (name, type, opening_balance, statement_day, payment_due_day) values ('Visa', 'credit', -500000, 15, 5) returning statement_day, payment_due_day`,
+  );
+  check('tarjeta guarda día de corte y de pago', card.statement_day === 15 && card.payment_due_day === 5, card);
+  const bad = await fails(`insert into accounts (name, type, statement_day) values ('Mala', 'credit', 32)`);
+  check('día de corte fuera de 1-31 se rechaza', Boolean(bad), bad);
+});
+
 console.log(`\n${passed} ok, ${failures} fallos`);
 process.exit(failures ? 1 : 0);

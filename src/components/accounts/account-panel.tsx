@@ -24,6 +24,8 @@ import { toast } from "@/hooks/use-toast";
 import { CURRENCIES, CURRENCY_CODES, centsToInput, formatMoney, parseMoney } from "@/lib/money";
 import type { AccountInput } from "@/lib/data/accounts";
 import type { Account, AccountType } from "@/lib/types";
+import { cardDates } from "@/lib/card-dates";
+import { shortDate, todayISO } from "@/lib/dates";
 
 export const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
   { value: "checking", label: "Corriente" },
@@ -45,7 +47,11 @@ interface Props {
   onDeleted?: () => void;
 }
 
-type Errors = Partial<Record<"name" | "opening" | "last4", string>>;
+type Errors = Partial<Record<"name" | "opening" | "last4" | "statementDay" | "dueDay", string>>;
+
+const dayInput = (v: string) => v.replace(/\D/g, "").slice(0, 2);
+/** "" → null; 1-31 → número; otra cosa → NaN. */
+const parseDay = (v: string) => (v.trim() ? (/^\d{1,2}$/.test(v) && Number(v) >= 1 && Number(v) <= 31 ? Number(v) : NaN) : null);
 
 export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) {
   const { data: profile } = useProfile();
@@ -60,12 +66,18 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
   const [isDebt, setIsDebt] = useState(account ? account.opening_balance < 0 : false);
   const [institution, setInstitution] = useState(account?.institution ?? "");
   const [last4, setLast4] = useState(account?.last4 ?? "");
+  const [statementDay, setStatementDay] = useState(account?.statement_day ? String(account.statement_day) : "");
+  const [dueDay, setDueDay] = useState(account?.payment_due_day ? String(account.payment_due_day) : "");
   const [errors, setErrors] = useState<Errors>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const busy = m.create.isPending || m.update.isPending || m.remove.isPending;
   const archived = Boolean(account?.archived_at);
   const openingCents = opening.trim() ? parseMoney(opening) : 0;
+  const isCard = type === "credit";
+  const cut = parseDay(statementDay);
+  const due = parseDay(dueDay);
+  const preview = isCard ? cardDates(Number.isNaN(cut) ? null : cut, Number.isNaN(due) ? null : due, todayISO()) : null;
 
   function changeType(t: AccountType) {
     setType(t);
@@ -81,6 +93,8 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
     if (!trimmed) next.name = "Ponle un nombre a la cuenta.";
     if (openingCents === null) next.opening = "El saldo inicial no es un número válido.";
     if (digits && !/^\d{4}$/.test(digits)) next.last4 = "Escribe exactamente 4 números.";
+    if (isCard && Number.isNaN(cut)) next.statementDay = "Un día del 1 al 31.";
+    if (isCard && Number.isNaN(due)) next.dueDay = "Un día del 1 al 31.";
     setErrors(next);
     if (Object.keys(next).length || openingCents === null) return;
 
@@ -92,6 +106,12 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
       opening_balance: isDebt ? -abs : abs,
       institution: institution.trim() || null,
       last4: digits || null,
+      // Solo se envían si aplican: así una base sin la migración nueva sigue funcionando para las demás cuentas.
+      ...(isCard
+        ? { statement_day: cut, payment_due_day: due }
+        : account?.statement_day || account?.payment_due_day
+          ? { statement_day: null, payment_due_day: null }
+          : {}),
     };
     try {
       if (account) await m.update.mutateAsync({ id: account.id, patch: input });
@@ -225,6 +245,46 @@ export function AccountPanel({ open, onOpenChange, account, onDeleted }: Props) 
               />
             </Field>
           </div>
+
+          {isCard && (
+            <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Día de corte" htmlFor="acc-cut" error={errors.statementDay}>
+                  <Input
+                    id="acc-cut"
+                    value={statementDay}
+                    onChange={(e) => setStatementDay(dayInput(e.target.value))}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="Ej. 15"
+                    maxLength={2}
+                    className="tabular"
+                    aria-invalid={Boolean(errors.statementDay)}
+                  />
+                </Field>
+                <Field label="Día límite de pago" htmlFor="acc-due" error={errors.dueDay}>
+                  <Input
+                    id="acc-due"
+                    value={dueDay}
+                    onChange={(e) => setDueDay(dayInput(e.target.value))}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="Ej. 5"
+                    maxLength={2}
+                    className="tabular"
+                    aria-invalid={Boolean(errors.dueDay)}
+                  />
+                </Field>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {preview?.nextStatement || preview?.nextDue
+                  ? [preview.nextStatement && `Próximo corte: ${shortDate(preview.nextStatement)}`, preview.nextDue && `pagar antes del ${shortDate(preview.nextDue)}`]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : "Están en tu estado de cuenta. Te avisamos en Inicio cuando se acerque el pago."}
+              </p>
+            </div>
+          )}
 
           <PanelFooter>
             {account && (

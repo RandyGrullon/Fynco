@@ -11,6 +11,7 @@ import { EmptyState, PageHeader, SectionTitle } from "@/components/shell/page-he
 import { useSheets } from "@/components/shell/sheets";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { ACCOUNT_TYPE_LABEL, AccountPanel } from "@/components/accounts/account-panel";
+import { CardDatesInfo } from "@/components/accounts/card-dates";
 import { useAccountMutations, useAccounts, useTransactions } from "@/hooks/queries";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -126,6 +127,8 @@ export default function CuentaDetallePage() {
           </span>
         </div>
       </section>
+
+      {acc.type === "credit" && !archived && <CardDatesInfo account={acc} onSetup={() => setEditing(true)} />}
 
       {archived ? (
         <div className="flex flex-col gap-3 rounded-2xl border border-secondary bg-card p-4">

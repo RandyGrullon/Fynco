@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronRight, Eye, EyeOff, Mic, Repeat, Split, Users, type LucideIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronRight, CreditCard, Eye, EyeOff, Mic, Repeat, Split, Users, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BigMoney, Money, usePrivateAccountIds } from "@/components/money";
@@ -14,6 +14,8 @@ import { AvatarStack, Monogram, accountMonogram, initials } from "@/components/v
 import { useAccounts, useCashflow, useProfile, useRecentTransactions, useRecurring, useSharedOverview, useUpdateProfile } from "@/hooks/queries";
 import { greeting, monthName, monthRange, shortDate, todayISO } from "@/lib/dates";
 import { addDays, format } from "date-fns";
+import { cardDates, daysUntil } from "@/lib/card-dates";
+import { cn } from "@/lib/utils";
 
 export default function InicioPage() {
   const { data: profile } = useProfile();
@@ -48,6 +50,11 @@ export default function InicioPage() {
 
   const weekEnd = format(addDays(new Date(), 7), "yyyy-MM-dd");
   const upcoming = recurring.filter((r) => r.active && r.next_run_on <= weekEnd && r.next_run_on >= todayISO()).slice(0, 3);
+  const cardPayments = active
+    .filter((a) => a.type === "credit")
+    .map((a) => ({ account: a, date: cardDates(a.statement_day, a.payment_due_day, todayISO()).nextDue }))
+    .filter((c): c is { account: typeof c.account; date: string } => Boolean(c.date && c.date <= weekEnd))
+    .sort((x, y) => x.date.localeCompare(y.date));
   const firstName = profile?.display_name?.split(" ")[0] ?? "";
 
   return (
@@ -156,12 +163,34 @@ export default function InicioPage() {
         </Link>
       )}
 
-      {upcoming.length > 0 && (
+      {(upcoming.length > 0 || cardPayments.length > 0) && (
         <section className="flex flex-col gap-2">
           <SectionTitle href="/recurrentes" action="Ver todos">
             Próximos 7 días
           </SectionTitle>
           <ul className="flex flex-col gap-2">
+            {cardPayments.map(({ account: a, date }) => {
+              const urgent = daysUntil(date, todayISO()) <= 2;
+              return (
+                <li key={`card-${a.id}`}>
+                  <Link
+                    href={`/cuentas/${a.id}`}
+                    className="flex items-center gap-3 rounded-xl border border-secondary bg-card px-3 py-2.5 transition-colors hover:bg-[#1b1e24] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className={cn("flex h-9 w-9 items-center justify-center rounded-md", urgent ? "bg-negative/15 text-negative" : "bg-secondary text-muted-foreground")}>
+                      <CreditCard className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">Pago de {a.name}</span>
+                      <span className={cn("block text-xs", urgent ? "font-semibold text-negative" : "text-muted-foreground")}>
+                        Vence {date === todayISO() ? "hoy" : shortDate(date)}
+                      </span>
+                    </span>
+                    {a.balance < 0 && <Money amount={a.balance} currency={a.currency} masked={privateAccounts.has(a.id)} className="text-sm font-bold" />}
+                  </Link>
+                </li>
+              );
+            })}
             {upcoming.map((r) => (
               <li key={r.id} className="flex items-center gap-3 rounded-xl border border-secondary bg-card px-3 py-2.5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-muted-foreground">

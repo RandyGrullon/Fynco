@@ -20,6 +20,8 @@ const MESSAGES: Record<string, string> = {
   already_member: "Ya eres miembro de ese grupo.",
   invalid_pin_format: "El PIN debe tener de 4 a 6 dígitos.",
   wrong_pin: "PIN incorrecto.",
+  // PostgREST no encuentra una columna nueva: falta correr una migración en Supabase.
+  "schema cache": "Falta actualizar la base de datos de Fynco (migración pendiente en Supabase).",
   "Invalid login credentials": "Correo o contraseña incorrectos.",
   "Email not confirmed": "Confirma tu correo antes de entrar. Revisa tu bandeja.",
   "User already registered": "Ya existe una cuenta con ese correo.",

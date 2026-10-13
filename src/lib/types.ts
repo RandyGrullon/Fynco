@@ -30,6 +30,9 @@ export interface Account {
   is_default: boolean;
   archived_at: string | null;
   created_at: string;
+  /** Tarjetas de crédito: día del mes del corte y día límite de pago (1-31). */
+  statement_day?: number | null;
+  payment_due_day?: number | null;
   /** opening_balance + suma del libro (vista account_balances) */
   balance: number;
 }
