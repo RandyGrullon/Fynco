@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Archive, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Pencil, Star, Wallet, type LucideIcon } from "lucide-react";
+import { Archive, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, FileUp, Pencil, Star, Wallet, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BigMoney, Money, usePrivateAccountIds } from "@/components/money";
@@ -147,10 +147,11 @@ export default function CuentaDetallePage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-1">
           <Action label="Gasto" icon={ArrowUpRight} onClick={() => sheets.open({ type: "transaction", kind: "expense", preset: { account_id: acc.id } })} />
           <Action label="Ingreso" icon={ArrowDownLeft} onClick={() => sheets.open({ type: "transaction", kind: "income", preset: { account_id: acc.id } })} />
           <Action label="Transferir" icon={ArrowLeftRight} onClick={() => sheets.open({ type: "transfer", preset: { from: acc.id } })} />
+          <Action label="Importar" icon={FileUp} onClick={() => sheets.open({ type: "import", accountId: acc.id })} />
           <Action label="Editar" icon={Pencil} onClick={() => setEditing(true)} />
         </div>
       )}

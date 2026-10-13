@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Mic, Split } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, FileUp, Mic, Split } from "lucide-react";
 import { Panel, PanelContent } from "@/components/ui/panel";
 import { useSheets } from "./sheets";
 
@@ -47,6 +47,19 @@ export function QuickAddPanel({ open, onOpenChange }: { open: boolean; onOpenCha
               <span className="block text-xs text-muted-foreground">“Gasté 850 en almuerzo con la tarjeta”</span>
             </span>
           </Link>
+          <button
+            type="button"
+            onClick={() => sheets.open({ type: "import" })}
+            className="col-span-2 flex items-center gap-3 rounded-xl border border-secondary bg-card p-4 text-left transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-primary">
+              <FileUp className="h-5 w-5" strokeWidth={2.2} />
+            </span>
+            <span>
+              <span className="block text-[15px] font-bold">Importar estado de cuenta</span>
+              <span className="block text-xs text-muted-foreground">PDF, Excel o foto de tu banco</span>
+            </span>
+          </button>
         </div>
       </PanelContent>
     </Panel>

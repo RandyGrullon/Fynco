@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, Download, Loader2, Plus, ReceiptText, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, FileUp, Loader2, Plus, ReceiptText, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -114,10 +114,15 @@ export default function MovimientosPage() {
       <PageHeader
         title="Movimientos"
         actions={
-          <Button variant="secondary" onClick={exportCsv} disabled={exporting} className="h-11 rounded-full px-4 text-sm">
-            {exporting ? <Loader2 className="animate-spin" /> : <Download />}
-            {exporting ? "Exportando…" : "Exportar"}
-          </Button>
+          <>
+            <Button variant="secondary" onClick={() => sheets.open({ type: "import" })} className="h-11 rounded-full px-4 text-sm">
+              <FileUp />
+              Importar
+            </Button>
+            <Button variant="secondary" size="icon" onClick={exportCsv} disabled={exporting} aria-label="Exportar a CSV" title="Exportar a CSV">
+              {exporting ? <Loader2 className="animate-spin" /> : <Download />}
+            </Button>
+          </>
         }
       />
 

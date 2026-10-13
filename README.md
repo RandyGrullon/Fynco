@@ -53,6 +53,7 @@ npm run typecheck
 - Las operaciones de varias filas (transferencias, gastos compartidos, pagos, recurrentes) son **RPCs atómicas** en Postgres.
 - **Compartido:** `shared_expenses` + `expense_payers` (quién pagó) + `expense_shares` (cuánto le toca a cada uno) + `settlements` (pagos). Si pagas con una cuenta tuya, se descuenta de ella, pero en estadísticas cuenta **solo tu parte**.
 - **Asistente:** `/api/assistant` usa la sesión del usuario (RLS) y herramientas de solo lectura. Para registrar algo solo propone un borrador que el usuario confirma. Tiene un límite de 40 consultas por hora y 200 por día por usuario.
+- **Importar estados de cuenta:** el PDF (también con contraseña), Excel, CSV o foto se lee en el teléfono; a `/api/import` solo van las líneas con movimientos y la IA (Groq; Gemini para fotos o PDF escaneados) devuelve fecha, descripción, monto y categoría. El usuario revisa, se marcan los repetidos y nada se guarda hasta confirmar. Los pagos a tarjeta se registran como transferencias.
 - **Recurrentes:** se generan al abrir la app, de forma idempotente (`unique(recurring_rule_id, occurrence_date)`). Opcionalmente también con `pg_cron` (ver el final del SQL).
 
 Más detalle en [docs/REDISENO.md](docs/REDISENO.md) y [docs/UI.md](docs/UI.md).

@@ -86,6 +86,11 @@ export function bestMatch<T>(items: T[], query: string | null | undefined, names
 }
 
 const CATEGORY_HINTS: [RegExp, string][] = [
+  // Comercios comunes en RD (estados de cuenta).
+  [/pedidosya|uber ?eats|adrian tropical|burger king|\bkfc\b|mcdonald|wendy|domino|pizza hut|little caesars|restaurante/, "comida"],
+  [/jumbo|la sirena|\bsirena\b|\bbravo\b|\bole\b|pricesmart|carrefour|plaza lama|supermercado/, "supermercado"],
+  [/texaco|\bshell\b|\besso\b|sunix|gasolinera|estacion de servicio/, "transporte"],
+  [/caribbean cinemas|palacio del cine|cinemas/, "entretenimiento"],
   [/almuerzo|\bcena|desayuno|comida|aliment|restaurant|pizza|hamburgues|\bcafe|picadera|delivery|pedidos ya|empanada|pollo|sushi|helado/, "comida"],
   [/\bsuper|colmado|mercado|bodega|despensa/, "supermercado"],
   [/\buber|taxi|gasolina|combustible|pasaje|guagua|\bmetro\b|peaje|parqueo|didi|indrive|transporte|\bcarro|vehiculo/, "transporte"],
@@ -101,6 +106,7 @@ const CATEGORY_HINTS: [RegExp, string][] = [
   [/freelance|proyecto|cliente|honorario|chiripa/, "freelance"],
   [/dividendo|interes|inversion/, "inversiones"],
   [/regalo/, "regalos"],
+  [/comision|cargo por|impuesto|\bdgii\b|seguro|interes|mora\b|manejo de cuenta/, "otros gastos"],
 ];
 
 /** Pistas de categoría a partir de palabras comunes ("almuerzo" → "comida"), en orden. */

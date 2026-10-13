@@ -191,3 +191,46 @@ export async function runGroqToolLoop(opts: GroqLoopOptions): Promise<{ text: st
   }
   return { text: "", model: opts.models[modelIndex], toolCalls };
 }
+
+/**
+ * Una respuesta en JSON (sin herramientas). Si un modelo no tiene cupo, prueba el siguiente;
+ * si ninguno tiene, espera un poco y vuelve a intentar mientras quede tiempo.
+ */
+export async function groqJson(opts: { apiKey: string; models: string[]; system: string; user: string; maxTokens: number; deadline: number; signal?: AbortSignal }): Promise<{ text: string; model: string }> {
+  for (let pass = 0; pass < 2; pass++) {
+    for (const model of opts.models) {
+      const remaining = opts.deadline - Date.now();
+      if (remaining < 3000) throw new GeminiError(504, "timeout", GEMINI_MESSAGES.timeout, "provider=groq json");
+      try {
+        const res = (await post(
+          "/chat/completions",
+          opts.apiKey,
+          {
+            json: true,
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: "system", content: opts.system },
+                { role: "user", content: opts.user },
+              ],
+              response_format: { type: "json_object" },
+              temperature: 0,
+              max_completion_tokens: opts.maxTokens,
+              ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
+            }),
+          },
+          Math.min(45_000, remaining - 1000),
+          opts.signal,
+          model,
+        )) as { choices?: { message?: { content?: string | null } }[] };
+        return { text: res.choices?.[0]?.message?.content ?? "", model };
+      } catch (e) {
+        if (e instanceof GeminiError && (e.code === "rate_limited" || e.code === "model_unavailable")) continue;
+        throw e;
+      }
+    }
+    // Todos sin cupo: el límite es por minuto, se espera un rato si alcanza el tiempo.
+    if (pass === 0 && opts.deadline - Date.now() > 20_000) await new Promise((r) => setTimeout(r, 12_000));
+  }
+  throw new GeminiError(429, "rate_limited", GEMINI_MESSAGES.rateLimited, "provider=groq json all models");
+}

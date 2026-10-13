@@ -113,6 +113,7 @@ export function useTransactionMutations() {
   const done = { onSuccess: () => money() };
   return {
     create: useMutation({ mutationFn: tx.createTransaction, ...done }),
+    createMany: useMutation({ mutationFn: tx.createTransactions, ...done }),
     update: useMutation({ mutationFn: (v: { id: string; input: tx.TransactionInput }) => tx.updateTransaction(v.id, v.input), ...done }),
     remove: useMutation({ mutationFn: tx.deleteTransaction, ...done }),
     transfer: useMutation({ mutationFn: tx.createTransfer, ...done }),

@@ -65,6 +65,13 @@ export async function createTransaction(input: TransactionInput): Promise<Transa
   return normalize(unwrap(await db().from("transactions").insert(toRow(input)).select("*").single()));
 }
 
+/** Varios movimientos de una vez (p. ej. al importar un estado de cuenta). */
+export async function createTransactions(inputs: TransactionInput[]): Promise<number> {
+  if (!inputs.length) return 0;
+  const rows = unwrap(await db().from("transactions").insert(inputs.map(toRow)).select("id")) as { id: string }[];
+  return rows.length;
+}
+
 export async function updateTransaction(id: string, input: TransactionInput): Promise<Transaction> {
   const { source: _source, ...rest } = toRow(input);
   return normalize(unwrap(await db().from("transactions").update(rest).eq("id", id).select("*").single()));

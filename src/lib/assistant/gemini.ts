@@ -39,7 +39,7 @@ interface GeminiCandidate {
   finishReason?: string;
 }
 
-interface GeminiResponse {
+export interface GeminiResponse {
   candidates?: GeminiCandidate[];
   promptFeedback?: { blockReason?: string };
 }
