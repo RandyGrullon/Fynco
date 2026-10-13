@@ -10,7 +10,7 @@ import { CURRENCY_CODES, formatMoney } from "@/lib/money";
 import { pairwiseDebts, simplifyDebts, splitEqual } from "@/lib/split";
 import type { AccountType, Debt, Group, GroupMember, MemberBalance, Settlement, SharedExpense, TxKind } from "@/lib/types";
 import type { FunctionDeclaration } from "./gemini";
-import type { AccountDraft, Draft, DraftShare, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "./types";
+import type { AccountDraft, CardDebtDraft, CardPaymentDraft, Draft, DraftShare, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "./types";
 
 export type ServerSupabase = Awaited<ReturnType<typeof createSupabaseServer>>;
 
@@ -338,6 +338,34 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         payment_due_day: { type: "INTEGER", description: "Solo tarjetas: día límite de pago (1-31)." },
       },
       required: ["type"],
+    },
+  },
+  {
+    name: "propose_card_payment",
+    description:
+      "Prepara un BORRADOR de pago de tarjeta de crédito ('pagué la Visa', 'tarjeta pagada', 'abone 5 mil a la Master'). Es una transferencia desde la cuenta con que pagó: el dinero sale de esa cuenta solo al confirmar. Sin monto = toda la deuda. Si no dice desde qué cuenta, NO preguntes: el usuario la elige en el borrador.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        card: { type: "STRING", description: "Tarjeta que pagó (nombre, banco o últimos 4). Si solo tiene una, puede omitirse." },
+        amount: { type: "NUMBER", description: "Monto pagado. Omítelo si pagó toda la deuda." },
+        from_account: { type: "STRING", description: "Cuenta desde la que pagó, si la dice." },
+        date: { type: "STRING", description: "Fecha YYYY-MM-DD. Por defecto hoy." },
+      },
+    },
+  },
+  {
+    name: "propose_card_debt",
+    description:
+      "Prepara un BORRADOR para poner al día cuánto lleva consumido (cuánto debe) en una tarjeta ('de la Visa llevo 12,500 consumido'). No toca ninguna otra cuenta. Una llamada por tarjeta.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        card: { type: "STRING", description: "Tarjeta (nombre, banco o últimos 4). Si solo tiene una, puede omitirse." },
+        debt: { type: "NUMBER", description: "Lo que debe hoy en esa tarjeta (0 si no debe nada)." },
+        date: { type: "STRING", description: "Fecha YYYY-MM-DD. Por defecto hoy." },
+      },
+      required: ["debt"],
     },
   },
   {
@@ -873,7 +901,7 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     if (kind === "expense") {
       const card = cardPaymentTarget(accs, `${description} ${str(args.category, 40)} ${accName}`);
       if (card && card.id !== account?.id) {
-        return proposeTransfer({ amount: args.amount, from_account: account?.name, to_account: card.name, description: description || `Pago ${card.name}`, date: args.date });
+        return proposeCardPayment({ card: card.name, amount: args.amount, from_account: accName || undefined, date: args.date });
       }
     }
     const category = findCategory(cats, kind, str(args.category, 40), description) ?? null;
@@ -976,6 +1004,78 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     };
   }
 
+  /** Tarjeta por nombre, banco o últimos 4; si solo hay una, esa. */
+  function findCard(accs: AccountLite[], name: string): AccountLite | { error: string; cards: string[] } {
+    const cards = accs.filter((a) => !a.archived_at && a.type === "credit");
+    if (!cards.length) return { error: "El usuario no tiene tarjetas de crédito en Fynco. Puede crearla con propose_account.", cards: [] };
+    const found = name ? findAccount(cards, name) : cards.length === 1 ? cards[0] : undefined;
+    return found ?? { error: name ? `No encontré la tarjeta "${name}".` : "¿Cuál tarjeta?", cards: cards.map((c) => c.name) };
+  }
+
+  async function proposeCardPayment(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const accs = await accounts();
+    const card = findCard(accs, str(args.card, 60));
+    if ("error" in card) return card;
+    const debt = Math.max(0, -card.balance);
+    const amount = toCents(args.amount) ?? debt;
+    if (!amount) return { error: `En Fynco la tarjeta ${card.name} no tiene deuda. ¿Cuánto pagó?` };
+    const sources = accs.filter((a) => !a.archived_at && a.type !== "credit" && a.currency === card.currency);
+    const fromName = str(args.from_account, 60);
+    const warnings: string[] = [];
+    let from = fromName ? findAccount(sources, fromName) : undefined;
+    if (fromName && !from) warnings.push(`No encontré la cuenta "${fromName}" en ${card.currency}; el usuario la elige en el borrador.`);
+    from ??= sources.find((a) => a.is_default) ?? sources[0];
+    const draft: CardPaymentDraft = {
+      type: "card_payment",
+      id: crypto.randomUUID(),
+      card_id: card.id,
+      card_name: card.name,
+      currency: card.currency,
+      amount,
+      debt,
+      from_account_id: from?.id ?? null,
+      from_account_name: from?.name ?? null,
+      occurred_on: validDate(args.date) ?? today,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: { card: card.name, amount: fmt(amount, card.currency), debt_before: fmt(debt, card.currency), from: draft.from_account_name, date: draft.occurred_on, full_payment: amount === debt },
+      warnings,
+      instruction: "Aún NO está registrado. Dile que revise de qué cuenta salió el pago (lo puede cambiar en el borrador) y toque Confirmar.",
+    };
+  }
+
+  async function proposeCardDebt(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const accs = await accounts();
+    const card = findCard(accs, str(args.card, 60));
+    if ("error" in card) return card;
+    const debt = args.debt === 0 || args.debt === "0" ? 0 : toCents(args.debt);
+    if (debt === null) return { error: "Indica cuánto debe hoy en la tarjeta." };
+    const current = -card.balance;
+    const draft: CardDebtDraft = {
+      type: "card_debt",
+      id: crypto.randomUUID(),
+      card_id: card.id,
+      card_name: card.name,
+      currency: card.currency,
+      current_debt: current,
+      new_debt: debt,
+      occurred_on: validDate(args.date) ?? today,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: { card: card.name, debt_in_fynco: fmt(Math.max(0, current), card.currency), new_debt: fmt(debt, card.currency) },
+      note: debt > current ? "La diferencia se registra como consumos sin detallar (cuenta como gasto)." : debt < current ? "Se corrige la deuda sin contarlo como ingreso." : "Ya estaba al día.",
+      instruction: "Aún NO está guardado. Dile que revise y toque Confirmar.",
+    };
+  }
+
   /** Varias operaciones de una vez: gastos, ingresos y transferencias. */
   async function proposeBatch(args: Record<string, unknown>) {
     const items = Array.isArray(args.items) ? args.items.slice(0, MAX_DRAFTS) : [];
@@ -983,7 +1083,13 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     const results: Record<string, unknown>[] = [];
     for (const [i, raw] of items.entries()) {
       const it = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-      const r: Record<string, unknown> = it.type === "transfer" ? await proposeTransfer(it) : await proposeTransaction({ ...it, kind: it.type });
+      const toCard = it.type === "transfer" && str(it.to_account, 60) ? findCard(await accounts(), str(it.to_account, 60)) : null;
+      const r: Record<string, unknown> =
+        toCard && !("error" in toCard)
+          ? await proposeCardPayment({ card: toCard.name, amount: it.amount, from_account: it.from_account, date: it.date })
+          : it.type === "transfer"
+            ? await proposeTransfer(it)
+            : await proposeTransaction({ ...it, kind: it.type });
       if ("error" in r) results.push({ item: i + 1, error: r.error, ...(r.accounts ? { accounts: r.accounts } : {}) });
       else {
         const warnings = ((r.warnings as string[] | undefined) ?? []).filter((w) => !w.startsWith("No encontré la categoría"));
@@ -1288,6 +1394,10 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
           return await proposeAccount(args);
         case "propose_batch":
           return await proposeBatch(args);
+        case "propose_card_payment":
+          return await proposeCardPayment(args);
+        case "propose_card_debt":
+          return await proposeCardDebt(args);
         default:
           return { error: `La herramienta ${name} no existe.` };
       }

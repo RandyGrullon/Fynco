@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Archive, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, FileUp, Pencil, Star, Wallet, type LucideIcon } from "lucide-react";
+import { Archive, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CircleCheck, FileUp, Gauge, Pencil, Star, Wallet, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BigMoney, Money, usePrivateAccountIds } from "@/components/money";
@@ -128,7 +128,21 @@ export default function CuentaDetallePage() {
         </div>
       </section>
 
-      {acc.type === "credit" && !archived && <CardDatesInfo account={acc} onSetup={() => setEditing(true)} />}
+      {acc.type === "credit" && !archived && (
+        <div className="flex flex-col gap-2.5">
+          <CardDatesInfo account={acc} onSetup={() => setEditing(true)} />
+          <div className="grid grid-cols-2 gap-2.5">
+            <Button className="h-12" onClick={() => sheets.open({ type: "card_payment", cardId: acc.id })}>
+              <CircleCheck />
+              Tarjeta pagada
+            </Button>
+            <Button variant="secondary" className="h-12" onClick={() => sheets.open({ type: "card_balance", cardId: acc.id })}>
+              <Gauge />
+              Actualizar deuda
+            </Button>
+          </div>
+        </div>
+      )}
 
       {archived ? (
         <div className="flex flex-col gap-3 rounded-2xl border border-secondary bg-card p-4">

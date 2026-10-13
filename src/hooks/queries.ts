@@ -90,6 +90,8 @@ export function useAccountMutations() {
       onSuccess: () => Promise.all([money(), qc.invalidateQueries({ queryKey: keys.recurring }), qc.invalidateQueries({ queryKey: keys.shared })]),
     }),
     setDefault: useMutation({ mutationFn: accounts.setDefaultAccount, onSuccess: () => qc.invalidateQueries({ queryKey: keys.accounts }) }),
+    payCard: useMutation({ mutationFn: accounts.payCard, ...done }),
+    setCardDebt: useMutation({ mutationFn: accounts.setCardDebt, ...done }),
   };
 }
 

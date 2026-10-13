@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, FileUp, Mic, Split } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CreditCard, FileUp, Mic, Split } from "lucide-react";
+import { useAccounts } from "@/hooks/queries";
 import { Panel, PanelContent } from "@/components/ui/panel";
 import { useSheets } from "./sheets";
 
 export function QuickAddPanel({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const sheets = useSheets();
+  const { data: accounts = [] } = useAccounts();
+  const hasCards = accounts.some((a) => a.type === "credit" && !a.archived_at);
   const options = [
     { label: "Gasto", hint: "Sale de una cuenta", icon: ArrowUpRight, onClick: () => sheets.open({ type: "transaction", kind: "expense" }) },
     { label: "Ingreso", hint: "Entra a una cuenta", icon: ArrowDownLeft, onClick: () => sheets.open({ type: "transaction", kind: "income" }) },
@@ -47,6 +50,21 @@ export function QuickAddPanel({ open, onOpenChange }: { open: boolean; onOpenCha
               <span className="block text-xs text-muted-foreground">“Gasté 850 en almuerzo con la tarjeta”</span>
             </span>
           </Link>
+          {hasCards && (
+            <button
+              type="button"
+              onClick={() => sheets.open({ type: "card_payment" })}
+              className="col-span-2 flex items-center gap-3 rounded-xl border border-secondary bg-card p-4 text-left transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-primary">
+                <CreditCard className="h-5 w-5" strokeWidth={2.2} />
+              </span>
+              <span>
+                <span className="block text-[15px] font-bold">Pagar tarjeta</span>
+                <span className="block text-xs text-muted-foreground">Elige la tarjeta y de qué cuenta pagaste</span>
+              </span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => sheets.open({ type: "import" })}

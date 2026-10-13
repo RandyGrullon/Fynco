@@ -359,5 +359,55 @@ await as(RANDY, async () => {
   check('día de corte fuera de 1-31 se rechaza', Boolean(bad), bad);
 });
 
+// ---------- Pagar tarjetas y poner al día lo consumido ----------
+{
+  const balance = async (id) => Number((await one(`select balance from account_balances where account_id = $1`, [id])).balance);
+  let card, bank, usd, other;
+  await as(RANDY, async () => {
+    card = (await one(`insert into accounts (name, type, opening_balance) values ('Visa pagos', 'credit', -100000) returning id`)).id;
+    bank = (await one(`insert into accounts (name, type, opening_balance) values ('Banco pagos', 'checking', 500000) returning id`)).id;
+    usd = (await one(`insert into accounts (name, type, currency, opening_balance) values ('Dólares', 'savings', 'USD', 50000) returning id`)).id;
+    // Consumir con la tarjeta solo sube su deuda: el banco no se toca.
+    await q(`insert into transactions (account_id, kind, amount, description) values ($1, 'expense', -25000, 'Cena')`, [card]);
+    check('consumo con tarjeta no toca el banco', (await balance(card)) === -125000 && (await balance(bank)) === 500000);
+
+    check('set_card_debt sube la deuda como consumo', (await one(`select set_card_debt($1, 150000) r`, [card])).r === 'expense' && (await balance(card)) === -150000);
+    const gasto = await one(`select amount, kind, description from transactions where account_id = $1 and description = 'Consumos sin detallar'`, [card]);
+    check('la diferencia queda como gasto sin detallar', gasto?.kind === 'expense' && Number(gasto.amount) === -25000, gasto);
+    check('set_card_debt baja la deuda sin inventar ingreso', (await one(`select set_card_debt($1, 120000) r`, [card])).r === 'opening' && (await balance(card)) === -120000);
+    const ingresos = await one(`select count(*)::int n from transactions where account_id = $1 and kind = 'income'`, [card]);
+    check('no hay ingresos en la tarjeta', ingresos.n === 0);
+    check('set_card_debt igual no hace nada', (await one(`select set_card_debt($1, 120000) r`, [card])).r === 'none');
+
+    const parcial = await one(`select pay_card($1, $2, 20000, '2026-10-10') id`, [card, bank]);
+    check('pago parcial: transferencia del banco a la tarjeta', Boolean(parcial.id) && (await balance(card)) === -100000 && (await balance(bank)) === 480000);
+    await one(`select pay_card($1, $2) id`, [card, bank]);
+    check('pago total deja la tarjeta en cero', (await balance(card)) === 0 && (await balance(bank)) === 380000);
+    const legs = await one(`select count(*)::int n, min(description) d from transactions where transfer_id = $1`, [parcial.id]);
+    check('el pago son dos patas con descripción', legs.n === 2 && legs.d === 'Pago Visa pagos', legs);
+
+    check('sin deuda no hay nada que pagar', (await fails(`select pay_card($1, $2)`, [card, bank]))?.includes('nothing_to_pay'));
+    check('monedas distintas se rechazan', (await fails(`select pay_card($1, $2, 1000)`, [card, usd]))?.includes('card_currency_mismatch'));
+    check('solo tarjetas', (await fails(`select pay_card($1, $2, 1000)`, [bank, card]))?.includes('not_a_card'));
+  });
+  await db.query(`insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000ee', 'otro.pagos@example.com')`);
+  await as('00000000-0000-0000-0000-0000000000ee', async () => {
+    other = await fails(`select pay_card($1, $2, 1000)`, [card, bank]);
+    check('nadie más paga tus tarjetas', other?.includes('invalid_account'), other);
+    check('nadie más cambia tu deuda', (await fails(`select set_card_debt($1, 1)`, [card]))?.includes('invalid_account'));
+  });
+  await db.exec(`set role anon`);
+  const anon = await fails(`select pay_card($1, $2, 1000)`, [card, bank]);
+  await db.exec(`reset role`);
+  check('anon no puede pagar', Boolean(anon), anon);
+
+  // Un agente conectado como administrador (p. ej. otro chat con el conector de Supabase):
+  // primero dice a nombre de quién actúa, como en docs/AGENTES.md.
+  await db.exec(`select set_config('request.jwt.claim.sub', (select id::text from auth.users where id = '${RANDY}'), false)`);
+  const agent = await one(`select set_card_debt($1, 30000) r`, [card]);
+  await db.exec(`select set_config('request.jwt.claim.sub', '', false)`);
+  check('un agente puede actuar a nombre del usuario', agent.r === 'expense' && (await balance(card)) === -30000, agent);
+}
+
 console.log(`\n${passed} ok, ${failures} fallos`);
 process.exit(failures ? 1 : 0);

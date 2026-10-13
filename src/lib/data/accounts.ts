@@ -38,6 +38,24 @@ export async function updateAccount(id: string, patch: Partial<AccountInput> & {
   return unwrap(await db().from("accounts").update(patch).eq("id", id).select("*").single());
 }
 
+/** Pagar una tarjeta desde otra cuenta (transferencia). Sin monto = toda la deuda. */
+export async function payCard(input: { card: string; from: string; amount?: number | null; occurred_on: string; description?: string | null }): Promise<string> {
+  return unwrap(
+    await db().rpc("pay_card", {
+      p_card: input.card,
+      p_from: input.from,
+      p_amount: input.amount ?? null,
+      p_occurred_on: input.occurred_on,
+      p_description: input.description ?? null,
+    }),
+  );
+}
+
+/** Dejar la deuda de una tarjeta en `debt` (centavos). Devuelve cómo se registró. */
+export async function setCardDebt(input: { card: string; debt: number; occurred_on: string }): Promise<"expense" | "opening" | "none"> {
+  return unwrap(await db().rpc("set_card_debt", { p_card: input.card, p_debt: input.debt, p_occurred_on: input.occurred_on }));
+}
+
 export async function deleteAccount(id: string): Promise<void> {
   unwrap(await db().from("accounts").delete().eq("id", id));
 }

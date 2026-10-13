@@ -58,6 +58,8 @@ function mapHttpError(status: number, body: string, model: string): GeminiError 
   if (status === 404 || code === "model_not_found" || /model .*(does not exist|not found|decommissioned)/i.test(message)) {
     return new GeminiError(503, "model_unavailable", GEMINI_MESSAGES.misconfigured, detail);
   }
+  // El modelo armó mal los datos de una herramienta: vale la pena reintentar.
+  if (code === "tool_use_failed") return new GeminiError(400, "tool_failed", GEMINI_MESSAGES.badRequest, detail);
   if (status === 400 || status === 413 || status === 422) return new GeminiError(400, "bad_request", GEMINI_MESSAGES.badRequest, detail);
   return new GeminiError(503, "unavailable", GEMINI_MESSAGES.unavailable, detail);
 }
@@ -122,6 +124,7 @@ export async function runGroqToolLoop(opts: GroqLoopOptions): Promise<{ text: st
   const tools = toTools(opts.tools);
   let modelIndex = 0;
   let toolCalls = 0;
+  let toolRetries = 0;
 
   for (let round = 1; round <= maxRounds; round++) {
     const remaining = deadline - Date.now();
@@ -152,7 +155,13 @@ export async function runGroqToolLoop(opts: GroqLoopOptions): Promise<{ text: st
       )) as typeof res;
     } catch (e) {
       // Cada modelo tiene su propio cupo por minuto: si uno se llena, sigue el siguiente con la misma conversación.
-      const retryable = e instanceof GeminiError && (e.code === "rate_limited" || (e.code === "model_unavailable" && round === 1));
+      // Una llamada mal armada se reintenta una vez con el mismo modelo.
+      if (e instanceof GeminiError && e.code === "tool_failed" && toolRetries < 1) {
+        toolRetries++;
+        round--;
+        continue;
+      }
+      const retryable = e instanceof GeminiError && (e.code === "rate_limited" || e.code === "tool_failed" || (e.code === "model_unavailable" && round === 1));
       if (retryable && modelIndex < opts.models.length - 1) {
         modelIndex++;
         round--;

@@ -10,6 +10,8 @@ import { TransferPanel } from "@/components/forms/transfer-panel";
 import { ExpensePanel } from "@/components/shared/expense-panel";
 import { SettlePanel } from "@/components/shared/settle-panel";
 import { ImportPanel } from "@/components/import/import-panel";
+import { CardPaymentPanel } from "@/components/accounts/card-payment-panel";
+import { CardBalancePanel } from "@/components/accounts/card-balance-panel";
 
 export type SheetState =
   | { type: "quick" }
@@ -17,7 +19,9 @@ export type SheetState =
   | { type: "transfer"; tx?: Transaction; preset?: { from?: string; to?: string; amount?: number; description?: string } }
   | { type: "expense"; groupId?: string; expense?: SharedExpense; preset?: ExpensePreset }
   | { type: "settle"; groupId: string; from?: string; to?: string; amount?: number }
-  | { type: "import"; accountId?: string };
+  | { type: "import"; accountId?: string }
+  | { type: "card_payment"; cardId?: string }
+  | { type: "card_balance"; cardId: string };
 
 interface SheetsApi {
   open: (s: SheetState) => void;
@@ -52,6 +56,8 @@ export function SheetsProvider({ children }: { children: React.ReactNode }) {
         <SettlePanel key={nonce} open onOpenChange={onOpenChange} groupId={sheet.groupId} from={sheet.from} to={sheet.to} amount={sheet.amount} />
       )}
       {sheet?.type === "import" && <ImportPanel key={nonce} open onOpenChange={onOpenChange} accountId={sheet.accountId} />}
+      {sheet?.type === "card_payment" && <CardPaymentPanel key={nonce} open onOpenChange={onOpenChange} cardId={sheet.cardId} />}
+      {sheet?.type === "card_balance" && <CardBalancePanel key={nonce} open onOpenChange={onOpenChange} cardId={sheet.cardId} />}
     </SheetsContext.Provider>
   );
 }

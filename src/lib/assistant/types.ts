@@ -121,7 +121,36 @@ export interface AccountDraft {
   payment_due_day: number | null;
 }
 
-export type Draft = TransactionDraft | SharedExpenseDraft | TransferDraft | SettlementDraft | RecurringDraft | AccountDraft;
+/** Pagar una tarjeta desde otra cuenta (transferencia). */
+export interface CardPaymentDraft {
+  type: "card_payment";
+  id: string;
+  card_id: string;
+  card_name: string;
+  currency: string;
+  /** Centavos a pagar. */
+  amount: number;
+  /** Deuda de la tarjeta al preparar el borrador. */
+  debt: number;
+  /** Cuenta con que se paga; el usuario la puede cambiar en el borrador. */
+  from_account_id: string | null;
+  from_account_name: string | null;
+  occurred_on: string;
+}
+
+/** Poner al día cuánto se lleva consumido (se debe) en una tarjeta. */
+export interface CardDebtDraft {
+  type: "card_debt";
+  id: string;
+  card_id: string;
+  card_name: string;
+  currency: string;
+  current_debt: number;
+  new_debt: number;
+  occurred_on: string;
+}
+
+export type Draft = TransactionDraft | SharedExpenseDraft | TransferDraft | SettlementDraft | RecurringDraft | AccountDraft | CardPaymentDraft | CardDebtDraft;
 
 export interface AssistantAudio {
   mimeType: "audio/wav";

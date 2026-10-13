@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { useUser } from "@/components/providers/session-provider";
 import { todayISO } from "@/lib/dates";
 import { toast } from "@/hooks/use-toast";
-import { VOICE_PLACEHOLDER, type AssistantErrorBody, type AssistantRequest, type AssistantResponse } from "@/lib/assistant/types";
+import { VOICE_PLACEHOLDER, type AssistantErrorBody, type AssistantRequest, type AssistantResponse, type Draft } from "@/lib/assistant/types";
 import type { WavResult } from "@/lib/assistant/wav";
 import { cn } from "@/lib/utils";
 import { Composer, MicButton } from "./composer";
@@ -160,6 +160,10 @@ export function AssistantChat() {
     setMessages([]);
   }
 
+  function updateDraft(messageId: string, draft: Draft) {
+    setMessages((prev) => prev.map((m) => (m.id === messageId && m.drafts ? { ...m, drafts: m.drafts.map((d) => (d.draft.id === draft.id ? { ...d, draft } : d)) } : m)));
+  }
+
   function markSaved(messageId: string, draftId: string) {
     setMessages((prev) =>
       prev.map((m) => (m.id === messageId && m.drafts ? { ...m, drafts: m.drafts.map((d) => (d.draft.id === draftId ? { ...d, status: "saved" as const } : d)) } : m)),
@@ -185,7 +189,13 @@ export function AssistantChat() {
         <EmptyChat voiceMode={voiceMode} voice={voice} onPick={(s) => send(s)} />
       ) : (
         <div role="log" aria-live="polite" aria-label="Conversación con Fynco" className="flex flex-col gap-5 pt-3">
-          {messages.map((m) => (m.role === "user" ? <UserBubble key={m.id} message={m} /> : <AssistantMessage key={m.id} message={m} actions={actions} onSaved={(draftId) => markSaved(m.id, draftId)} />))}
+          {messages.map((m) =>
+            m.role === "user" ? (
+              <UserBubble key={m.id} message={m} />
+            ) : (
+              <AssistantMessage key={m.id} message={m} actions={actions} onSaved={(draftId) => markSaved(m.id, draftId)} onUpdate={(d) => updateDraft(m.id, d)} />
+            ),
+          )}
           {pending && <Typing />}
           {error && !pending && (
             <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl border border-negative/30 bg-negative/10 p-3">
@@ -280,7 +290,17 @@ function UserBubble({ message }: { message: UIMessage }) {
   );
 }
 
-function AssistantMessage({ message, actions, onSaved }: { message: UIMessage; actions: DraftActions; onSaved: (draftId: string) => void }) {
+function AssistantMessage({
+  message,
+  actions,
+  onSaved,
+  onUpdate,
+}: {
+  message: UIMessage;
+  actions: DraftActions;
+  onSaved: (draftId: string) => void;
+  onUpdate: (d: Draft) => void;
+}) {
   const [bulk, setBulk] = useState(false);
   const pendingDrafts = message.drafts?.filter((d) => d.status !== "saved") ?? [];
 
@@ -308,7 +328,7 @@ function AssistantMessage({ message, actions, onSaved }: { message: UIMessage; a
         <div className="text-[15px] leading-relaxed">
           <RichText text={message.text} />
         </div>
-        {message.drafts?.map((d) => <DraftCard key={d.draft.id} item={d} actions={actions} locked={bulk} onSaved={() => onSaved(d.draft.id)} />)}
+        {message.drafts?.map((d) => <DraftCard key={d.draft.id} item={d} actions={actions} locked={bulk} onSaved={() => onSaved(d.draft.id)} onUpdate={onUpdate} />)}
         {pendingDrafts.length >= 2 && (
           <Button type="button" className="h-12" onClick={confirmAll} disabled={bulk || !actions.ready}>
             {bulk ? <Loader2 className="animate-spin" aria-hidden="true" /> : <CheckCheck aria-hidden="true" />}

@@ -173,9 +173,10 @@ export default function InicioPage() {
               const urgent = daysUntil(date, todayISO()) <= 2;
               return (
                 <li key={`card-${a.id}`}>
-                  <Link
-                    href={`/cuentas/${a.id}`}
-                    className="flex items-center gap-3 rounded-xl border border-secondary bg-card px-3 py-2.5 transition-colors hover:bg-[#1b1e24] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  <button
+                    type="button"
+                    onClick={() => sheets.open({ type: "card_payment", cardId: a.id })}
+                    className="flex w-full items-center gap-3 rounded-xl border border-secondary bg-card px-3 py-2.5 text-left transition-colors hover:bg-[#1b1e24] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className={cn("flex h-9 w-9 items-center justify-center rounded-md", urgent ? "bg-negative/15 text-negative" : "bg-secondary text-muted-foreground")}>
                       <CreditCard className="h-4 w-4" />
@@ -187,7 +188,7 @@ export default function InicioPage() {
                       </span>
                     </span>
                     {a.balance < 0 && <Money amount={a.balance} currency={a.currency} masked={privateAccounts.has(a.id)} className="text-sm font-bold" />}
-                  </Link>
+                  </button>
                 </li>
               );
             })}

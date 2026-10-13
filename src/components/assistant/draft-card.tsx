@@ -11,7 +11,7 @@ import { ACCOUNT_TYPE_LABEL, AccountPanel } from "@/components/accounts/account-
 import { useAccountMutations, useAccounts, useRecurringMutations, useSharedMutations, useTransactionMutations } from "@/hooks/queries";
 import { toast } from "@/hooks/use-toast";
 import { dayLabel, shortDate } from "@/lib/dates";
-import type { AccountDraft, Draft, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "@/lib/assistant/types";
+import type { AccountDraft, CardDebtDraft, CardPaymentDraft, Draft, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "@/lib/assistant/types";
 import type { Account } from "@/lib/types";
 import type { UIDraft } from "./conversation";
 
@@ -113,6 +113,19 @@ export function useDraftActions() {
           await accountM.create.mutateAsync(accountInput(d));
           break;
         }
+        case "card_payment": {
+          const from = paymentSource(d);
+          if (!from) {
+            toast({ title: "Elige la cuenta", description: "¿Desde qué cuenta pagaste la tarjeta?" });
+            return false;
+          }
+          await accountM.payCard.mutateAsync({ card: d.card_id, from: from.id, amount: d.amount, occurred_on: d.occurred_on });
+          break;
+        }
+        case "card_debt": {
+          await accountM.setCardDebt.mutateAsync({ card: d.card_id, debt: d.new_debt, occurred_on: d.occurred_on });
+          break;
+        }
       }
       return true;
     } catch {
@@ -150,8 +163,19 @@ export function useDraftActions() {
         return setEditingRecurring(d);
       case "account":
         return setEditingAccount(d);
+      case "card_payment":
+        return sheets.open({ type: "card_payment", cardId: d.card_id });
+      case "card_debt":
+        return sheets.open({ type: "card_balance", cardId: d.card_id });
     }
   }
+
+  /** Cuentas con que se puede pagar una tarjeta: no son tarjetas y están en su moneda. */
+  const paymentSources = (d: CardPaymentDraft) => active.filter((a) => a.type !== "credit" && a.currency === d.currency);
+  const paymentSource = (d: CardPaymentDraft) => {
+    const list = paymentSources(d);
+    return list.find((a) => a.id === d.from_account_id) ?? list.find((a) => a.is_default) ?? list[0];
+  };
 
   /** Panel de recurrente para "Editar" (no está en los paneles globales). */
   const recurringEditor = editingRecurring ? (
@@ -173,7 +197,7 @@ export function useDraftActions() {
   /** Panel de cuenta nueva para "Editar" un borrador de cuenta. */
   const accountEditor = editingAccount ? <AccountPanel open onOpenChange={(o) => !o && setEditingAccount(null)} preset={accountInput(editingAccount)} /> : null;
 
-  return { ready, confirm, edit, accountForTransaction, accountForShared, byId, recurringEditor, accountEditor };
+  return { ready, confirm, edit, accountForTransaction, accountForShared, byId, recurringEditor, accountEditor, paymentSources, paymentSource };
 }
 
 /** Datos para crear la cuenta. Los campos de tarjeta solo se envían en tarjetas. */
@@ -216,16 +240,34 @@ function labelFor(d: Draft) {
       return d.kind === "income" ? "Ingreso recurrente" : "Gasto recurrente";
     case "account":
       return d.account_type === "credit" ? "Nueva tarjeta" : "Nueva cuenta";
+    case "card_payment":
+      return "Tarjeta pagada";
+    case "card_debt":
+      return "Deuda de tarjeta";
   }
 }
 
 function titleFor(d: Draft) {
   if (d.type === "settlement") return d.i_pay ? `Le pagaste a ${d.to_name}` : `${d.from_name} te pagó`;
-  if (d.type === "account") return d.name;
+  if (d.type === "account" || d.type === "card_debt") return d.type === "account" ? d.name : d.card_name;
+  if (d.type === "card_payment") return `Pago ${d.card_name}`;
   return d.description;
 }
 
-export function DraftCard({ item, actions, onSaved, locked }: { item: UIDraft; actions: DraftActions; onSaved: () => void; locked?: boolean }) {
+export function DraftCard({
+  item,
+  actions,
+  onSaved,
+  onUpdate,
+  locked,
+}: {
+  item: UIDraft;
+  actions: DraftActions;
+  onSaved: () => void;
+  /** Cambios hechos en la misma tarjeta (p. ej. la cuenta con que se pagó). */
+  onUpdate?: (d: Draft) => void;
+  locked?: boolean;
+}) {
   const [busy, setBusy] = useState(false);
   const d = item.draft;
   const saved = item.status === "saved";
@@ -239,7 +281,7 @@ export function DraftCard({ item, actions, onSaved, locked }: { item: UIDraft; a
   }
 
   const positive = (d.type === "transaction" || d.type === "recurring") && d.kind === "income";
-  const neutral = d.type === "transfer" || d.type === "settlement";
+  const neutral = d.type === "transfer" || d.type === "settlement" || d.type === "card_payment";
   const label = labelFor(d);
   const when = d.type === "recurring" ? `Desde ${shortDate(d.start_on)}` : d.type === "account" ? (d.institution ?? "") : dayLabel(d.occurred_on);
 
@@ -254,6 +296,8 @@ export function DraftCard({ item, actions, onSaved, locked }: { item: UIDraft; a
         <p className="min-w-0 truncate text-[15px] font-bold">{titleFor(d)}</p>
         {d.type === "account" ? (
           <Money amount={d.opening_balance} currency={d.currency} className={d.opening_balance < 0 ? "text-lg font-extrabold text-negative" : "text-lg font-extrabold"} />
+        ) : d.type === "card_debt" ? (
+          <Money amount={-d.new_debt} currency={d.currency} className="text-lg font-extrabold" />
         ) : (
           <Money
             amount={neutral || positive ? d.amount : -d.amount}
@@ -274,6 +318,8 @@ export function DraftCard({ item, actions, onSaved, locked }: { item: UIDraft; a
       {d.type === "transfer" && <TransferDetails d={d} />}
       {d.type === "settlement" && <SettlementDetails d={d} account={actions.byId(d.account_id)} />}
       {d.type === "account" && <AccountDetails d={d} />}
+      {d.type === "card_payment" && <CardPaymentDetails d={d} actions={actions} saved={saved} onUpdate={onUpdate} />}
+      {d.type === "card_debt" && <CardDebtDetails d={d} />}
       {d.type === "recurring" && (
         <dl className="mt-3 grid grid-cols-2 gap-3">
           <Detail label="Frecuencia">{FREQUENCY_LABEL[d.frequency]}</Detail>
@@ -319,6 +365,71 @@ function SharedDetails({ d, account }: { d: SharedExpenseDraft; account: Account
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+function CardPaymentDetails({ d, actions, saved, onUpdate }: { d: CardPaymentDraft; actions: DraftActions; saved: boolean; onUpdate?: (d: Draft) => void }) {
+  const sources = actions.paymentSources(d);
+  const from = actions.paymentSource(d);
+  return (
+    <div className="mt-3 flex flex-col gap-3">
+      <dl className="grid grid-cols-2 gap-3">
+        <Detail label="Debías">
+          <Money amount={d.debt} currency={d.currency} />
+        </Detail>
+        <Detail label="Entra a">{d.card_name}</Detail>
+      </dl>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-semibold text-primary">¿Desde qué cuenta pagaste?</span>
+        {sources.length ? (
+          <select
+            value={from?.id ?? ""}
+            disabled={saved}
+            onChange={(e) => {
+              const a = sources.find((x) => x.id === e.target.value);
+              if (a) onUpdate?.({ ...d, from_account_id: a.id, from_account_name: a.name });
+            }}
+            className="h-11 rounded-xl border border-secondary bg-background px-3 text-sm font-semibold text-foreground disabled:opacity-70"
+          >
+            {sources.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+                {a.last4 ? ` ···${a.last4}` : ""}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="text-sm text-muted-foreground">No tienes cuentas en {d.currency}. Crea una para registrar el pago.</span>
+        )}
+      </label>
+    </div>
+  );
+}
+
+function CardDebtDetails({ d }: { d: CardDebtDraft }) {
+  const diff = d.new_debt - d.current_debt;
+  return (
+    <>
+      <dl className="mt-3 grid grid-cols-2 gap-3">
+        <Detail label="En Fynco">
+          <Money amount={Math.max(0, d.current_debt)} currency={d.currency} />
+        </Detail>
+        <Detail label="Debes hoy">
+          <Money amount={d.new_debt} currency={d.currency} />
+        </Detail>
+      </dl>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {diff > 0 ? (
+          <>
+            Se registran <Money amount={diff} currency={d.currency} className="font-semibold text-foreground" /> como consumos sin detallar. Ninguna cuenta se toca.
+          </>
+        ) : diff < 0 ? (
+          "Se corrige la deuda sin contarlo como ingreso. Ninguna cuenta se toca."
+        ) : (
+          "Ya estaba al día."
+        )}
+      </p>
     </>
   );
 }
