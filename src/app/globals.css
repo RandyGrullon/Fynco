@@ -187,6 +187,11 @@ html[data-intro="skip"] .intro-splash {
   }
 }
 
+/* El recargar nativo del navegador se reemplaza por el de la app (también funciona instalada). */
+html {
+  overscroll-behavior-y: none;
+}
+
 @layer utilities {
   .tabular {
     font-variant-numeric: tabular-nums;

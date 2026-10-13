@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { BottomNav, SideNav } from "./nav";
+import { PullToRefresh } from "./pull-to-refresh";
 import { SheetsProvider } from "./sheets";
 import { AppLock } from "@/components/security/app-lock";
 import { IOSInstallBanner } from "@/components/ios-install-banner";
@@ -38,6 +39,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       <AppLock>
         <SheetsProvider>
           <RecurringRunner />
+          <PullToRefresh />
           {/* Tapa lo que pasa por debajo de la barra de estado (hora, batería) al hacer scroll. */}
           <div aria-hidden="true" className="h-safe-top pointer-events-none fixed inset-x-0 top-0 z-30 bg-background" />
           <div className="flex min-h-dvh">
