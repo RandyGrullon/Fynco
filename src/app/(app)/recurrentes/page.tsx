@@ -32,6 +32,7 @@ export default function RecurrentesPage() {
   const monthly = useMemo(() => {
     const out: Monthly = {};
     for (const r of active) {
+      if (r.kind === "transfer") continue;
       const cur = accById.get(r.account_id)?.currency ?? currency;
       const slot = (out[cur] ??= { expense: 0, income: 0 });
       slot[r.kind] += monthlyEquivalent(r.amount, r.frequency);
@@ -152,7 +153,13 @@ function RuleSection({
         <ul className="flex flex-col gap-2">
           {rules.map((r) => (
             <li key={r.id}>
-              <RuleRow rule={r} account={accById.get(r.account_id)} category={r.category_id ? catById.get(r.category_id) : undefined} onClick={() => onOpen(r)} />
+              <RuleRow
+                rule={r}
+                account={accById.get(r.account_id)}
+                toAccount={r.to_account_id ? accById.get(r.to_account_id) : undefined}
+                category={r.category_id ? catById.get(r.category_id) : undefined}
+                onClick={() => onOpen(r)}
+              />
             </li>
           ))}
         </ul>
@@ -161,12 +168,14 @@ function RuleSection({
   );
 }
 
-function RuleRow({ rule, account, category, onClick }: { rule: RecurringRule; account?: Account; category?: Category; onClick: () => void }) {
+function RuleRow({ rule, account, toAccount, category, onClick }: { rule: RecurringRule; account?: Account; toAccount?: Account; category?: Category; onClick: () => void }) {
   const Icon = category ? iconFor(category.icon) : Repeat;
   const ended = Boolean(rule.end_on && rule.next_run_on > rule.end_on);
   const next = adjustWeekend(rule.next_run_on, rule.weekend_policy);
   const when = !rule.active ? (ended ? "Finalizado" : "Pausado") : next === todayISO() ? "Hoy" : shortDate(next);
-  const meta = [FREQUENCY_LABEL[rule.frequency], rule.active ? `Próximo: ${when}` : when, account?.name].filter(Boolean).join(" · ");
+  const meta = [FREQUENCY_LABEL[rule.frequency], rule.active ? `Próximo: ${when}` : when, rule.kind === "transfer" ? (toAccount ? `${account?.name ?? ""} → ${toAccount.name}` : null) : account?.name]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <button
       type="button"
@@ -185,9 +194,9 @@ function RuleRow({ rule, account, category, onClick }: { rule: RecurringRule; ac
         <span className="block truncate text-xs text-muted-foreground">{meta}</span>
       </span>
       <Money
-        amount={rule.kind === "income" ? rule.amount : -rule.amount}
+        amount={rule.kind === "income" || rule.kind === "transfer" ? rule.amount : -rule.amount}
         currency={account?.currency}
-        sign="always"
+        sign={rule.kind === "transfer" ? "never" : "always"}
         className={cn("text-[15px] font-bold", rule.kind === "income" && rule.active && "text-positive", !rule.active && "text-muted-foreground")}
       />
     </button>

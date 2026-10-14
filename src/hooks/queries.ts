@@ -3,6 +3,7 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as accounts from "@/lib/data/accounts";
 import * as debts from "@/lib/data/debts";
+import * as plan from "@/lib/data/plan";
 import * as groups from "@/lib/data/groups";
 import * as planning from "@/lib/data/planning";
 import * as profile from "@/lib/data/profile";
@@ -25,6 +26,8 @@ export const keys = {
   invites: ["invites"] as const,
   pin: ["pin"] as const,
   debts: ["debts"] as const,
+  planSettings: ["plan", "settings"] as const,
+  planPeriods: ["plan", "periods"] as const,
 };
 
 /** Todo lo que cambia cuando se mueve dinero. */
@@ -129,6 +132,26 @@ export function useTransactionMutations() {
 }
 
 // ---------- Recurrentes y metas ----------
+// ---------- Plan ----------
+export function usePlanSettings() {
+  return useQuery({ queryKey: keys.planSettings, queryFn: plan.fetchPlanSettings, retry: false });
+}
+
+export function usePlanPeriods() {
+  return useQuery({ queryKey: keys.planPeriods, queryFn: plan.fetchPlanPeriods, retry: false });
+}
+
+export function usePlanMutations() {
+  const qc = useQueryClient();
+  const settingsDone = { onSuccess: () => qc.invalidateQueries({ queryKey: keys.planSettings }) };
+  const periodsDone = { onSuccess: () => qc.invalidateQueries({ queryKey: keys.planPeriods }) };
+  return {
+    saveSettings: useMutation({ mutationFn: plan.savePlanSettings, ...settingsDone }),
+    savePeriod: useMutation({ mutationFn: (v: { id: string | null; input: plan.PlanPeriodInput }) => plan.savePlanPeriod(v.id, v.input), ...periodsDone }),
+    removePeriod: useMutation({ mutationFn: plan.deletePlanPeriod, ...periodsDone }),
+  };
+}
+
 // ---------- Deudas ----------
 export function useDebts() {
   return useQuery({ queryKey: keys.debts, queryFn: debts.fetchDebts });

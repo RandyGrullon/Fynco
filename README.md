@@ -17,7 +17,7 @@ Tu cartera personal, tus gastos compartidos (estilo Splitwise) y un asistente fi
 
 Solo hay que poner las variables de entorno y correr el SQL una vez.
 
-1. **Base de datos:** en Supabase → SQL Editor, ejecuta en orden los archivos de [`supabase/migrations/`](supabase/migrations/): primero [`20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql) y luego cada migración nueva (p. ej. [`20261013000001_card_dates.sql`](supabase/migrations/20261013000001_card_dates.sql), fechas de corte y pago de tarjetas, [`20261014000001_credit_limit.sql`](supabase/migrations/20261014000001_credit_limit.sql), límite de crédito, [`20261015000001_card_payments.sql`](supabase/migrations/20261015000001_card_payments.sql), pagar tarjetas y poner al día lo consumido, y [`20261016000001_debts.sql`](supabase/migrations/20261016000001_debts.sql), deudas y préstamos con personas).
+1. **Base de datos:** en Supabase → SQL Editor, ejecuta en orden los archivos de [`supabase/migrations/`](supabase/migrations/): primero [`20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql) y luego cada migración nueva (p. ej. [`20261013000001_card_dates.sql`](supabase/migrations/20261013000001_card_dates.sql), fechas de corte y pago de tarjetas, [`20261014000001_credit_limit.sql`](supabase/migrations/20261014000001_credit_limit.sql), límite de crédito, [`20261015000001_card_payments.sql`](supabase/migrations/20261015000001_card_payments.sql), pagar tarjetas y poner al día lo consumido, [`20261016000001_debts.sql`](supabase/migrations/20261016000001_debts.sql), deudas y préstamos con personas, y [`20261017000001_plan.sql`](supabase/migrations/20261017000001_plan.sql), el plan).
 2. **Variables** (Vercel → Settings → Environment Variables, o `.env.local` para desarrollo):
 
    | Variable | Para qué |
@@ -59,5 +59,16 @@ npm run typecheck
 - **Tarjetas:** lo consumido sube la deuda de la tarjeta y no toca el banco; el dinero sale de una cuenta solo al registrar el pago (`pay_card`). `set_card_debt` deja la deuda en lo que dice el banco.
 - **Deudas con personas:** "me prestaron" o "presté", con interés simple opcional (mensual, anual o total) y cuotas que se calculan solas (`debt_terms`, igual que `src/lib/debts.ts`). Con una cuenta, el capital va como pago de deuda (no cuenta en estadísticas) y solo el interés cuenta como gasto o ingreso.
 - **Agentes:** otro chat de Claude conectado a la base puede registrar datos con las mismas funciones: ver [docs/AGENTES.md](docs/AGENTES.md).
+
+## Plan
+
+La pantalla `/plan` responde cuánto dinero es de verdad tuyo, qué hay que pagar (cuándo, cuánto y con qué), cuánto puedes gastar esta quincena y cómo queda tu cuenta día a día. El motor está en `src/lib/plan/` (funciones puras con pruebas en Vitest) y lo usan la pantalla, la tarjeta de Inicio y la herramienta `get_plan` del asistente.
+
+- **Tu dinero** = cuentas corrientes, de ahorro y efectivo, menos las cuentas `other` marcadas como prestado (`reserved`).
+- **Quincenas**: de un cobro de Salario (recurrentes, también de una sola vez) al siguiente; si no hay, del 1 y del 16. Un periodo (`plan_periods`, p. ej. un viaje) es su propia fila.
+- **Presupuesto**: `monthly_budget × 12 / 365` por día, redondeado a 50 por quincena. Gastado = gastos + tu parte de lo compartido, sin recurrentes ni categorías excluidas. Lo que queda se reparte como estimado en la cuenta del día a día.
+- **Tarjetas**: un consumo entra en el corte de ese día o el siguiente; cada corte se paga el `pay_day` (o la fecha límite) desde `pay_from_account_id` (o la predeterminada). Las tarjetas de doble saldo (mismo `last4`) se pagan juntas, convertidas con `rates`.
+- **Cuotas**: recurrentes de tipo transferencia hacia cuentas `other` (y las cuotas del módulo Deudas).
+- **Línea de tiempo**: desde hoy hasta `horizon_days`; el mismo día entra primero lo que entra. Marca el punto más bajo y si baja del colchón.
 
 Más detalle en [docs/REDISENO.md](docs/REDISENO.md) y [docs/UI.md](docs/UI.md).

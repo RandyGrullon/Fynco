@@ -23,7 +23,7 @@ export type SheetState =
   | { type: "expense"; groupId?: string; expense?: SharedExpense; preset?: ExpensePreset }
   | { type: "settle"; groupId: string; from?: string; to?: string; amount?: number }
   | { type: "import"; accountId?: string }
-  | { type: "card_payment"; cardId?: string }
+  | { type: "card_payment"; cardId?: string; amount?: number; fromId?: string | null }
   | { type: "card_balance"; cardId: string }
   | { type: "debt"; debt?: PersonDebt; direction?: PersonDebt["direction"]; preset?: Partial<DebtInput> }
   | { type: "debt_payment"; debtId: string };
@@ -61,7 +61,7 @@ export function SheetsProvider({ children }: { children: React.ReactNode }) {
         <SettlePanel key={nonce} open onOpenChange={onOpenChange} groupId={sheet.groupId} from={sheet.from} to={sheet.to} amount={sheet.amount} />
       )}
       {sheet?.type === "import" && <ImportPanel key={nonce} open onOpenChange={onOpenChange} accountId={sheet.accountId} />}
-      {sheet?.type === "card_payment" && <CardPaymentPanel key={nonce} open onOpenChange={onOpenChange} cardId={sheet.cardId} />}
+      {sheet?.type === "card_payment" && <CardPaymentPanel key={nonce} open onOpenChange={onOpenChange} cardId={sheet.cardId} amount={sheet.amount} fromId={sheet.fromId} />}
       {sheet?.type === "card_balance" && <CardBalancePanel key={nonce} open onOpenChange={onOpenChange} cardId={sheet.cardId} />}
       {sheet?.type === "debt" && <DebtPanel key={nonce} open onOpenChange={onOpenChange} debt={sheet.debt} direction={sheet.direction} preset={sheet.preset} />}
       {sheet?.type === "debt_payment" && <DebtPaymentPanel key={nonce} open onOpenChange={onOpenChange} debtId={sheet.debtId} />}

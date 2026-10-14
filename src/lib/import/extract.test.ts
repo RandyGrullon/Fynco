@@ -123,20 +123,20 @@ describe("tarjetas", () => {
     r.closing_date = "2026-09-14";
     mergeModelOutput(
       r,
-      { rows: [["20/08", "SUPERMARKET POLLENCA", 762.29, "otro", null, "5411"], ["21/08", "Pago Via App", -36640.78, "pago_tarjeta", null, null], ["14/09", "CARGO SOBREGIRO", 600, "otro", null, null]] },
+      { rows: [["20/08", "SUPERMARKET POLLENCA", 762.29, "otro", null, "5411"], ["21/08", "Pago Via App", -25000, "pago_tarjeta", null, null], ["14/09", "CARGO SOBREGIRO", 600, "otro", null, null]] },
       all,
       "2026-10-13",
       "credit",
     );
     expect(r.rows.map((x) => [x.date, x.amount, x.category_name, x.card_payment])).toEqual([
       ["2026-08-20", -76_229, "Supermercado", false],
-      ["2026-08-21", 3_664_078, null, true],
+      ["2026-08-21", 2_500_000, null, true],
       ["2026-09-14", -60_000, null, false],
     ]);
   });
 
   it("cuenta los renglones con movimientos para avisar si falta alguno", () => {
-    const chunk = "****-5263 | 65,000.00 | 0.00 | 14/09/2026\n20/08 | 19/08 #5432 | TASTY ASIA | 1,623.39 | MCC 5812\n20/08 | 19/08 #3112 | TASTY ASIA | 1,623.39 | MCC 5812\n21/08 | 21/08 #8439 | Pago Via App | -36,640.78\n01/09/2026 BALANCE ANTERIOR | 45,230.15\n0 | 0.00 | 2,470.50 | 67,937.23";
+    const chunk = "****-1234 | 50,000.00 | 0.00 | 14/09/2026\n20/08 | 19/08 #5432 | CAFE CENTRAL | 1,623.39 | MCC 5812\n20/08 | 19/08 #3112 | CAFE CENTRAL | 1,623.39 | MCC 5812\n21/08 | 21/08 #8439 | Pago Via App | -25,000.00\n01/09/2026 BALANCE ANTERIOR | 30,000.00\n0 | 0.00 | 1,800.00 | 48,500.00";
     expect(countMovementLines(chunk)).toBe(3);
   });
 });

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BarChart3, ChevronRight, FileText, HandCoins, LogOut, MessageCircle, Repeat, Settings, ShieldCheck, Target, Wallet, type LucideIcon } from "lucide-react";
+import { BarChart3, CalendarRange, ChevronRight, FileText, HandCoins, LogOut, MessageCircle, Repeat, Settings, ShieldCheck, Target, Wallet, type LucideIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shell/page-header";
 import { initials } from "@/components/visuals";
@@ -20,6 +20,7 @@ interface Item {
 }
 
 const MAIN: Item[] = [
+  { href: "/plan", label: "Plan", hint: "Cuánto puedes gastar y qué hay que pagar", icon: CalendarRange },
   { href: "/cuentas", label: "Cuentas", hint: "Saldos, tarjetas y efectivo", icon: Wallet },
   { href: "/deudas", label: "Deudas", hint: "A quién le debes y quién te debe", icon: HandCoins },
   { href: "/metas", label: "Metas", hint: "Ahorra para lo que quieres", icon: Target },

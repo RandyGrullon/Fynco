@@ -71,7 +71,7 @@ function describeDraft(d: UIDraft) {
     case "settlement":
       return `pago de ${x.from_name} a ${x.to_name} por ${formatMoney(x.amount, x.currency)} en ${x.group_name} (${status})`;
     case "recurring":
-      return `${x.kind === "income" ? "ingreso" : "gasto"} recurrente ${x.frequency} de ${formatMoney(x.amount, x.currency)} «${x.description}» (${status})`;
+      return `${x.kind === "income" ? "ingreso" : x.kind === "transfer" ? "transferencia" : "gasto"} recurrente ${x.frequency} de ${formatMoney(x.amount, x.currency)} «${x.description}» (${status})`;
     case "account":
       return `cuenta nueva «${x.name}» (${x.account_type}${x.institution ? `, ${x.institution}` : ""}) (${status})`;
     case "card_payment":

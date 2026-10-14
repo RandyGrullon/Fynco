@@ -68,3 +68,30 @@ export function inDays(n: number): string {
   if (n === 1) return "mañana";
   return `en ${n} días`;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Ciclos (para el plan): en qué corte cae un consumo y cuándo se paga ese corte.
+// ---------------------------------------------------------------------------------------------
+
+/** Corte al que pertenece un consumo de esa fecha: el primero en o después de ella (el día de corte entra). */
+export function cutFor(date: string, statementDay: number): string {
+  return iso(cutOnOrAfter(statementDay, parse(date)));
+}
+
+/** Último corte en o antes de `date` (el corte de hoy ya está cerrado). */
+export function lastCutOnOrBefore(date: string, statementDay: number): string {
+  const d = parse(date);
+  const here = on(d.y, d.m, statementDay);
+  return iso(cmp(here, d) <= 0 ? here : on(d.y, d.m - 1, statementDay));
+}
+
+/** El corte siguiente a `cut`. */
+export function nextCut(cut: string, statementDay: number): string {
+  const c = parse(cut);
+  return iso(on(c.y, c.m + 1, statementDay));
+}
+
+/** Primer día `day` del mes estrictamente después de `date` (fecha de pago o límite de un corte). */
+export function firstDayAfter(date: string, day: number): string {
+  return iso(dueAfter(day, parse(date)));
+}

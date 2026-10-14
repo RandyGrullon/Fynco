@@ -76,7 +76,8 @@ interface Props {
   preset?: Partial<RecurringInput>;
 }
 
-type Errors = Partial<Record<"amount" | "description" | "account" | "end", string>>;
+type Errors = Partial<Record<"amount" | "description" | "account" | "to" | "end", string>>;
+type Kind = "expense" | "income" | "transfer";
 
 export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
   const { data: accounts = [] } = useAccounts();
@@ -85,7 +86,8 @@ export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
   const editing = Boolean(rule);
   const today = todayISO();
 
-  const [kind, setKind] = useState<"expense" | "income">(rule?.kind ?? preset?.kind ?? "expense");
+  const [kind, setKind] = useState<Kind>(rule?.kind ?? preset?.kind ?? "expense");
+  const [toAccountId, setToAccountId] = useState<string | null>(rule?.to_account_id ?? preset?.to_account_id ?? null);
   const [amount, setAmount] = useState(rule ? centsToInput(rule.amount) : preset?.amount ? centsToInput(preset.amount) : "");
   const [description, setDescription] = useState(rule?.description ?? preset?.description ?? "");
   const [categoryId, setCategoryId] = useState<string | null>(rule?.category_id ?? preset?.category_id ?? null);
@@ -105,6 +107,10 @@ export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
 
   const account = accounts.find((a) => a.id === accountId);
   const currency = account?.currency ?? "DOP";
+  const isTransfer = kind === "transfer";
+  // Destinos posibles: otras cuentas en la misma moneda (cuotas de deudas, efectivo, ahorro).
+  const destinations = accounts.filter((a) => !a.archived_at && a.id !== accountId && a.currency === currency);
+  const toAccount = destinations.find((a) => a.id === toAccountId);
   const busy = m.create.isPending || m.update.isPending || m.remove.isPending;
 
   // El trigger reinicia el calendario si cambian inicio o frecuencia; si el inicio es pasado, se registran los pendientes.
@@ -116,11 +122,12 @@ export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
     e.preventDefault();
     const cents = parseMoney(amount);
     const category = categories.find((c) => c.id === categoryId);
-    const desc = description.trim() || category?.name || "";
+    const desc = description.trim() || (isTransfer ? (toAccount ? `${account?.name ?? ""} → ${toAccount.name}`.trim() : "") : category?.name) || "";
     const next: Errors = {};
     if (!cents || cents <= 0) next.amount = "Escribe un monto mayor que cero.";
     if (!desc) next.description = "Escribe una descripción o elige una categoría.";
     if (!accountId) next.account = "Elige una cuenta.";
+    if (isTransfer && !toAccount) next.to = "Elige a qué cuenta va (en la misma moneda).";
     if (endOn && endOn < startOn) next.end = "La fecha final no puede ser antes del inicio.";
     setErrors(next);
     if (Object.keys(next).length || !cents || !accountId) return;
@@ -128,9 +135,10 @@ export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
     const input: RecurringInput = {
       account_id: accountId,
       kind,
+      to_account_id: isTransfer ? (toAccount?.id ?? null) : null,
       amount: cents,
       description: desc,
-      category_id: categoryId,
+      category_id: isTransfer ? null : categoryId,
       frequency,
       start_on: startOn,
       end_on: endOn || null,
@@ -144,7 +152,7 @@ export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
       return; // el error ya se mostró en un aviso
     }
     toast({
-      title: rule ? "Cambios guardados" : kind === "income" ? "Ingreso fijo creado" : "Gasto fijo creado",
+      title: rule ? "Cambios guardados" : kind === "income" ? "Ingreso fijo creado" : isTransfer ? "Transferencia fija creada" : "Gasto fijo creado",
       description: `${desc} · ${formatMoney(cents, currency)} ${FREQUENCY_LABEL[frequency].toLowerCase()}`,
     });
     onOpenChange(false);
@@ -164,7 +172,7 @@ export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
 
   return (
     <Panel open={open} onOpenChange={onOpenChange}>
-      <PanelContent title={editing ? "Editar recurrente" : kind === "income" ? "Nuevo ingreso fijo" : "Nuevo gasto fijo"}>
+      <PanelContent title={editing ? "Editar recurrente" : kind === "income" ? "Nuevo ingreso fijo" : isTransfer ? "Nueva transferencia fija" : "Nuevo gasto fijo"}>
         <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
           <Segmented
             label="Tipo"
@@ -176,22 +184,30 @@ export function RecurringPanel({ open, onOpenChange, rule, preset }: Props) {
             options={[
               { value: "expense", label: "Gasto" },
               { value: "income", label: "Ingreso" },
+              { value: "transfer", label: "Transferencia" },
             ]}
           />
-          <AmountField value={amount} onChange={setAmount} currency={currency} autoFocus={!editing} tone={kind === "income" ? "positive" : "negative"} error={errors.amount} />
+          <AmountField value={amount} onChange={setAmount} currency={currency} autoFocus={!editing} tone={kind === "income" ? "positive" : kind === "expense" ? "negative" : undefined} error={errors.amount} />
           <Field label="Descripción" htmlFor="rec-desc" error={errors.description}>
             <Input
               id="rec-desc"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={kind === "income" ? "Salario, alquiler cobrado…" : "Netflix, luz, gimnasio…"}
+              placeholder={kind === "income" ? "Salario, alquiler cobrado…" : isTransfer ? "Cuota del préstamo, ahorro…" : "Netflix, luz, gimnasio…"}
               maxLength={120}
               aria-invalid={Boolean(errors.description)}
             />
           </Field>
-          <Field label="Categoría">
-            <CategoryPicker categories={categories} kind={kind} value={categoryId} onChange={setCategoryId} />
-          </Field>
+          {!isTransfer && (
+            <Field label="Categoría">
+              <CategoryPicker categories={categories} kind={kind === "income" ? "income" : "expense"} value={categoryId} onChange={setCategoryId} />
+            </Field>
+          )}
+          {isTransfer && (
+            <Field label="Entra a" htmlFor="rec-to" error={errors.to} hint="Por ejemplo, la cuenta de una deuda que pagas en cuotas.">
+              <AccountSelect id="rec-to" accounts={destinations} value={toAccount?.id ?? null} onChange={setToAccountId} placeholder="Elige la cuenta destino" />
+            </Field>
+          )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label={kind === "income" ? "Entra a" : "Sale de"} htmlFor="rec-account" error={errors.account}>
               <AccountSelect id="rec-account" accounts={accounts} value={accountId} onChange={setAccountId} />

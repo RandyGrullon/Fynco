@@ -9,13 +9,26 @@ import { BigMoney } from "@/components/money";
 import { useAccountMutations, useAccounts } from "@/hooks/queries";
 import { toast } from "@/hooks/use-toast";
 import { todayISO } from "@/lib/dates";
-import { formatMoney, parseMoney } from "@/lib/money";
+import { centsToInput, formatMoney, parseMoney } from "@/lib/money";
 
 /**
  * "Tarjeta pagada": registra el pago desde la cuenta que elijas. Lo consumido con la tarjeta
  * ya está en su deuda; el dinero sale de la cuenta solo ahora, en la fecha del pago.
  */
-export function CardPaymentPanel({ open, onOpenChange, cardId }: { open: boolean; onOpenChange: (o: boolean) => void; cardId?: string }) {
+export function CardPaymentPanel({
+  open,
+  onOpenChange,
+  cardId,
+  amount: presetAmount,
+  fromId,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  cardId?: string;
+  /** Monto ya lleno (p. ej. el corte que toca pagar según el plan). */
+  amount?: number;
+  fromId?: string | null;
+}) {
   const { data: accounts = [] } = useAccounts();
   const m = useAccountMutations();
   const active = accounts.filter((a) => !a.archived_at);
@@ -24,10 +37,11 @@ export function CardPaymentPanel({ open, onOpenChange, cardId }: { open: boolean
   const card = cards.find((c) => c.id === (cardChoice || cardId)) ?? (cardId ? undefined : cards[0]);
   const debt = card ? Math.max(0, -card.balance) : 0;
   const sources = active.filter((a) => a.type !== "credit" && a.currency === card?.currency);
-  const [fromChoice, setFromChoice] = useState("");
+  const [fromChoice, setFromChoice] = useState(fromId ?? card?.pay_from_account_id ?? "");
   const from = sources.find((a) => a.id === fromChoice) ?? sources.find((a) => a.is_default) ?? sources[0];
-  const [mode, setMode] = useState<"total" | "other">(debt > 0 ? "total" : "other");
-  const [amount, setAmount] = useState("");
+  const presetIsTotal = presetAmount == null || presetAmount === debt;
+  const [mode, setMode] = useState<"total" | "other">(debt > 0 && presetIsTotal ? "total" : "other");
+  const [amount, setAmount] = useState(presetAmount && !presetIsTotal ? centsToInput(presetAmount) : "");
   const [date, setDate] = useState(todayISO());
   const [error, setError] = useState<string | null>(null);
 

@@ -10,6 +10,7 @@ import { SectionTitle } from "@/components/shell/page-header";
 import { useSheets } from "@/components/shell/sheets";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { PendingInvites } from "@/components/shared/pending-invites";
+import { PlanCard } from "@/components/plan/plan-card";
 import { AvatarStack, Monogram, accountMonogram, initials } from "@/components/visuals";
 import { useAccounts, useCashflow, useDebts, useProfile, useRecentTransactions, useRecurring, useSharedOverview, useUpdateProfile } from "@/hooks/queries";
 import { debtView } from "@/components/debts/debt-view";
@@ -132,6 +133,8 @@ export default function InicioPage() {
 
       <PendingInvites compact />
 
+      <PlanCard />
+
       {hasGroups ? (
         <Link href="/compartido" className="flex flex-col gap-3.5 rounded-2xl border border-secondary bg-card p-4 transition-colors hover:bg-[#1b1e24] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <span className="flex items-center justify-between">
@@ -235,7 +238,12 @@ export default function InicioPage() {
                   <span className="block truncate text-sm font-semibold">{r.description}</span>
                   <span className="block text-xs text-muted-foreground">{r.next_run_on === todayISO() ? "Hoy" : shortDate(r.next_run_on)}</span>
                 </span>
-                <Money amount={r.kind === "income" ? r.amount : -r.amount} currency={active.find((a) => a.id === r.account_id)?.currency} sign="always" className={r.kind === "income" ? "text-sm font-bold text-positive" : "text-sm font-bold"} />
+                <Money
+                  amount={r.kind === "expense" ? -r.amount : r.amount}
+                  currency={active.find((a) => a.id === r.account_id)?.currency}
+                  sign={r.kind === "transfer" ? "never" : "always"}
+                  className={r.kind === "income" ? "text-sm font-bold text-positive" : "text-sm font-bold"}
+                />
               </li>
             ))}
           </ul>

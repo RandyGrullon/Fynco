@@ -4,6 +4,8 @@
 import { addDays, format, isValid, parse } from "date-fns";
 import type { createSupabaseServer } from "@/lib/supabase/server";
 import { cardDates } from "@/lib/card-dates";
+import { buildPlan } from "@/lib/plan/engine";
+import { loadPlanInput } from "@/lib/plan/load";
 import { debtStatus, debtTerms, defaultFirstDue, interestLabel, type DebtFrequency, type InterestPeriod } from "@/lib/debts";
 import { computeSharedOverview, myMember, type GroupDetail } from "@/lib/data/groups";
 import { monthRange, parseDate } from "@/lib/dates";
@@ -190,6 +192,11 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
       "Resumen financiero actual del usuario: cuentas con saldos (y, en tarjetas de crédito, próxima fecha de corte y fecha límite de pago), deudas y préstamos con personas (cuánto falta y la próxima cuota), ingresos y gastos de este mes, totales de lo que le deben y lo que debe en gastos compartidos, metas activas con su progreso y cobros recurrentes de los próximos 7 días.",
   },
   {
+    name: "get_plan",
+    description:
+      "Plan de flujo de caja: su dinero (sin lo prestado que no es suyo), cuánto puede gastar en esta quincena, el próximo pago de tarjeta (monto, fecha y desde qué cuenta), deudas, el saldo al final del plan, el punto más bajo y los próximos movimientos con la cuenta con que se pagan. Úsalo para '¿cuánto puedo gastar?', '¿con qué pago esto?', '¿cuándo pago la tarjeta?' o '¿cómo voy a quedar?'.",
+  },
+  {
     name: "list_transactions",
     description:
       "Lista movimientos del usuario (más recientes primero) con filtros opcionales y totales del período. Úsalo para preguntas sobre gastos o ingresos específicos (por texto, cuenta o categoría). Para totales por categoría usa spending_by_category.",
@@ -301,11 +308,13 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: "propose_recurring",
     description:
-      "Prepara un BORRADOR de ingreso o gasto recurrente (salario, alquiler, suscripciones) para que el usuario lo confirme. No guarda nada.",
+      "Prepara un BORRADOR de ingreso, gasto o transferencia recurrente (salario, alquiler, suscripciones, cuotas de una deuda, ahorro) para que el usuario lo confirme. Para algo de una sola vez en una fecha (un cobro especial, una compra programada), usa frequency monthly y end_date igual a start_date. No guarda nada.",
     parameters: {
       type: "OBJECT",
       properties: {
-        kind: { type: "STRING", format: "enum", enum: ["expense", "income"], description: "expense = gasto fijo, income = ingreso fijo." },
+        kind: { type: "STRING", format: "enum", enum: ["expense", "income", "transfer"], description: "expense = gasto fijo, income = ingreso fijo, transfer = pasar dinero a otra cuenta (cuota de una deuda, ahorro, efectivo)." },
+        to_account: { type: "STRING", description: "Solo transfer: cuenta a donde va (misma moneda)." },
+        end_date: { type: "STRING", description: "Última fecha YYYY-MM-DD, si termina." },
         amount: { type: "NUMBER", description: "Monto de cada cobro o pago." },
         description: { type: "STRING", description: "Descripción corta, p. ej. Netflix." },
         frequency: { type: "STRING", format: "enum", enum: ["daily", "weekly", "biweekly", "monthly", "quarterly", "yearly"], description: "Frecuencia. biweekly = quincenal." },
@@ -859,6 +868,29 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
             .map((x) => ({ category: x.category, total: fmt(x.total, cur), total_cents: x.total, percent: total > 0 ? Math.round((x.total / total) * 100) : 0 })),
         };
       }),
+    };
+  }
+
+  async function getPlan() {
+    const p = buildPlan(await loadPlanInput(supabase as never, userId, today, currency));
+    const m = (cents: number) => fmt(cents, p.currency);
+    const current = p.budgetRows.find((r) => r.current);
+    return {
+      today,
+      plan_until: p.horizonEnd,
+      my_money: m(p.myMoney),
+      borrowed_not_yours: p.reserved ? m(p.reserved) : null,
+      can_spend_this_period: p.canSpend ? { amount: m(p.canSpend.amount), until: p.canSpend.end, budget: current ? m(current.budget) : null, spent: current ? m(current.spent) : null } : "sin presupuesto del día a día",
+      next_card_payment: p.nextCard ? { card: p.nextCard.name, amount: fmt(p.nextCard.amount, p.nextCard.currency), pay_on: p.nextCard.date, due_on: p.nextCard.dueDate, from_account: p.nextCard.from } : null,
+      debts_in_installments: m(p.debts),
+      balance_at_end: m(p.endBalance),
+      lowest_point: { date: p.low.date, balance: m(p.low.balance), below_cushion: p.belowCushion },
+      upcoming: p.events
+        .filter((e) => !e.past && e.type !== "estimate")
+        .slice(0, 12)
+        .map((e) => ({ date: e.date, what: e.label, with: e.with, amount: fmt(e.amount, e.currency, true), balance_after: e.balance === null ? null : m(e.balance) })),
+      cards: p.cards.map((g) => ({ card: g.name, pays_from: g.fromName, next_cuts: g.cycles.slice(0, 2).map((c) => ({ cut: c.cut, pay_on: c.payDate, due_on: c.dueDate, total: fmt(c.total, g.currency) })) })),
+      note: "Calculado con los recurrentes, las tarjetas y el presupuesto del día a día del usuario. Los montos ya están formateados.",
     };
   }
 
@@ -1512,8 +1544,8 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
 
   async function proposeRecurring(args: Record<string, unknown>) {
     if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
-    const kind = args.kind === "income" ? "income" : args.kind === "expense" ? "expense" : null;
-    if (!kind) return { error: "Indica si es un gasto (expense) o un ingreso (income)." };
+    const kind = args.kind === "income" ? "income" : args.kind === "expense" ? "expense" : args.kind === "transfer" ? "transfer" : null;
+    if (!kind) return { error: "Indica si es un gasto (expense), un ingreso (income) o una transferencia (transfer)." };
     const amount = toCents(args.amount);
     if (!amount) return { error: "El monto debe ser un número mayor que cero." };
     const FREQS = ["daily", "weekly", "biweekly", "monthly", "quarterly", "yearly"] as const;
@@ -1523,9 +1555,16 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     const [accs, cats] = await Promise.all([accounts(), categories()]);
     const accName = str(args.account, 60);
     const account = (accName ? findAccount(accs, accName) : undefined) ?? defaultAccount(accs);
-    const description = str(args.description) || (kind === "income" ? "Ingreso fijo" : "Gasto fijo");
-    const category = findCategory(cats, kind, str(args.category, 40), description) ?? null;
+    let toAccount: AccountLite | undefined;
+    if (kind === "transfer") {
+      const toName = str(args.to_account, 60);
+      toAccount = toName ? findAccount(accs.filter((a) => a.id !== account?.id && a.currency === account?.currency), toName) : undefined;
+      if (!toAccount) return { error: toName ? `No encontré la cuenta "${toName}" en ${account?.currency ?? currency}.` : "¿A qué cuenta va la transferencia?", accounts: accs.filter((a) => !a.archived_at).map((a) => a.name) };
+    }
+    const description = str(args.description) || (kind === "income" ? "Ingreso fijo" : kind === "transfer" ? `${account?.name ?? ""} → ${toAccount?.name ?? ""}` : "Gasto fijo");
+    const category = kind === "transfer" ? null : (findCategory(cats, kind, str(args.category, 40), description) ?? null);
     const startOn = validDate(args.start_date) ?? today;
+    const endOn = validDate(args.end_date);
     const draft: RecurringDraft = {
       type: "recurring",
       id: crypto.randomUUID(),
@@ -1537,14 +1576,26 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
       category_name: category?.name ?? null,
       account_id: account?.id ?? null,
       account_name: account?.name ?? null,
+      to_account_id: toAccount?.id ?? null,
+      to_account_name: toAccount?.name ?? null,
       frequency,
       start_on: startOn,
+      end_on: endOn && endOn >= startOn ? endOn : null,
     };
     drafts.push(draft);
     return {
       ok: true,
       status: "borrador_pendiente",
-      draft: { kind: kind === "income" ? "ingreso fijo" : "gasto fijo", amount: fmt(amount, draft.currency), description, frequency, start: startOn, account: draft.account_name },
+      draft: {
+        kind: kind === "income" ? "ingreso fijo" : kind === "transfer" ? "transferencia fija" : "gasto fijo",
+        amount: fmt(amount, draft.currency),
+        description,
+        frequency,
+        start: startOn,
+        end: draft.end_on,
+        account: draft.account_name,
+        to: draft.to_account_name,
+      },
       instruction: "Aún NO está creado. Dile al usuario que revise la tarjeta y toque Confirmar.",
     };
   }
@@ -1561,6 +1612,8 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
           return await spendingByCategory(args);
         case "get_shared_balances":
           return await getSharedBalances();
+        case "get_plan":
+          return await getPlan();
         case "propose_transaction":
           return await proposeTransaction(args);
         case "propose_shared_expense":

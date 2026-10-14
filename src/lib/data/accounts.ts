@@ -28,6 +28,9 @@ export interface AccountInput {
   statement_day?: number | null;
   payment_due_day?: number | null;
   credit_limit?: number | null;
+  pay_day?: number | null;
+  pay_from_account_id?: string | null;
+  reserved?: boolean;
 }
 
 export async function createAccount(input: AccountInput): Promise<AccountRow> {

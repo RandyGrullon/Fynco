@@ -88,11 +88,14 @@ export interface SettlementDraft {
   occurred_on: string;
 }
 
-/** Crear un ingreso o gasto recurrente. */
+/** Crear un ingreso, gasto o transferencia recurrente. */
 export interface RecurringDraft {
   type: "recurring";
   id: string;
-  kind: "expense" | "income";
+  kind: "expense" | "income" | "transfer";
+  /** Solo transferencias: cuenta destino. */
+  to_account_id?: string | null;
+  to_account_name?: string | null;
   amount: number;
   currency: string;
   description: string;
@@ -102,6 +105,7 @@ export interface RecurringDraft {
   account_name: string | null;
   frequency: "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "yearly";
   start_on: string;
+  end_on?: string | null;
 }
 
 /** Crear una cuenta o tarjeta de crédito. */

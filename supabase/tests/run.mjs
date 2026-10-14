@@ -465,5 +465,69 @@ await as(RANDY, async () => {
   });
 }
 
+// ---------- Plan: cuentas, recurrentes de transferencia, ajustes y periodos ----------
+{
+  const balance = async (id) => Number((await one(`select balance from account_balances where account_id = $1`, [id])).balance);
+  let bank, deuda, card, usd, anaAcc;
+  await as(RANDY, async () => {
+    bank = (await one(`insert into accounts (name, type, opening_balance) values ('Plan banco', 'checking', 10000000) returning id`)).id;
+    deuda = (await one(`insert into accounts (name, type, opening_balance) values ('Deuda papi', 'other', -11060000) returning id`)).id;
+    usd = (await one(`insert into accounts (name, type, currency) values ('Plan USD', 'savings', 'USD') returning id`)).id;
+    card = (await one(`insert into accounts (name, type, statement_day, payment_due_day, pay_day, pay_from_account_id) values ('Plan Visa', 'credit', 13, 9, 4, $1) returning id`, [bank])).id;
+    check('tarjeta con día de pago y cuenta desde donde se paga', Boolean(card));
+
+    check('reserved solo en cuentas other', Boolean(await fails(`insert into accounts (name, type, reserved) values ('Mal', 'checking', true)`)));
+    const res = await one(`insert into accounts (name, type, opening_balance, reserved) values ('Préstamo embajada', 'other', -10000000, true) returning reserved`);
+    check('una cuenta other puede ser prestado', res.reserved === true);
+    check('pay_day fuera de 1-31 se rechaza', Boolean(await fails(`update accounts set pay_day = 32 where id = $1`, [card])));
+    check('no se paga desde sí misma', Boolean(await fails(`update accounts set pay_from_account_id = id where id = $1`, [card])));
+  });
+  await as(ANA, async () => {
+    anaAcc = (await one(`insert into accounts (name, type) values ('Cuenta de Ana plan', 'checking') returning id`)).id;
+  });
+  await as(RANDY, async () => {
+    check('no se paga desde la cuenta de otra persona', (await fails(`update accounts set pay_from_account_id = $1 where id = $2`, [anaAcc, card]))?.includes('invalid_account'));
+
+    // Cuota planificada: transferencia de una sola vez el 16 oct, y otra mensual desde el 1 oct.
+    await q(
+      `insert into recurring_rules (account_id, to_account_id, kind, amount, description, frequency, start_on, end_on, next_run_on)
+       values ($1, $2, 'transfer', 1000000, 'Cuota papi', 'monthly', '2026-10-16', '2026-10-16', '2026-10-16')`,
+      [bank, deuda],
+    );
+    check('transferencia recurrente sin destino se rechaza', Boolean(await fails(`insert into recurring_rules (account_id, kind, amount, description, frequency, start_on, next_run_on) values ($1, 'transfer', 100, 'x', 'monthly', '2026-10-01', '2026-10-01')`, [bank])));
+    check('destino en otra moneda se rechaza', (await fails(`insert into recurring_rules (account_id, to_account_id, kind, amount, description, frequency, start_on, next_run_on) values ($1, $2, 'transfer', 100, 'x', 'monthly', '2026-10-01', '2026-10-01')`, [bank, usd]))?.includes('transfer_currency_mismatch'));
+    check('destino de otra persona se rechaza', Boolean(await fails(`insert into recurring_rules (account_id, to_account_id, kind, amount, description, frequency, start_on, next_run_on) values ($1, $2, 'transfer', 100, 'x', 'monthly', '2026-10-01', '2026-10-01')`, [bank, anaAcc])));
+  });
+  await q(`select process_recurring($1, '2026-10-20')`, [RANDY]);
+  await q(`select process_recurring($1, '2026-10-21')`, [RANDY]);
+  const legs = await q(`select t.amount, t.account_id, t.transfer_id from transactions t where t.description = 'Cuota papi' order by t.amount`);
+  check('la cuota crea dos patas con el mismo transfer_id', legs.length === 2 && legs[0].transfer_id === legs[1].transfer_id && Number(legs[0].amount) === -1000000, legs);
+  check('correr dos veces no duplica', legs.length === 2);
+  await as(RANDY, async () => {
+    check('la cuota sale del banco y baja la deuda', (await balance(bank)) === 9000000 && (await balance(deuda)) === -10060000);
+    const rule = await one(`select active from recurring_rules where description = 'Cuota papi'`);
+    check('la de una sola vez queda inactiva', rule.active === false);
+
+    // Ajustes y periodos: solo de su dueño.
+    await q(`insert into plan_settings (monthly_budget, cushion, budget_account_id, rates, excluded_category_ids) values (3500000, 500000, $1, '{"USD": 62, "EUR": 69}', '{}')`, [card]);
+    check('guarda los ajustes del plan', Number((await one(`select monthly_budget from plan_settings`)).monthly_budget) === 3500000);
+    check('cuenta del día a día de otra persona se rechaza', Boolean(await fails(`update plan_settings set budget_account_id = $1`, [anaAcc])));
+    await q(`insert into plan_periods (name, start_on, end_on, budget, currency, cash_amount, account_id) values ('Viaje', '2026-11-29', '2027-01-09', 130000, 'EUR', 30000, $1)`, [card]);
+    check('periodo con efectivo mayor que el presupuesto se rechaza', Boolean(await fails(`insert into plan_periods (name, start_on, end_on, budget, cash_amount) values ('x', '2026-01-01', '2026-01-02', 100, 200)`)));
+    check('periodo que termina antes de empezar se rechaza', Boolean(await fails(`insert into plan_periods (name, start_on, end_on, budget) values ('x', '2026-01-02', '2026-01-01', 100)`)));
+    const shares = await q(`select * from my_shared_shares('2000-01-01', '2100-01-01')`);
+    check('tu parte de lo compartido por día', shares.length > 0 && shares.every((s) => Number(s.amount) > 0), shares.length);
+  });
+  await as(ANA, async () => {
+    check('nadie más ve tus ajustes del plan', (await q(`select * from plan_settings where user_id = $1`, [RANDY])).length === 0);
+    check('nadie más ve tus periodos', (await q(`select * from plan_periods where user_id = $1`, [RANDY])).length === 0);
+    check('nadie más cambia tus periodos', (await q(`update plan_periods set budget = 1 where user_id = $1 returning id`, [RANDY])).length === 0);
+  });
+  await db.exec(`set role anon`);
+  const anonPlan = await fails(`select * from plan_settings`);
+  await db.exec(`reset role`);
+  check('anon no lee los ajustes del plan', Boolean(anonPlan), anonPlan);
+}
+
 console.log(`\n${passed} ok, ${failures} fallos`);
 process.exit(failures ? 1 : 0);

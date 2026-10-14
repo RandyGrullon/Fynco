@@ -63,8 +63,38 @@ select create_transfer('ID_ORIGEN', 'ID_DESTINO', 1000000, null, '2026-10-14', '
 
 -- Crear una tarjeta (deuda inicial negativa; días de corte y pago; límite)
 insert into accounts (user_id, name, type, currency, opening_balance, institution, last4, statement_day, payment_due_day, credit_limit)
-values (auth.uid(), 'Visa IKEA Popular', 'credit', 'DOP', -3664078, 'Popular', '5263', 14, 9, 6500000);
+values (auth.uid(), 'Visa Popular', 'credit', 'DOP', -2500000, 'Popular', '1234', 14, 9, 5000000);
 ```
+
+## Plan (flujo de caja)
+
+La pantalla `/plan` se calcula con lo que ya hay más estos ajustes:
+
+```sql
+-- Tarjeta: día en que de verdad se paga (si no, la fecha límite) y desde qué cuenta (si no, la predeterminada).
+update accounts set pay_day = 4, pay_from_account_id = 'ID_CUENTA' where id = 'ID_TARJETA';
+
+-- Dinero prestado que no es tuyo y se devuelve completo (solo cuentas 'other' con saldo negativo): resta de "tu dinero".
+update accounts set reserved = true where id = 'ID_CUENTA_OTHER';
+-- Si es false, la cuenta 'other' negativa es una deuda que se paga en cuotas.
+
+-- Cuota planificada: transferencia recurrente (misma moneda). De una sola vez: end_on = start_on.
+insert into recurring_rules (user_id, account_id, to_account_id, kind, amount, description, frequency, start_on, end_on, next_run_on)
+values (auth.uid(), 'ID_ORIGEN', 'ID_DEUDA', 1000000, 'Cuota papi', 'monthly', '2026-10-16', '2026-10-16', '2026-10-16');
+
+-- Cobro de una sola vez (nómina en fecha especial): ingreso recurrente con categoría Salario y end_on = start_on.
+insert into recurring_rules (user_id, account_id, kind, amount, description, category_id, frequency, start_on, end_on, next_run_on)
+values (auth.uid(), 'ID_CUENTA', 'income', 3390000, 'Nómina', (select id from categories where user_id is null and name = 'Salario'), 'monthly', '2026-10-16', '2026-10-16', '2026-10-16');
+
+-- Ajustes del plan (una fila por persona) y periodos con su propio presupuesto (un viaje).
+insert into plan_settings (user_id, monthly_budget, cushion, horizon_days, budget_account_id, rates, excluded_category_ids)
+values (auth.uid(), 3500000, 0, 100, 'ID_TARJETA', '{"USD": 62, "EUR": 69}', '{}')
+on conflict (user_id) do update set monthly_budget = excluded.monthly_budget, rates = excluded.rates;
+insert into plan_periods (user_id, name, start_on, end_on, budget, currency, cash_amount, account_id)
+values (auth.uid(), 'Viaje', '2026-11-29', '2027-01-09', 130000, 'EUR', 30000, null);
+```
+
+Las quincenas van de un cobro de Salario al siguiente; los recurrentes que ya pasaron se registran solos al abrir la app.
 
 ## Deudas y préstamos con personas
 

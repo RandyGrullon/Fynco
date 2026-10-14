@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  CalendarRange,
   Grid2x2,
   HandCoins,
   Home,
@@ -22,7 +23,7 @@ import { LogoMark } from "@/components/brand";
 
 const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-const MORE_PATHS = ["/mas", "/cuentas", "/deudas", "/metas", "/recurrentes", "/estadisticas", "/ajustes", "/asistente", "/legal"];
+const MORE_PATHS = ["/mas", "/plan", "/cuentas", "/deudas", "/metas", "/recurrentes", "/estadisticas", "/ajustes", "/asistente", "/legal"];
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -75,6 +76,7 @@ const SIDE_ITEMS = [
   { href: "/inicio", label: "Inicio", icon: Home },
   { href: "/movimientos", label: "Movimientos", icon: List },
   { href: "/compartido", label: "Compartido", icon: Users },
+  { href: "/plan", label: "Plan", icon: CalendarRange },
   { href: "/cuentas", label: "Cuentas", icon: Wallet },
   { href: "/deudas", label: "Deudas", icon: HandCoins },
   { href: "/metas", label: "Metas", icon: Target },

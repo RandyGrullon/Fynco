@@ -10,7 +10,9 @@ export async function fetchRecurring(): Promise<RecurringRule[]> {
 
 export interface RecurringInput {
   account_id: string;
-  kind: "income" | "expense";
+  kind: "income" | "expense" | "transfer";
+  /** Solo transferencias: cuenta destino (misma moneda). */
+  to_account_id?: string | null;
   amount: number;
   description: string;
   category_id: string | null;

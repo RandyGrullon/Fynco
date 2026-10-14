@@ -101,12 +101,13 @@ export function useDraftActions() {
           await recurring.create.mutateAsync({
             account_id: account.id,
             kind: d.kind,
+            to_account_id: d.kind === "transfer" ? (d.to_account_id ?? null) : null,
             amount: d.amount,
             description: d.description,
             category_id: d.category_id,
             frequency: d.frequency,
             start_on: d.start_on,
-            end_on: null,
+            end_on: d.end_on ?? null,
             weekend_policy: "keep",
           });
           break;
@@ -198,6 +199,7 @@ export function useDraftActions() {
       onOpenChange={(o) => !o && setEditingRecurring(null)}
       preset={{
         kind: editingRecurring.kind,
+        to_account_id: editingRecurring.to_account_id ?? null,
         amount: editingRecurring.amount,
         description: editingRecurring.description,
         category_id: editingRecurring.category_id,
@@ -268,7 +270,7 @@ function labelFor(d: Draft) {
     case "settlement":
       return `Saldar · ${d.group_name}`;
     case "recurring":
-      return d.kind === "income" ? "Ingreso recurrente" : "Gasto recurrente";
+      return d.kind === "income" ? "Ingreso recurrente" : d.kind === "transfer" ? "Transferencia recurrente" : "Gasto recurrente";
     case "account":
       return d.account_type === "credit" ? "Nueva tarjeta" : "Nueva cuenta";
     case "card_payment":
@@ -318,7 +320,7 @@ export function DraftCard({
   }
 
   const positive = (d.type === "transaction" || d.type === "recurring") && d.kind === "income";
-  const neutral = d.type === "transfer" || d.type === "settlement" || d.type === "card_payment";
+  const neutral = d.type === "transfer" || d.type === "settlement" || d.type === "card_payment" || (d.type === "recurring" && d.kind === "transfer");
   const label = labelFor(d);
   const when =
     d.type === "recurring"
@@ -383,7 +385,7 @@ export function DraftCard({
         <dl className="mt-3 grid grid-cols-2 gap-3">
           <Detail label="Frecuencia">{FREQUENCY_LABEL[d.frequency]}</Detail>
           <Detail label={d.kind === "income" ? "Entra a" : "Sale de"}>{actions.accountForTransaction(d)?.name ?? d.account_name ?? "Elige una cuenta"}</Detail>
-          <Detail label="Categoría">{d.category_name ?? "Sin categoría"}</Detail>
+          {d.kind === "transfer" ? <Detail label="Va a">{d.to_account_name ?? "Elige una cuenta"}</Detail> : <Detail label="Categoría">{d.category_name ?? "Sin categoría"}</Detail>}
         </dl>
       )}
 

@@ -18,7 +18,7 @@ export const PAGE_BREAK = "\f";
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const LOOSE: Record<string, string> = { a: "[aáàä]", e: "[eéèë]", i: "[iíìï]", o: "[oóòö]", u: "[uúùü]", n: "[nñ]" };
-/** "Grullón" también encuentra "GRULLON". */
+/** "Pérez" también encuentra "PEREZ". */
 const loose = (w: string) =>
   escapeRe(w.normalize("NFD").replace(/[̀-ͯ]/g, ""))
     .split("")

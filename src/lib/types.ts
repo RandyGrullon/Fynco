@@ -35,6 +35,12 @@ export interface Account {
   payment_due_day?: number | null;
   /** Tarjetas: límite de crédito en centavos. */
   credit_limit?: number | null;
+  /** Plan: día en que de verdad se paga la tarjeta (si no, payment_due_day). */
+  pay_day?: number | null;
+  /** Plan: desde qué cuenta se paga (si no, la predeterminada). */
+  pay_from_account_id?: string | null;
+  /** Plan: cuenta "other" con dinero prestado que se devuelve completo; resta de "tu dinero". */
+  reserved?: boolean;
   /** opening_balance + suma del libro (vista account_balances) */
   balance: number;
 }
@@ -108,7 +114,9 @@ export interface RecurringRule {
   id: string;
   user_id: string;
   account_id: string;
-  kind: "income" | "expense";
+  kind: "income" | "expense" | "transfer";
+  /** Solo transferencias: cuenta destino. */
+  to_account_id?: string | null;
   amount: number;
   description: string;
   category_id: string | null;
@@ -209,4 +217,31 @@ export interface Debt {
   from: string; // member_id
   to: string; // member_id
   amount: number;
+}
+
+/** Ajustes del plan (una fila por persona). Montos en centavos de la moneda principal. */
+export interface PlanSettings {
+  user_id: string;
+  monthly_budget: number | null;
+  cushion: number;
+  horizon_days: number;
+  budget_account_id: string | null;
+  /** Tasas a la moneda principal, p. ej. { USD: 62 }. */
+  rates: Record<string, number>;
+  excluded_category_ids: string[];
+}
+
+/** Periodo con presupuesto propio (un viaje). */
+export interface PlanPeriod {
+  id: string;
+  user_id: string;
+  name: string;
+  start_on: string;
+  end_on: string;
+  budget: number;
+  currency: string;
+  cash_amount: number | null;
+  account_id: string | null;
+  note: string | null;
+  created_at: string;
 }
