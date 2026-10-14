@@ -8,7 +8,7 @@ export default function NotFound() {
       <h1 className="text-xl font-extrabold">Esta página no existe</h1>
       <p className="max-w-sm text-sm text-muted-foreground">Puede que el enlace esté mal escrito o que lo hayan borrado.</p>
       <Button asChild>
-        <Link href="/inicio">Ir al inicio</Link>
+        <Link href="/plan">Ir al plan</Link>
       </Button>
     </main>
   );

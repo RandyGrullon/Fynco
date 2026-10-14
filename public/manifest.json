@@ -1,8 +1,8 @@
 {
   "name": "Fynco",
   "short_name": "Fynco",
-  "description": "Tu cartera personal, tus gastos compartidos y un asistente financiero en un solo lugar.",
-  "start_url": "/inicio",
+  "description": "Tu plan de finanzas y un asistente honesto que recuerda todo.",
+  "start_url": "/plan",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0E1013",
@@ -32,6 +32,16 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chat",
+      "url": "/chat"
+    },
+    {
+      "name": "Plan",
+      "url": "/plan"
     }
   ]
 }

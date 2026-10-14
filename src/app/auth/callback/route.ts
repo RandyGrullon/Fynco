@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const rawType = searchParams.get("type");
   const type = OTP_TYPES.find((t) => t === rawType) ?? null;
-  const next = safeNext(searchParams.get("next")) ?? (type === "recovery" ? "/nueva-contrasena" : "/inicio");
+  const next = safeNext(searchParams.get("next")) ?? (type === "recovery" ? "/nueva-contrasena" : "/plan");
 
   // El proveedor devolvió un error (p. ej. cancelaste el acceso con Google).
   if (!code && !tokenHash && searchParams.get("error")) {

@@ -1,140 +1,81 @@
 # Fynco para agentes (otro chat de Claude conectado a la base)
 
-Guía para un agente con acceso SQL a la base de Fynco (por ejemplo, un chat de Claude con el **conector de Supabase** usando `execute_sql`, o el SQL Editor de Supabase). Con estas recetas el agente registra datos **igual que la app**: los saldos, las estadísticas y los avisos de pago quedan bien.
+Guía para un agente con acceso SQL a la base de Fynco (por ejemplo, un chat de Claude con el **conector de Supabase** usando `execute_sql`). Con estas recetas el agente cambia el plan **igual que el chat de la app**: cada cambio queda como versión nueva en el historial y se puede deshacer.
 
-Proyecto de Supabase: `htgouhbriofyhbeacamj`.
+Proyecto de Supabase: `htgouhbriofyhbeacamj`. (La guía del Fynco anterior, con cuentas y movimientos en centavos, está en la rama `fynco-completo`.)
 
 ## Reglas
 
-1. **Todo en centavos** (`bigint`): RD$ 1,250.50 = `125050`.
-2. **Signo de los movimientos** (`transactions.amount`): ingreso positivo, gasto negativo. `kind` es `income` o `expense` (las transferencias y pagos de tarjeta se crean con funciones, nunca a mano).
-3. **Tarjetas de crédito** (`accounts.type = 'credit'`): el saldo negativo es la deuda. Lo que se compra con la tarjeta es un **gasto en la cuenta de la tarjeta**: sube su deuda y **no toca el banco**. El dinero sale de una cuenta solo cuando se registra el pago (`pay_card`).
-4. Marca lo que crees con `source = 'assistant'`.
-5. Solo datos del usuario que te lo pidió. No borres nada sin que lo confirme.
-6. Antes de escribir, consulta las cuentas y categorías para usar sus `id`. Después, vuelve a consultar los saldos para confirmar.
+1. **El plan es un documento JSON** en `pf_estado.datos` (tipos en `src/lib/finanzas/tipos.ts`). Los montos van **en su moneda, no en centavos**: RD$ 1,250.50 = `1250.5`.
+2. **Nunca** hagas `update` directo a `pf_estado` ni toques `pf_historial`: guarda con `pf_guardar_estado`, que comprueba la versión y deja el historial.
+3. No borres nada sin que el usuario lo confirme. Los mensajes del chat y el historial no se borran; las notas se archivan (`archivada = true`).
+4. Si el usuario da el saldo del banco, ese manda: ponlo en `cuentas[].saldo`.
+5. Antes de escribir, lee el plan y la versión; después, vuelve a leer para confirmar.
 
 ## Paso 0: actuar a nombre del usuario
 
-Las funciones de Fynco usan `auth.uid()`. Conectado como administrador, ese valor está vacío: ponlo **al inicio de cada ejecución**, en la misma llamada que el resto del SQL:
+Las funciones usan `auth.uid()`. Conectado como administrador, ese valor está vacío: ponlo **al inicio de cada ejecución**, en la misma llamada que el resto del SQL:
 
 ```sql
 select set_config('request.jwt.claim.sub', (select id::text from auth.users where email = 'CORREO_DEL_USUARIO'), false);
 ```
 
-## Consultar
+## Leer
 
 ```sql
--- Cuentas con su saldo (en las tarjetas, negativo = deuda)
-select a.id, a.name, a.type, a.currency, a.last4, a.statement_day, a.payment_due_day,
-       a.credit_limit / 100.0 as limite, b.balance / 100.0 as saldo
-  from accounts a join account_balances b on b.account_id = a.id
- where a.user_id = auth.uid() and a.archived_at is null
- order by a.is_default desc, a.created_at;
+-- El plan y su versión
+select version, actualizado, datos from pf_estado where user_id = auth.uid();
 
--- Categorías (las del sistema y las del usuario)
-select id, name, kind from categories where user_id is null or user_id = auth.uid() order by kind, sort;
+-- Partes útiles
+select jsonb_pretty(datos->'cuentas'), jsonb_pretty(datos->'tarjetas') from pf_estado where user_id = auth.uid();
+select m from pf_estado, jsonb_array_elements(datos->'movimientos') m where user_id = auth.uid() order by m->>'fecha' desc limit 20;
 
--- Últimos movimientos
-select occurred_on, description, amount / 100.0 as monto, kind, account_id
-  from transactions where user_id = auth.uid() order by occurred_on desc, created_at desc limit 30;
+-- Memoria, historial y chat
+select tema, texto from pf_memoria where user_id = auth.uid() and not archivada order by tema;
+select version, motivo, origen, cambios, creado from pf_historial where user_id = auth.uid() order by version desc limit 20;
+select rol, texto, creado from pf_chat where user_id = auth.uid() order by id desc limit 20;
+
+-- Buscar en la conversación original con Claude
+select * from pf_buscar_archivo('zapatos');
 ```
 
-## Registrar
+## Guardar un cambio del plan
+
+Lee la versión actual, arma el documento nuevo con `jsonb_set` (o en tu código) y guárdalo con la versión que leíste. Si alguien guardó en el medio, falla con `version_conflict`: vuelve a leer y repite.
 
 ```sql
--- Gasto (también un consumo con tarjeta: account_id = la tarjeta)
-insert into transactions (user_id, account_id, kind, amount, occurred_on, description, category_id, source)
-values (auth.uid(), 'ID_CUENTA', 'expense', -125050, '2026-10-14', 'Supermercado Nacional', 'ID_CATEGORIA', 'assistant');
+-- Agregar un gasto con la JetBlue (día a día)
+select pf_guardar_estado(
+  jsonb_set(datos, '{movimientos}', datos->'movimientos' || jsonb_build_object(
+    'id', 'm-' || substr(md5(random()::text), 1, 8), 'fecha', '2026-10-15', 'tarjeta', 'jetblue',
+    'moneda', 'DOP', 'monto', 600, 'descripcion', 'Pádel', 'categoria', 'día a día', 'estado', 'real')),
+  version, 'Pádel RD$ 600 con la JetBlue', 'manual', '["+ Pádel: RD$ 600 con JetBlue (15 oct)"]'::jsonb)
+from pf_estado where user_id = auth.uid();
 
--- Ingreso
-insert into transactions (user_id, account_id, kind, amount, occurred_on, description, category_id, source)
-values (auth.uid(), 'ID_CUENTA', 'income', 9500000, '2026-10-15', 'Salario', 'ID_CATEGORIA', 'assistant');
-
--- "De la tarjeta llevo consumido tanto": deja la deuda en ese monto. No toca ninguna otra cuenta.
--- Si es más, la diferencia queda como "Consumos sin detallar"; si es menos, se corrige sin inventar un ingreso.
-select set_card_debt('ID_TARJETA', 1250000);             -- devuelve 'expense', 'opening' o 'none'
-
--- Tarjeta pagada: transferencia desde la cuenta con que se pagó (sale de esa cuenta ahora).
-select pay_card('ID_TARJETA', 'ID_CUENTA_ORIGEN');                        -- toda la deuda, hoy
-select pay_card('ID_TARJETA', 'ID_CUENTA_ORIGEN', 500000, '2026-10-09');  -- un monto y fecha
-
--- Transferencia entre cuentas propias (misma moneda; si son distintas, el 4.º valor es lo que llegó)
-select create_transfer('ID_ORIGEN', 'ID_DESTINO', 1000000, null, '2026-10-14', 'Ahorro');
-
--- Crear una tarjeta (deuda inicial negativa; días de corte y pago; límite)
-insert into accounts (user_id, name, type, currency, opening_balance, institution, last4, statement_day, payment_due_day, credit_limit)
-values (auth.uid(), 'Visa Popular', 'credit', 'DOP', -2500000, 'Popular', '1234', 14, 9, 5000000);
+-- Poner el saldo del banco de la cuenta principal
+select pf_guardar_estado(
+  jsonb_set(datos, '{cuentas,0,saldo}', '218595'::jsonb),
+  version, 'Saldo del banco: RD$ 218,595', 'manual', null)
+from pf_estado where user_id = auth.uid();
 ```
 
-## Plan (flujo de caja)
+Valores válidos:
+- `tarjeta`: la `clave` de una tarjeta de `datos.tarjetas`, `cuenta` (débito de la cuenta principal) o `efectivo`.
+- `moneda`: `DOP`, `USD` o `EUR`.
+- `categoria`: `día a día` (cuenta en la quincena), `regalo`, `viaje`, `otro`.
+- `estado` del movimiento: `real` o `planificado`.
 
-La pantalla `/plan` se calcula con lo que ya hay más estos ajustes:
+## Volver atrás
 
 ```sql
--- Tarjeta: día en que de verdad se paga (si no, la fecha límite) y desde qué cuenta (si no, la predeterminada).
-update accounts set pay_day = 4, pay_from_account_id = 'ID_CUENTA' where id = 'ID_TARJETA';
-
--- Dinero prestado que no es tuyo y se devuelve completo (solo cuentas 'other' con saldo negativo): resta de "tu dinero".
-update accounts set reserved = true where id = 'ID_CUENTA_OTHER';
--- Si es false, la cuenta 'other' negativa es una deuda que se paga en cuotas.
-
--- Cuota planificada: transferencia recurrente (misma moneda). De una sola vez: end_on = start_on.
-insert into recurring_rules (user_id, account_id, to_account_id, kind, amount, description, frequency, start_on, end_on, next_run_on)
-values (auth.uid(), 'ID_ORIGEN', 'ID_DEUDA', 1000000, 'Cuota papi', 'monthly', '2026-10-16', '2026-10-16', '2026-10-16');
-
--- Cobro de una sola vez (nómina en fecha especial): ingreso recurrente con categoría Salario y end_on = start_on.
-insert into recurring_rules (user_id, account_id, kind, amount, description, category_id, frequency, start_on, end_on, next_run_on)
-values (auth.uid(), 'ID_CUENTA', 'income', 3390000, 'Nómina', (select id from categories where user_id is null and name = 'Salario'), 'monthly', '2026-10-16', '2026-10-16', '2026-10-16');
-
--- Ajustes del plan (una fila por persona) y periodos con su propio presupuesto (un viaje).
-insert into plan_settings (user_id, monthly_budget, cushion, horizon_days, budget_account_id, rates, excluded_category_ids)
-values (auth.uid(), 3500000, 0, 100, 'ID_TARJETA', '{"USD": 62, "EUR": 69}', '{}')
-on conflict (user_id) do update set monthly_budget = excluded.monthly_budget, rates = excluded.rates;
-insert into plan_periods (user_id, name, start_on, end_on, budget, currency, cash_amount, account_id)
-values (auth.uid(), 'Viaje', '2026-11-29', '2027-01-09', 130000, 'EUR', 30000, null);
+select pf_restaurar(12);              -- el plan vuelve a como estaba en la versión 12 (queda como versión nueva)
+select pf_deshacer(<id del mensaje>); -- deshace lo que cambió una respuesta del chat, si no hubo cambios después
 ```
 
-Las quincenas van de un cobro de Salario al siguiente; los recurrentes que ya pasaron se registran solos al abrir la app.
-
-## Deudas y préstamos con personas
-
-Se manejan solo con funciones (las tablas `debts` y `debt_payments` son de solo lectura). El interés es simple; las cuotas y el total los calcula `debt_terms`.
+## Notas de memoria
 
 ```sql
--- Me prestaron 30,000 al 5% mensual, 6 cuotas mensuales desde el 13 nov; entró al Popular.
--- direction: 'borrowed' (me prestaron) o 'lent' (presté). interest_period: 'none', 'monthly', 'annual' o 'total'.
--- frequency: 'once' (un solo pago; installments = 1), 'weekly', 'biweekly' o 'monthly'. La cuenta es opcional (null).
-select save_debt(null, 'borrowed', 'María', 3000000, 'DOP', '2026-10-13', 5, 'monthly', 6, 'monthly', '2026-11-13', 'ID_CUENTA', 'Para el carro');
-
--- Pago (o cobro, si prestaste). Con cuenta: el capital no cuenta en estadísticas y el interés sí.
-select record_debt_payment('ID_DEUDA', 650000, '2026-11-13', 'ID_CUENTA');
-
--- Lo que falta y la próxima cuota
-select d.person, d.direction, t.total / 100.0 as total, coalesce(sum(p.amount), 0) / 100.0 as pagado, t.last_due_on
-  from debts d cross join lateral debt_terms(d) t left join debt_payments p on p.debt_id = d.id
- where d.user_id = auth.uid() and d.closed_at is null
- group by d.id, t.total, t.last_due_on;
-
--- Editar (mismos parámetros con el id) o borrar (borra también sus pagos y movimientos)
-select delete_debt('ID_DEUDA');
-select delete_debt_payment('ID_PAGO');
+insert into pf_memoria (tema, texto, origen) values ('Regalos de Navidad', 'Compró la chaqueta el 10 nov con la tarjeta de viajes', 'manual');
+update pf_memoria set texto = '…', actualizado = now() where id = '…';
+update pf_memoria set archivada = true where id = '…';
 ```
-
-## Errores que puede devolver
-
-| Código | Qué significa |
-|---|---|
-| `not_authenticated` | Falta el paso 0 |
-| `invalid_account` | La cuenta no existe o no es del usuario |
-| `not_a_card` | Esa cuenta no es una tarjeta de crédito |
-| `nothing_to_pay` | La tarjeta no tiene deuda (pasa un monto) |
-| `card_currency_mismatch` | La cuenta y la tarjeta están en monedas distintas (usa `create_transfer` con el monto que llegó) |
-| `invalid_amount` | Monto vacío, cero o negativo |
-| `debt_currency_mismatch` | La cuenta está en otra moneda que la deuda |
-| `not_found` | La deuda o el pago no existe o no es del usuario |
-
-La app muestra los cambios al volver a abrirla o al deslizar hacia abajo para recargar.
-
-## Antes de empezar
-
-En Supabase → SQL Editor deben estar corridos, en orden, todos los archivos de `supabase/migrations/` (incluye `pay_card`, `set_card_debt` y las deudas con personas).

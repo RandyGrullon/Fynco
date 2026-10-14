@@ -1,0 +1,885 @@
+{
+ "calendario": [
+  {
+   "id": "hoy",
+   "fecha": "2026-12-10",
+   "tipo": "Hoy",
+   "concepto": "Tu dinero hoy (sin lo prestado)",
+   "medio": "Cuenta 9999",
+   "monto": 0,
+   "saldo": 41250
+  },
+  {
+   "id": "papi-1016",
+   "fecha": "2026-10-16",
+   "tipo": "Papi",
+   "concepto": "Papi: cuota fija",
+   "medio": "Sale de la 9999",
+   "monto": -8000,
+   "saldo": 33250
+  },
+  {
+   "id": "papi-1029",
+   "fecha": "2026-10-29",
+   "tipo": "Papi",
+   "concepto": "Papi: cuota fija",
+   "medio": "Sale de la 9999",
+   "monto": -8000,
+   "saldo": 25250
+  },
+  {
+   "id": "o-01",
+   "fecha": "2026-11-05",
+   "tipo": "Otro",
+   "concepto": "Retirar paquete",
+   "medio": "Sale de la 9999",
+   "monto": -800,
+   "saldo": 24450
+  },
+  {
+   "id": "papi-1111",
+   "fecha": "2026-11-11",
+   "tipo": "Papi",
+   "concepto": "Papi: cuota fija",
+   "medio": "Sale de la 9999",
+   "monto": -8000,
+   "saldo": 16450
+  },
+  {
+   "id": "papi-1125",
+   "fecha": "2026-11-25",
+   "tipo": "Papi",
+   "concepto": "Papi: cuota fija",
+   "medio": "Sale de la 9999",
+   "monto": -8000,
+   "saldo": 8450
+  },
+  {
+   "id": "o-02",
+   "fecha": "2026-11-25",
+   "tipo": "Otro",
+   "concepto": "Cambiar euros en efectivo",
+   "medio": "9999 → efectivo (€)",
+   "monto": -17250,
+   "saldo": -8800
+  },
+  {
+   "id": "ing-1215",
+   "fecha": "2026-12-15",
+   "tipo": "Cobro",
+   "concepto": "Nómina (quincena 20 dic)",
+   "medio": "Entra a la 9999",
+   "monto": 30000,
+   "saldo": 21200
+  },
+  {
+   "id": "papi-1215",
+   "fecha": "2026-12-15",
+   "tipo": "Papi",
+   "concepto": "Papi: cuota fija",
+   "medio": "Sale de la 9999",
+   "monto": -8000,
+   "saldo": 13200
+  },
+  {
+   "id": "pago-jb-2026-12",
+   "fecha": "2026-12-19",
+   "tipo": "Tarjeta",
+   "concepto": "Pagar Viajera 2222 · corte 1 dic",
+   "medio": "9999 → Viajera",
+   "monto": -28289,
+   "saldo": -15089
+  },
+  {
+   "id": "ing-1228",
+   "fecha": "2026-12-28",
+   "tipo": "Cobro",
+   "concepto": "Nómina (quincena 5 ene)",
+   "medio": "Entra a la 9999",
+   "monto": 30000,
+   "saldo": 14911
+  },
+  {
+   "id": "papi-1228",
+   "fecha": "2026-12-28",
+   "tipo": "Papi",
+   "concepto": "Papi: cuota fija",
+   "medio": "Sale de la 9999",
+   "monto": -8000,
+   "saldo": 6911
+  },
+  {
+   "id": "ing-0105",
+   "fecha": "2027-01-05",
+   "tipo": "Cobro",
+   "concepto": "Bonificación (monto por confirmar, no contada)",
+   "medio": "Entra a la 9999",
+   "monto": 0,
+   "saldo": 6911
+  },
+  {
+   "id": "ing-0119",
+   "fecha": "2027-01-19",
+   "tipo": "Cobro",
+   "concepto": "Nómina (quincena 20 ene)",
+   "medio": "Entra a la 9999",
+   "monto": 30000,
+   "saldo": 36911
+  },
+  {
+   "id": "papi-0119",
+   "fecha": "2027-01-19",
+   "tipo": "Papi",
+   "concepto": "Papi: cuota fija",
+   "medio": "Sale de la 9999",
+   "monto": -8000,
+   "saldo": 28911
+  },
+  {
+   "id": "pago-jb-2027-01",
+   "fecha": "2027-01-19",
+   "tipo": "Tarjeta",
+   "concepto": "Pagar Viajera 2222 · corte 1 ene (estimado)",
+   "medio": "9999 → Viajera",
+   "monto": -43515,
+   "saldo": -14604
+  }
+ ],
+ "movimientos": [
+  {
+   "id": "m-08",
+   "fecha": "2026-11-30",
+   "tarjeta": "Viajera",
+   "moneda": "EUR",
+   "monto": 41.5,
+   "monto_dop": 2864,
+   "descripcion": "Regalo A",
+   "categoria": "regalo",
+   "estado": "Planificado",
+   "paga_el": "2026-12-19",
+   "nota": ""
+  },
+  {
+   "id": "o-02",
+   "fecha": "2026-11-25",
+   "tarjeta": "9999 → efectivo (€)",
+   "moneda": "EUR",
+   "monto": 250,
+   "monto_dop": 17250,
+   "descripcion": "Cambiar euros en efectivo",
+   "categoria": "viaje",
+   "estado": "Planificado",
+   "paga_el": "2026-11-25",
+   "nota": ""
+  },
+  {
+   "id": "m-07",
+   "fecha": "2026-11-10",
+   "tarjeta": "Viajera",
+   "moneda": "EUR",
+   "monto": 149.36,
+   "monto_dop": 10306,
+   "descripcion": "Gasolina",
+   "categoria": "regalo",
+   "estado": "Planificado",
+   "paga_el": "2026-12-19",
+   "nota": ""
+  },
+  {
+   "id": "o-01",
+   "fecha": "2026-11-05",
+   "tarjeta": "Sale de la 9999",
+   "moneda": "DOP",
+   "monto": 800,
+   "monto_dop": 800,
+   "descripcion": "Retirar paquete",
+   "categoria": "regalo",
+   "estado": "Planificado",
+   "paga_el": "2026-11-05",
+   "nota": ""
+  },
+  {
+   "id": "m-06",
+   "fecha": "2026-11-04",
+   "tarjeta": "Viajera",
+   "moneda": "EUR",
+   "monto": 116.2,
+   "monto_dop": 8018,
+   "descripcion": "Cine",
+   "categoria": "regalo",
+   "estado": "Planificado",
+   "paga_el": "2026-12-19",
+   "nota": ""
+  },
+  {
+   "id": "m-05",
+   "fecha": "2026-11-04",
+   "tarjeta": "Viajera",
+   "moneda": "EUR",
+   "monto": 102.92,
+   "monto_dop": 7101,
+   "descripcion": "Panadería",
+   "categoria": "regalo",
+   "estado": "Planificado",
+   "paga_el": "2026-12-19",
+   "nota": ""
+  },
+  {
+   "id": "m-04",
+   "fecha": "2026-10-15",
+   "tarjeta": "Viajera",
+   "moneda": "USD",
+   "monto": 39.42,
+   "monto_dop": 2444,
+   "descripcion": "Librería",
+   "categoria": "regalo",
+   "estado": "Planificado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-17",
+   "fecha": "2026-10-14",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 621.5,
+   "monto_dop": 622,
+   "descripcion": "Lavandería",
+   "categoria": "día a día",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-16",
+   "fecha": "2026-10-14",
+   "tarjeta": "Hogar",
+   "moneda": "EUR",
+   "monto": 74.7,
+   "monto_dop": 5154,
+   "descripcion": "Ferretería",
+   "categoria": "otro",
+   "estado": "Cargado",
+   "paga_el": "2026-12-04",
+   "nota": ""
+  },
+  {
+   "id": "m-15",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 193.36,
+   "monto_dop": 193,
+   "descripcion": "Tienda",
+   "categoria": "día a día",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-14",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 99.6,
+   "monto_dop": 100,
+   "descripcion": "Taxi",
+   "categoria": "día a día",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-13",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 99.58,
+   "monto_dop": 100,
+   "descripcion": "Restaurante",
+   "categoria": "día a día",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-12",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 730.29,
+   "monto_dop": 730,
+   "descripcion": "Suscripción",
+   "categoria": "día a día",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-11",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 1867.5,
+   "monto_dop": 1868,
+   "descripcion": "Regalo D",
+   "categoria": "otro",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-10",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 249.0,
+   "monto_dop": 249,
+   "descripcion": "Regalo C",
+   "categoria": "día a día",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-09",
+   "fecha": "2026-10-13",
+   "tarjeta": "Débito 9999",
+   "moneda": "DOP",
+   "monto": 498.0,
+   "monto_dop": 498,
+   "descripcion": "Regalo B",
+   "categoria": "día a día",
+   "estado": "Cargado",
+   "paga_el": "2026-10-13",
+   "nota": ""
+  },
+  {
+   "id": "m-03",
+   "fecha": "2026-10-13",
+   "tarjeta": "Hogar",
+   "moneda": "DOP",
+   "monto": 3904.94,
+   "monto_dop": 3905,
+   "descripcion": "Cafetería",
+   "categoria": "otro",
+   "estado": "Cargado",
+   "paga_el": "2026-11-04",
+   "nota": ""
+  },
+  {
+   "id": "m-02",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "USD",
+   "monto": 30.71,
+   "monto_dop": 1904,
+   "descripcion": "Farmacia",
+   "categoria": "antes del plan",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  },
+  {
+   "id": "m-01",
+   "fecha": "2026-10-13",
+   "tarjeta": "Viajera",
+   "moneda": "DOP",
+   "monto": 5395.0,
+   "monto_dop": 5395,
+   "descripcion": "Supermercado",
+   "categoria": "antes del plan",
+   "estado": "Cargado",
+   "paga_el": "2026-11-19",
+   "nota": ""
+  }
+ ],
+ "papi": [
+  {
+   "id": "d-prev",
+   "fecha": "2026-09-01",
+   "concepto": "Abono",
+   "monto": 5000,
+   "queda_despues": 90000,
+   "estado": "Hecho"
+  },
+  {
+   "id": "papi-1016",
+   "fecha": "2026-10-16",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 82000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-1029",
+   "fecha": "2026-10-29",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 74000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-1111",
+   "fecha": "2026-11-11",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 66000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-1125",
+   "fecha": "2026-11-25",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 58000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-1215",
+   "fecha": "2026-12-15",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 50000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-1228",
+   "fecha": "2026-12-28",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 42000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-0119",
+   "fecha": "2027-01-19",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 34000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-0205",
+   "fecha": "2027-02-05",
+   "concepto": "Cuota fija (o saldar todo con la bonificación del 5 ene)",
+   "monto": 8000,
+   "queda_despues": 26000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-0220",
+   "fecha": "2027-02-20",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 18000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-0305",
+   "fecha": "2027-03-05",
+   "concepto": "Cuota fija",
+   "monto": 8000,
+   "queda_despues": 10000,
+   "estado": "Pendiente"
+  },
+  {
+   "id": "papi-0320",
+   "fecha": "2027-03-20",
+   "concepto": "Última cuota",
+   "monto": 2000,
+   "queda_despues": 8000,
+   "estado": "Pendiente"
+  }
+ ],
+ "prestado": [
+  {
+   "id": "pr-1",
+   "de": "Tío",
+   "monto": 70000,
+   "estado": "En la cuenta",
+   "para": "Carta del banco",
+   "devolver": "Al terminar el trámite"
+  },
+  {
+   "id": "pr-2",
+   "de": "Amiga",
+   "monto": 30000,
+   "estado": "En la cuenta",
+   "para": "Carta del banco",
+   "devolver": "Al terminar el trámite"
+  }
+ ],
+ "presupuesto": [
+  {
+   "id": "p-2026-10-13",
+   "periodo": "13–15 oct",
+   "desde": "2026-10-13",
+   "hasta": "2026-10-15",
+   "tipo": "En casa",
+   "presupuesto": 2950,
+   "gastado": 2491,
+   "queda": 459,
+   "estado": "pasado"
+  },
+  {
+   "id": "p-2026-10-16",
+   "periodo": "16–28 oct",
+   "desde": "2026-10-16",
+   "hasta": "2026-10-28",
+   "tipo": "En casa",
+   "presupuesto": 12800,
+   "gastado": 0,
+   "queda": 12800,
+   "estado": "pasado"
+  },
+  {
+   "id": "p-2026-10-29",
+   "periodo": "29 oct–10 nov",
+   "desde": "2026-10-29",
+   "hasta": "2026-11-10",
+   "tipo": "En casa",
+   "presupuesto": 12800,
+   "gastado": 0,
+   "queda": 12800,
+   "estado": "pasado"
+  },
+  {
+   "id": "p-2026-11-11",
+   "periodo": "11–24 nov",
+   "desde": "2026-11-11",
+   "hasta": "2026-11-24",
+   "tipo": "En casa",
+   "presupuesto": 13800,
+   "gastado": 0,
+   "queda": 13800,
+   "estado": "pasado"
+  },
+  {
+   "id": "p-2026-11-25",
+   "periodo": "25–28 nov",
+   "desde": "2026-11-25",
+   "hasta": "2026-11-28",
+   "tipo": "En casa",
+   "presupuesto": 3950,
+   "gastado": 0,
+   "queda": 3950,
+   "estado": "pasado"
+  },
+  {
+   "id": "p-2026-11-29",
+   "periodo": "Viaje 29 nov–9 ene",
+   "desde": "2026-11-29",
+   "hasta": "2027-01-09",
+   "tipo": "Viaje",
+   "presupuesto": 75900,
+   "gastado": 0,
+   "queda": 75900,
+   "estado": "actual"
+  },
+  {
+   "id": "p-2027-01-10",
+   "periodo": "10–18 ene",
+   "desde": "2027-01-10",
+   "hasta": "2027-01-18",
+   "tipo": "En casa",
+   "presupuesto": 8900,
+   "gastado": 0,
+   "queda": 8900,
+   "estado": "próximo"
+  },
+  {
+   "id": "p-2027-01-19",
+   "periodo": "19 ene–4 feb",
+   "desde": "2027-01-19",
+   "hasta": "2027-02-04",
+   "tipo": "En casa",
+   "presupuesto": 16750,
+   "gastado": 0,
+   "queda": 16750,
+   "estado": "próximo"
+  }
+ ],
+ "resumen": [
+  {
+   "clave": "saldo_hoy",
+   "valor": 41250,
+   "texto": "Tu dinero en la 9999, sin lo prestado"
+  },
+  {
+   "clave": "saldo_banco",
+   "valor": 141250,
+   "texto": "Lo que dice el banco hoy"
+  },
+  {
+   "clave": "prestado_total",
+   "valor": 100000,
+   "texto": "Prestado para la carta del banco, no se toca"
+  },
+  {
+   "clave": "deuda_tras_ene",
+   "valor": 34000,
+   "texto": "Lo que le faltaría a papi después del 19 ene"
+  },
+  {
+   "clave": "saldo_1948",
+   "valor": 500,
+   "texto": "Banco Uno 8888 (ahorro)"
+  },
+  {
+   "clave": "periodo_queda",
+   "valor": 75900,
+   "texto": "Viaje 29 nov–9 ene"
+  },
+  {
+   "clave": "periodo_presupuesto",
+   "valor": 75900,
+   "texto": "Viaje 29 nov–9 ene"
+  },
+  {
+   "clave": "periodo_gastado",
+   "valor": 0,
+   "texto": "Viaje 29 nov–9 ene"
+  },
+  {
+   "clave": "periodo_hasta",
+   "valor": null,
+   "texto": "9 ene"
+  },
+  {
+   "clave": "proximo_pago",
+   "valor": 28289,
+   "texto": "Pagar Viajera 2222 · corte 1 dic"
+  },
+  {
+   "clave": "proximo_pago_fecha",
+   "valor": null,
+   "texto": "19 dic"
+  },
+  {
+   "clave": "deuda_total",
+   "valor": 90000,
+   "texto": "RD$ 95,000 menos lo que ya le diste"
+  },
+  {
+   "clave": "deuda_pagada",
+   "valor": 0,
+   "texto": "Pagado desde el plan"
+  },
+  {
+   "clave": "deuda_restante",
+   "valor": 90000,
+   "texto": "Le falta por pagar"
+  },
+  {
+   "clave": "deuda_fin",
+   "valor": null,
+   "texto": "20 mar"
+  },
+  {
+   "clave": "saldo_salida",
+   "valor": -8800,
+   "texto": "Saldo al salir de viaje (29 nov)"
+  },
+  {
+   "clave": "viaje_inicio",
+   "valor": null,
+   "texto": "2026-11-29"
+  },
+  {
+   "clave": "viaje_fin",
+   "valor": null,
+   "texto": "2027-01-09"
+  },
+  {
+   "clave": "saldo_minimo",
+   "valor": -15089,
+   "texto": "19 dic"
+  },
+  {
+   "clave": "saldo_final",
+   "valor": -14604,
+   "texto": "22 ene"
+  },
+  {
+   "clave": "colchon",
+   "valor": 20000,
+   "texto": "Mínimo que no queremos tocar"
+  },
+  {
+   "clave": "viaje_presupuesto_eur",
+   "valor": 1100,
+   "texto": "Total para gastar en Europa"
+  },
+  {
+   "clave": "viaje_efectivo_eur",
+   "valor": 250,
+   "texto": "En efectivo"
+  },
+  {
+   "clave": "viaje_tarjeta_eur",
+   "valor": 850,
+   "texto": "Con la Viajera"
+  },
+  {
+   "clave": "viaje_gastado_eur",
+   "valor": 0.0,
+   "texto": "Gastado del viaje"
+  },
+  {
+   "clave": "viaje_queda_eur",
+   "valor": 1100.0,
+   "texto": "Queda del viaje"
+  },
+  {
+   "clave": "viaje_dias",
+   "valor": 42,
+   "texto": "29 nov – 9 ene"
+  },
+  {
+   "clave": "viaje_por_dia_eur",
+   "valor": 26.19,
+   "texto": "Promedio por día"
+  },
+  {
+   "clave": "casa_mes",
+   "valor": 30000,
+   "texto": "Presupuesto en casa por mes"
+  }
+ ],
+ "supuestos": [
+  {
+   "id": "s-usd",
+   "supuesto": "Tasa del dólar",
+   "valor": "RD$ 62.00 (Banco Central ~61.6 + margen del banco)"
+  },
+  {
+   "id": "s-eur",
+   "supuesto": "Tasa del euro",
+   "valor": "RD$ 69.00 (incluye margen por cobro con tarjeta)"
+  },
+  {
+   "id": "s-prestado",
+   "supuesto": "Dinero prestado",
+   "valor": "Los RD$ 100,000 prestados están dentro de los RD$ 141,250 del banco. No cuentan como tuyos"
+  },
+  {
+   "id": "s-casa",
+   "supuesto": "Gasto en casa",
+   "valor": "RD$ 30,000 al mes (≈ RD$ 986 al día), se estima en la Hogar"
+  },
+  {
+   "id": "s-viaje",
+   "supuesto": "Viaje",
+   "valor": "€ 1,100 en total (250 en efectivo, resto con la Viajera), incluye paseos y regalos"
+  },
+  {
+   "id": "s-pagos",
+   "supuesto": "Cuándo pagas las tarjetas",
+   "valor": "Hogar el 4 de cada mes (vence el 9); Viajera el 19 (vence el 22). Siempre el total"
+  },
+  {
+   "id": "s-estimado",
+   "supuesto": "Cómo se estiman las tarjetas",
+   "valor": "Lo ya cargado + regalos planificados + lo que falta del presupuesto de cada quincena"
+  }
+ ],
+ "tarjetas": [
+  {
+   "id": "jb-2026-10",
+   "tarjeta": "Viajera 2222",
+   "corte": "2026-10-01",
+   "pagar": "2026-10-19",
+   "vence": "2026-10-22",
+   "cargado": 24500,
+   "por_venir": 0,
+   "total": 24500,
+   "usd_cargado": 250,
+   "estado": "Corte cerrado"
+  },
+  {
+   "id": "ikea-2026-10",
+   "tarjeta": "Visa Hogar 1111",
+   "corte": "2026-10-13",
+   "pagar": "2026-11-04",
+   "vence": "2026-11-09",
+   "cargado": 24500,
+   "por_venir": 0,
+   "total": 24500,
+   "usd_cargado": 0,
+   "estado": "Corte cerrado"
+  },
+  {
+   "id": "jb-2026-11",
+   "tarjeta": "Viajera 2222",
+   "corte": "2026-11-01",
+   "pagar": "2026-11-19",
+   "vence": "2026-11-22",
+   "cargado": 11160,
+   "por_venir": 2444,
+   "total": 13604,
+   "usd_cargado": 30.71,
+   "estado": "Corte cerrado"
+  },
+  {
+   "id": "ikea-2026-11",
+   "tarjeta": "Visa Hogar 1111",
+   "corte": "2026-11-13",
+   "pagar": "2026-12-04",
+   "vence": "2026-12-09",
+   "cargado": 5154,
+   "por_venir": 0,
+   "total": 5154,
+   "usd_cargado": 83.13,
+   "estado": "Corte cerrado"
+  },
+  {
+   "id": "jb-2026-12",
+   "tarjeta": "Viajera 2222",
+   "corte": "2026-12-01",
+   "pagar": "2026-12-19",
+   "vence": "2026-12-22",
+   "cargado": 0,
+   "por_venir": 28289,
+   "total": 28289,
+   "usd_cargado": 0.0,
+   "estado": "Corte cerrado"
+  },
+  {
+   "id": "jb-2027-01",
+   "tarjeta": "Viajera 2222",
+   "corte": "2027-01-01",
+   "pagar": "2027-01-19",
+   "vence": "2027-01-22",
+   "cargado": 0,
+   "por_venir": 43515,
+   "total": 43515,
+   "usd_cargado": 0.0,
+   "estado": "En curso"
+  },
+  {
+   "id": "ikea-2027-01",
+   "tarjeta": "Visa Hogar 1111",
+   "corte": "2027-01-13",
+   "pagar": "2027-02-04",
+   "vence": "2027-02-09",
+   "cargado": 0,
+   "por_venir": 3956,
+   "total": 3956,
+   "usd_cargado": 0.0,
+   "estado": "Futuro (estimado)"
+  },
+  {
+   "id": "jb-2027-02",
+   "tarjeta": "Viajera 2222",
+   "corte": "2027-02-01",
+   "pagar": "2027-02-19",
+   "vence": "2027-02-22",
+   "cargado": 0,
+   "por_venir": 15135,
+   "total": 15135,
+   "usd_cargado": 0.0,
+   "estado": "Futuro (estimado)"
+  }
+ ]
+}

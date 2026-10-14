@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/supabase/env";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/recuperar", "/auth", "/legal", "/configurar", "/unirse"];
+const PUBLIC_PATHS = ["/login", "/signup", "/recuperar", "/auth", "/legal", "/configurar"];
 const AUTH_ONLY_PATHS = ["/login", "/signup", "/recuperar"];
 
 function isPublic(pathname: string) {
@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (signedIn && AUTH_ONLY_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL("/inicio", request.url));
+    return NextResponse.redirect(new URL("/plan", request.url));
   }
 
   return response;

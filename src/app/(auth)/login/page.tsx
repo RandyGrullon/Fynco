@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Field } from "@/components/forms/fields";
+import { Field } from "@/components/forms/field";
 import { getSupabase } from "@/lib/supabase/client";
 import { authErrorMessage, isEmail, linkErrorMessage, safeNext } from "../_components/auth-helpers";
 import { FormError, GoogleButton, OrDivider, PasswordInput, textLinkClass } from "../_components/auth-ui";
@@ -41,7 +41,7 @@ function LoginForm() {
         setBusy(false);
         return setError(authErrorMessage(authError));
       }
-      router.replace(next ?? "/inicio");
+      router.replace(next ?? "/plan");
       router.refresh();
     } catch (err) {
       setBusy(false);

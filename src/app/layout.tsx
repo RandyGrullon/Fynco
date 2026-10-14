@@ -10,7 +10,7 @@ const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans", display: 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: "Fynco", template: "%s · Fynco" },
-  description: "Tu cartera personal, tus gastos compartidos y un asistente financiero en un solo lugar.",
+  description: "Tu plan de finanzas y un asistente honesto que registra y recuerda todo.",
   manifest: "/manifest.json",
   applicationName: "Fynco",
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Fynco" },
@@ -25,13 +25,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Fynco",
-    description: "Tu cartera, tus gastos compartidos y tu asistente financiero.",
+    description: "Tu plan de finanzas y un asistente honesto.",
     url: SITE_URL,
     siteName: "Fynco",
     locale: "es_DO",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "Fynco" }],
   },
-  twitter: { card: "summary_large_image", title: "Fynco", description: "Tu cartera, tus gastos compartidos y tu asistente financiero.", images: ["/og.png"] },
+  twitter: { card: "summary_large_image", title: "Fynco", description: "Tu plan de finanzas y un asistente honesto.", images: ["/og.png"] },
 };
 
 export const viewport: Viewport = {

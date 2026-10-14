@@ -1,0 +1,474 @@
+{
+ "actualizado": "2026-10-14T18:30:00Z",
+ "tasas": {
+  "USD": 62.0,
+  "EUR": 69.0
+ },
+ "cuentas": [
+  {
+   "id": "c-principal",
+   "cuenta": "Banco Uno 9999 (nómina)",
+   "saldo": 141250,
+   "principal": true,
+   "last4": "9999"
+  },
+  {
+   "id": "c-ahorro",
+   "cuenta": "Banco Uno 8888 (ahorro)",
+   "saldo": 500,
+   "last4": "8888"
+  }
+ ],
+ "viaje": {
+  "inicio": "2026-11-29",
+  "fin": "2027-01-09",
+  "presupuesto_eur": 1100,
+  "efectivo_eur": 250,
+  "tarjeta": "jetblue",
+  "nombre": "Viaje de ejemplo",
+  "incluye": "paseos y regalos"
+ },
+ "presupuesto_casa_mes": 30000,
+ "colchon": 20000,
+ "horizonte": "2027-01-22",
+ "ingresos": [
+  {
+   "id": "ing-1016",
+   "fecha": "2026-10-16",
+   "concepto": "Nómina (quincena 20 oct)",
+   "monto": 30000,
+   "estado": "pendiente",
+   "tipo": "nomina"
+  },
+  {
+   "id": "ing-1029",
+   "fecha": "2026-10-29",
+   "concepto": "Nómina (quincena 5 nov)",
+   "monto": 30000,
+   "estado": "pendiente",
+   "tipo": "nomina"
+  },
+  {
+   "id": "ing-1111",
+   "fecha": "2026-11-11",
+   "concepto": "Nómina (quincena 20 nov)",
+   "monto": 30000,
+   "estado": "pendiente",
+   "tipo": "nomina"
+  },
+  {
+   "id": "ing-1125",
+   "fecha": "2026-11-25",
+   "concepto": "Nómina (quincena 5 dic)",
+   "monto": 30000,
+   "estado": "pendiente",
+   "tipo": "nomina"
+  },
+  {
+   "id": "ing-1204",
+   "fecha": "2026-12-04",
+   "concepto": "Salario de Navidad (estimado)",
+   "monto": 70000,
+   "estado": "pendiente",
+   "tipo": "extra"
+  },
+  {
+   "id": "ing-1215",
+   "fecha": "2026-12-15",
+   "concepto": "Nómina (quincena 20 dic)",
+   "monto": 30000,
+   "estado": "pendiente",
+   "tipo": "nomina"
+  },
+  {
+   "id": "ing-1228",
+   "fecha": "2026-12-28",
+   "concepto": "Nómina (quincena 5 ene)",
+   "monto": 30000,
+   "estado": "pendiente",
+   "tipo": "nomina"
+  },
+  {
+   "id": "ing-0105",
+   "fecha": "2027-01-05",
+   "concepto": "Bonificación (monto por confirmar, no contada)",
+   "monto": 0,
+   "estado": "pendiente",
+   "tipo": "extra"
+  },
+  {
+   "id": "ing-0119",
+   "fecha": "2027-01-19",
+   "concepto": "Nómina (quincena 20 ene)",
+   "monto": 30000,
+   "estado": "pendiente",
+   "tipo": "nomina"
+  }
+ ],
+ "cortes_conocidos": [
+  {
+   "id": "jb-2026-10",
+   "tarjeta": "jetblue",
+   "corte": "2026-10-01",
+   "vence": "2026-10-22",
+   "dop": 9000,
+   "usd": 250,
+   "estado": "pendiente"
+  },
+  {
+   "id": "ikea-2026-10",
+   "tarjeta": "ikea",
+   "corte": "2026-10-13",
+   "vence": "2026-11-09",
+   "dop": 24500.5,
+   "usd": 0,
+   "estado": "pendiente"
+  }
+ ],
+ "otros": [
+  {
+   "id": "o-01",
+   "fecha": "2026-11-05",
+   "concepto": "Retirar paquete",
+   "monto": 800,
+   "estado": "planificado",
+   "categoria": "regalo",
+   "medio": "Sale de la 9999"
+  },
+  {
+   "id": "o-02",
+   "fecha": "2026-11-25",
+   "concepto": "Cambiar euros en efectivo",
+   "monto_eur": 250,
+   "estado": "planificado",
+   "categoria": "viaje",
+   "medio": "9999 → efectivo (€)"
+  }
+ ],
+ "movimientos": [
+  {
+   "id": "m-01",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 5395.0,
+   "descripcion": "Supermercado",
+   "categoria": "antes del plan",
+   "estado": "real"
+  },
+  {
+   "id": "m-02",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "USD",
+   "monto": 30.71,
+   "descripcion": "Farmacia",
+   "categoria": "antes del plan",
+   "estado": "real"
+  },
+  {
+   "id": "m-03",
+   "fecha": "2026-10-13",
+   "tarjeta": "ikea",
+   "moneda": "DOP",
+   "monto": 3904.94,
+   "descripcion": "Cafetería",
+   "categoria": "otro",
+   "estado": "real",
+   "corte": "2026-10-13"
+  },
+  {
+   "id": "m-04",
+   "fecha": "2026-10-15",
+   "tarjeta": "jetblue",
+   "moneda": "USD",
+   "monto": 39.42,
+   "descripcion": "Librería",
+   "categoria": "regalo",
+   "estado": "planificado"
+  },
+  {
+   "id": "m-05",
+   "fecha": "2026-11-04",
+   "tarjeta": "jetblue",
+   "moneda": "EUR",
+   "monto": 102.92,
+   "descripcion": "Panadería",
+   "categoria": "regalo",
+   "estado": "planificado"
+  },
+  {
+   "id": "m-06",
+   "fecha": "2026-11-04",
+   "tarjeta": "jetblue",
+   "moneda": "EUR",
+   "monto": 116.2,
+   "descripcion": "Cine",
+   "categoria": "regalo",
+   "estado": "planificado"
+  },
+  {
+   "id": "m-07",
+   "fecha": "2026-11-10",
+   "tarjeta": "jetblue",
+   "moneda": "EUR",
+   "monto": 149.36,
+   "descripcion": "Gasolina",
+   "categoria": "regalo",
+   "estado": "planificado"
+  },
+  {
+   "id": "m-08",
+   "fecha": "2026-11-30",
+   "tarjeta": "jetblue",
+   "moneda": "EUR",
+   "monto": 41.5,
+   "descripcion": "Regalo A",
+   "categoria": "regalo",
+   "estado": "planificado"
+  },
+  {
+   "id": "m-09",
+   "fecha": "2026-10-13",
+   "tarjeta": "cuenta",
+   "moneda": "DOP",
+   "monto": 498.0,
+   "descripcion": "Regalo B",
+   "categoria": "día a día",
+   "estado": "real"
+  },
+  {
+   "id": "m-10",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 249.0,
+   "descripcion": "Regalo C",
+   "categoria": "día a día",
+   "estado": "real"
+  },
+  {
+   "id": "m-11",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 1867.5,
+   "descripcion": "Regalo D",
+   "categoria": "otro",
+   "estado": "real"
+  },
+  {
+   "id": "m-12",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 730.29,
+   "descripcion": "Suscripción",
+   "categoria": "día a día",
+   "estado": "real"
+  },
+  {
+   "id": "m-13",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 99.58,
+   "descripcion": "Restaurante",
+   "categoria": "día a día",
+   "estado": "real"
+  },
+  {
+   "id": "m-14",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 99.6,
+   "descripcion": "Taxi",
+   "categoria": "día a día",
+   "estado": "real"
+  },
+  {
+   "id": "m-15",
+   "fecha": "2026-10-13",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 193.36,
+   "descripcion": "Tienda",
+   "categoria": "día a día",
+   "estado": "real"
+  },
+  {
+   "id": "m-16",
+   "fecha": "2026-10-14",
+   "tarjeta": "ikea",
+   "moneda": "EUR",
+   "monto": 74.7,
+   "descripcion": "Ferretería",
+   "categoria": "otro",
+   "estado": "real"
+  },
+  {
+   "id": "m-17",
+   "fecha": "2026-10-14",
+   "tarjeta": "jetblue",
+   "moneda": "DOP",
+   "monto": 621.5,
+   "descripcion": "Lavandería",
+   "categoria": "día a día",
+   "estado": "real"
+  }
+ ],
+ "prestado": [
+  {
+   "id": "pr-1",
+   "de": "Tío",
+   "monto": 70000,
+   "estado": "en la cuenta",
+   "para": "Carta del banco",
+   "devolver": "Al terminar el trámite"
+  },
+  {
+   "id": "pr-2",
+   "de": "Amiga",
+   "monto": 30000,
+   "estado": "en la cuenta",
+   "para": "Carta del banco",
+   "devolver": "Al terminar el trámite"
+  }
+ ],
+ "inicio_plan": "2026-10-13",
+ "version_esquema": 2,
+ "tarjetas": [
+  {
+   "clave": "ikea",
+   "prefijo": "ikea",
+   "nombre": "Visa Hogar 1111",
+   "corto": "Hogar",
+   "red": "Visa",
+   "last4": "1111",
+   "corte_dia": 13,
+   "vence_dia": 9,
+   "pago_dia": 4,
+   "limite_dop": 50000,
+   "uso": "Compras locales"
+  },
+  {
+   "clave": "jetblue",
+   "prefijo": "jb",
+   "nombre": "Viajera 2222",
+   "corto": "Viajera",
+   "red": "Mastercard",
+   "last4": "2222",
+   "corte_dia": 1,
+   "vence_dia": 22,
+   "pago_dia": 19,
+   "limite_dop": 90000,
+   "uso": "Compras afuera"
+  }
+ ],
+ "tarjeta_dia_a_dia": "ikea",
+ "deuda": {
+  "deuda_original": 95000,
+  "abonos_previos": [
+   {
+    "id": "d-prev",
+    "fecha": "2026-09-01",
+    "concepto": "Abono",
+    "monto": 5000,
+    "estado": "hecho"
+   }
+  ],
+  "plan": [
+   {
+    "id": "papi-1016",
+    "fecha": "2026-10-16",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-1029",
+    "fecha": "2026-10-29",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-1111",
+    "fecha": "2026-11-11",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-1125",
+    "fecha": "2026-11-25",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-1215",
+    "fecha": "2026-12-15",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-1228",
+    "fecha": "2026-12-28",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-0119",
+    "fecha": "2027-01-19",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-0205",
+    "fecha": "2027-02-05",
+    "concepto": "Cuota fija (o saldar todo con la bonificación del 5 ene)",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-0220",
+    "fecha": "2027-02-20",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-0305",
+    "fecha": "2027-03-05",
+    "concepto": "Cuota fija",
+    "monto": 8000,
+    "estado": "pendiente"
+   },
+   {
+    "id": "papi-0320",
+    "fecha": "2027-03-20",
+    "concepto": "Última cuota",
+    "monto": 2000,
+    "estado": "pendiente"
+   }
+  ],
+  "acreedor": "Papi",
+  "nombre": "Deuda de ejemplo"
+ },
+ "supuestos": [
+  {
+   "id": "s-nomina",
+   "supuesto": "Nómina",
+   "valor": "RD$ 30,000 por quincena"
+  }
+ ],
+ "tasas_nota": {
+  "USD": "Banco Central ~61.6 + margen del banco",
+  "EUR": "incluye margen por cobro con tarjeta"
+ }
+}

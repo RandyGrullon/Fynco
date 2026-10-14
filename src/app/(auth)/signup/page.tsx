@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Field } from "@/components/forms/fields";
+import { Field } from "@/components/forms/field";
 import { getSupabase } from "@/lib/supabase/client";
 import { MIN_PASSWORD, authErrorMessage, isEmail, safeNext } from "../_components/auth-helpers";
 import { FormError, GoogleButton, OrDivider, PasswordInput, textLinkClass } from "../_components/auth-ui";
@@ -57,7 +57,7 @@ function SignupForm() {
         return setError(authErrorMessage(authError));
       }
       if (data.session) {
-        router.replace(next ?? "/inicio");
+        router.replace(next ?? "/plan");
         router.refresh();
         return;
       }

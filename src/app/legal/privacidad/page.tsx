@@ -86,9 +86,13 @@ export default function PrivacidadPage() {
       <Section title="5. El asistente y las notas de voz">
         <ul>
           <li>
-            Cuando usas el asistente, enviamos tu pregunta y <strong>solo los datos necesarios para responderla</strong> (por ejemplo, saldos,
-            movimientos o categorías relevantes) a <strong>Google Gemini</strong>, el servicio de inteligencia artificial de Google. Si no usas el
-            asistente, no se envía nada.
+            Cuando le escribes al asistente, enviamos tu mensaje, tus notas de memoria, un resumen de tu plan y los últimos mensajes del chat a{" "}
+            <strong>Groq</strong> (y, si Groq no está disponible, a <strong>Google Gemini</strong>), los servicios de inteligencia artificial que
+            generan la respuesta. Si no usas el asistente, no se envía nada.
+          </li>
+          <li>
+            Los mensajes del chat, las notas de memoria y cada versión de tu plan se guardan en tu cuenta para que el asistente recuerde todo y
+            puedas deshacer cambios. Solo tú puedes verlos.
           </li>
           <li>
             Las <strong>notas de voz</strong> se procesan para transcribirlas y <strong>no se guardan</strong>.

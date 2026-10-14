@@ -80,7 +80,7 @@ export function GoogleButton({ next, onError, disabled }: { next?: string | null
   async function go() {
     setBusy(true);
     try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next ?? "/inicio")}`;
+      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next ?? "/plan")}`;
       const { error } = await getSupabase().auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
       if (error) {
         setBusy(false);

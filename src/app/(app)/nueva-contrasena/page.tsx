@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Field } from "@/components/forms/fields";
+import { Field } from "@/components/forms/field";
 import { PageHeader } from "@/components/shell/page-header";
 import { toast } from "@/hooks/use-toast";
 import { getSupabase } from "@/lib/supabase/client";
@@ -31,7 +31,7 @@ export default function NuevaContrasenaPage() {
       return setError(authErrorMessage(err));
     }
     toast({ title: "Contraseña actualizada", description: "Úsala la próxima vez que entres." });
-    router.replace("/inicio");
+    router.replace("/plan");
   }
 
   const mismatch = repeat.length > 0 && repeat !== password;

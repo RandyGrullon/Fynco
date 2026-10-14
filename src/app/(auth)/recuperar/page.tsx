@@ -5,7 +5,7 @@ import Link from "next/link";
 import { MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Field } from "@/components/forms/fields";
+import { Field } from "@/components/forms/field";
 import { getSupabase } from "@/lib/supabase/client";
 import { isEmail } from "../_components/auth-helpers";
 import { FormError, textLinkClass } from "../_components/auth-ui";

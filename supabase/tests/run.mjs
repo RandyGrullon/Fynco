@@ -529,5 +529,72 @@ await as(RANDY, async () => {
   check('anon no lee los ajustes del plan', Boolean(anonPlan), anonPlan);
 }
 
+// ---------- Nuevo Fynco: plan versionado, historial, memoria, chat y archivo ----------
+{
+  console.log('\nMis finanzas');
+  await as(RANDY, async () => {
+    const v1 = await one(`select pf_guardar_estado('{"cuentas": [], "a": 1}', 0, 'Plan inicial', 'semilla') as v`);
+    check('crea el plan en la versión 1', v1.v === 1, v1);
+    check('crear de nuevo con versión 0 choca', Boolean(await fails(`select pf_guardar_estado('{"a": 9}', 0, 'otra', 'manual')`)));
+    const v2 = await one(`select pf_guardar_estado('{"a": 2}', 1, 'Gasto', 'chat', '["+1 movimiento"]') as v`);
+    check('guardar sube la versión', v2.v === 2, v2);
+    check('versión vieja se rechaza (no pisa cambios)', Boolean(await fails(`select pf_guardar_estado('{"a": 3}', 1, 'viejo', 'chat')`)));
+    check('datos que no son objeto se rechazan', Boolean(await fails(`select pf_guardar_estado('[1]', 2, 'x', 'chat')`)));
+    check('cada versión queda en el historial', (await q(`select version from pf_historial order by version`)).map((r) => r.version).join() === '1,2');
+    check('no se puede escribir el plan directo', Boolean(await fails(`update pf_estado set version = 99`)) || (await q(`update pf_estado set version = 99 returning 1`)).length === 0);
+    check('no se puede borrar el historial', Boolean(await fails(`delete from pf_historial`)));
+
+    const r = await one(`select pf_restaurar(1) as v`);
+    const st = await one(`select datos, version from pf_estado`);
+    check('restaurar crea una versión nueva con lo viejo', r.v === 3 && st.datos.a === 1 && st.version === 3, st);
+
+    // Deshacer desde el chat
+    const v4 = (await one(`select pf_guardar_estado('{"a": 4}', 3, 'Pádel', 'chat') as v`)).v;
+    const msg = await one(`insert into pf_chat (rol, texto, cambios) values ('assistant', 'Listo', $1) returning id`, [{ version_antes: 3, version_despues: v4 }]);
+    const v5 = (await one(`select pf_deshacer($1) as v`, [msg.id])).v;
+    check('deshacer vuelve a la versión anterior', v5 === 5 && (await one(`select datos from pf_estado`)).datos.a === 1);
+    check('no se deshace dos veces', Boolean(await fails(`select pf_deshacer($1)`, [msg.id])));
+    await q(`select pf_guardar_estado('{"a": 6}', 5, 'Otro', 'chat')`);
+    const msg2 = await one(`insert into pf_chat (rol, texto, cambios) values ('assistant', 'x', $1) returning id`, [{ version_antes: 5, version_despues: 6 }]);
+    await q(`select pf_guardar_estado('{"a": 7}', 6, 'Después', 'manual')`);
+    check('si hubo cambios después, no deshace a ciegas', Boolean(await fails(`select pf_deshacer($1)`, [msg2.id])));
+    check('el chat no se edita', Boolean(await fails(`update pf_chat set texto = 'otro'`)));
+    check('el chat no se borra', Boolean(await fails(`delete from pf_chat`)));
+    check('no puede insertar un chat ya deshecho', Boolean(await fails(`insert into pf_chat (rol, texto, deshecho_en) values ('user', 'x', now())`)));
+
+    // Memoria: se edita y se archiva, no se borra.
+    const n = await one(`insert into pf_memoria (tema, texto, origen) values ('Tarjetas', 'IKEA corta el 13', 'semilla') returning id`);
+    await q(`update pf_memoria set texto = 'IKEA corta el 13 y se paga el 4', actualizado = now() where id = $1`, [n.id]);
+    check('la memoria se edita', (await one(`select texto from pf_memoria where id = $1`, [n.id])).texto.includes('el 4'));
+    check('la memoria no se borra', Boolean(await fails(`delete from pf_memoria where id = $1`, [n.id])));
+    check('la memoria no cambia de dueño', Boolean(await fails(`update pf_memoria set user_id = $1 where id = $2`, [ANA, n.id])));
+
+    // Archivo con búsqueda
+    await q(`insert into pf_archivo (fuente, n, quien, fecha, texto) values
+      ('claude-2026-10', 1, 'randy', '2026-10-13 00:41', 'quiero regalarle unos zapatos flabelus de 124 euros a zoe'),
+      ('claude-2026-10', 2, 'claude', '2026-10-13 00:41', 'Cómpralos entre el 2 y el 5 de noviembre')`);
+    const found = await q(`select * from pf_buscar_archivo('zapatos')`);
+    check('busca en el archivo', found.length === 1 && found[0].n === 1, found);
+    check('busca por pedazo de palabra', (await q(`select * from pf_buscar_archivo('flabel')`)).length === 1);
+    check('el archivo no se edita', Boolean(await fails(`update pf_archivo set texto = 'x'`)));
+  });
+  await as(ANA, async () => {
+    check('nadie más ve tu plan', (await q(`select * from pf_estado`)).length === 0);
+    check('nadie más ve tu historial', (await q(`select * from pf_historial`)).length === 0);
+    check('nadie más ve tu memoria', (await q(`select * from pf_memoria`)).length === 0);
+    check('nadie más ve tu chat', (await q(`select * from pf_chat`)).length === 0);
+    check('nadie más busca en tu archivo', (await q(`select * from pf_buscar_archivo('zapatos')`)).length === 0);
+    check('nadie más restaura tu plan', Boolean(await fails(`select pf_restaurar(1)`)));
+    const chatRandy = await one(`select 1`);
+    check('no puede escribir memoria a tu nombre', Boolean(await fails(`insert into pf_memoria (user_id, tema, texto) values ($1, 'x', 'y')`, [RANDY])) && Boolean(chatRandy));
+  });
+  await db.exec(`set role anon`);
+  const anonPf = await fails(`select * from pf_estado`);
+  const anonRpc = await fails(`select pf_guardar_estado('{}', 0, 'x', 'manual')`);
+  await db.exec(`reset role`);
+  check('anon no lee el plan', Boolean(anonPf), anonPf);
+  check('anon no guarda planes', Boolean(anonRpc), anonRpc);
+}
+
 console.log(`\n${passed} ok, ${failures} fallos`);
 process.exit(failures ? 1 : 0);
