@@ -41,7 +41,7 @@ function Cifra({ etiqueta, valor, sub, tono, barra }: { etiqueta: string; valor:
 
 function Chips<T extends string>({ opciones, valor, onChange }: { opciones: { v: T; label: string }[]; valor: T; onChange: (v: T) => void }) {
   return (
-    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+    <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto overscroll-x-contain px-1 pb-1">
       {opciones.map((o) => (
         <button
           key={o.v}
@@ -236,7 +236,7 @@ function Contenido({ plan, actualizado, estado }: { plan: Plan; actualizado: str
         <Tabla>
           <thead>
             <tr>
-              <Th>Fecha</Th>
+              <Th className="hidden sm:table-cell">Fecha</Th>
               <Th>Qué</Th>
               <Th num>Monto</Th>
               <Th num>Queda</Th>
@@ -245,10 +245,14 @@ function Contenido({ plan, actualizado, estado }: { plan: Plan; actualizado: str
           <tbody>
             {eventos.map((e) => (
               <tr key={e.id} className={cn(e.tipo === "Hoy" && "bg-primary-soft")}>
-                <Td className="whitespace-nowrap text-muted-foreground">{fechaCorta(e.fecha, true)}</Td>
+                <Td className="hidden whitespace-nowrap text-muted-foreground sm:table-cell">{fechaCorta(e.fecha, true)}</Td>
                 <Td>
                   <div className={cn(e.tipo === "Hoy" && "font-semibold")}>{e.concepto}</div>
-                  <div className="mt-0.5 inline-block rounded-md bg-secondary px-1.5 py-px text-[11px] text-muted-foreground">{e.medio}</div>
+                  {/* En el teléfono la fecha va aquí para que la tabla quepa sin moverse de lado. */}
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted-foreground">
+                    <span className="whitespace-nowrap sm:hidden">{fechaCorta(e.fecha, true)}</span>
+                    <span className="rounded-md bg-secondary px-1.5 py-px">{e.medio}</span>
+                  </div>
                 </Td>
                 <Td num className={cn(e.monto > 0 && "text-positive")}>{e.tipo === "Hoy" ? "" : conSigno(e.monto)}</Td>
                 <Td num className={cn("font-semibold", e.saldo < estado.colchon && "text-negative")}>{rd(e.saldo)}</Td>

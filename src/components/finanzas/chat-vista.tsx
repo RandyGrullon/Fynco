@@ -71,7 +71,8 @@ export function ChatVista() {
   const enviar = useEnviar();
   const [texto, setTexto] = useState("");
   const [pendiente, setPendiente] = useState<string | null>(null);
-  const fin = useRef<HTMLDivElement>(null);
+  const lista = useRef<HTMLDivElement>(null);
+  const pegado = useRef(true); // si está viendo lo último
   const area = useRef<HTMLTextAreaElement>(null);
 
   const mandar = (cuerpo: { texto?: string; audio?: { mimeType: "audio/wav"; data: string } }, mostrar: string) => {
@@ -97,9 +98,24 @@ export function ChatVista() {
   const mensajes = chat.data ?? [];
   const ultimoConCambios = [...mensajes].reverse().find((m) => m.cambios && !m.deshecho_en)?.id;
 
+  const alFinal = () => {
+    const el = lista.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+
   useLayoutEffect(() => {
-    fin.current?.scrollIntoView({ block: "end" });
+    pegado.current = true;
+    alFinal();
   }, [mensajes.length, pendiente]);
+
+  // Si el teclado achica la lista, sigue viéndose lo último.
+  useEffect(() => {
+    const el = lista.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => pegado.current && alFinal());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   function enviarTexto() {
     const t = texto.trim();
@@ -112,13 +128,20 @@ export function ChatVista() {
   const ocupado = enviar.isPending || voz.state === "processing";
 
   return (
-    <div className="flex min-h-[calc(100dvh-7rem)] flex-col pt-4 md:min-h-[calc(100dvh-3rem)] md:pt-8">
-      <header className="mb-3">
+    <div data-fija className="flex h-full flex-col pt-4 md:pt-8">
+      <header className="mb-3 shrink-0">
         <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">Chat</h1>
-        <p className="text-sm text-muted-foreground">Cuéntale todo. Te dice la verdad, registra lo que le digas y recuerda lo que han hablado.</p>
+        <p className="sin-teclado text-sm text-muted-foreground">Cuéntale todo. Te dice la verdad, registra lo que le digas y recuerda lo que han hablado.</p>
       </header>
 
-      <div className="flex flex-1 flex-col gap-3 pb-40">
+      <div
+        ref={lista}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          pegado.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        }}
+        className="-mx-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-3 md:-mx-8 md:px-8"
+      >
         {chat.isLoading && (
           <>
             <Skeleton className="h-14 w-2/3 self-end" />
@@ -150,10 +173,9 @@ export function ChatVista() {
             </div>
           </>
         )}
-        <div ref={fin} />
       </div>
 
-      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 px-3 py-2.5 backdrop-blur md:bottom-0 md:left-60">
+      <div className="-mx-4 shrink-0 border-t border-border bg-background px-3 py-2.5 md:-mx-8 md:px-8">
         <div className="mx-auto flex max-w-3xl items-end gap-2">
           {voz.state === "recording" ? (
             <div className="flex h-12 flex-1 items-center justify-between rounded-2xl border border-negative/50 bg-card px-4 text-sm">
@@ -178,8 +200,8 @@ export function ChatVista() {
               rows={1}
               maxLength={4000}
               placeholder="Escribe lo que pasó o pregunta…"
-              className="max-h-40 min-h-12 flex-1 resize-none rounded-2xl border border-border bg-card px-4 py-3 text-[15px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              style={{ height: Math.min(160, 48 + Math.max(0, texto.split("\n").length - 1) * 22) }}
+              className="max-h-40 min-h-12 flex-1 resize-none rounded-2xl border border-border bg-card px-4 py-3 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ height: Math.min(160, 48 + Math.max(0, texto.split("\n").length - 1) * 24) }}
             />
           )}
           {texto.trim() && voz.state !== "recording" ? (

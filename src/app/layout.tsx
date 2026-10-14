@@ -3,6 +3,7 @@ import { Manrope } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { IntroSplash, introSkipScript } from "@/components/intro-splash";
+import { AppViewport } from "@/components/app-viewport";
 import { SITE_URL } from "@/lib/supabase/env";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -37,7 +38,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Como app: sin zoom (tampoco al tocar un campo) y el teclado achica la pantalla en vez de taparla.
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
+  interactiveWidget: "resizes-content",
   themeColor: "#0E1013",
   colorScheme: "dark",
 };
@@ -49,9 +54,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: introSkipScript }} />
       </head>
-      <body className="min-h-dvh font-sans">
+      <body className="font-sans">
         <IntroSplash />
-        <QueryProvider>{children}</QueryProvider>
+        <AppViewport />
+        <div className="app-raiz">
+          <QueryProvider>{children}</QueryProvider>
+        </div>
       </body>
     </html>
   );

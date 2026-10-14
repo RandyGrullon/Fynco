@@ -22,7 +22,7 @@ export async function salir() {
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 items-start border-t border-border bg-nav/95 px-2 pt-2.5 backdrop-blur pb-safe md:hidden">
+    <nav aria-label="Principal" className="sin-teclado grid shrink-0 select-none grid-cols-3 items-start border-t border-border bg-nav px-2 pt-2.5 pb-safe md:hidden">
       {ITEMS.map((item) => {
         const active = isActive(pathname, item.href);
         return (
@@ -47,7 +47,7 @@ export function BottomNav() {
 export function SideNav() {
   const pathname = usePathname();
   return (
-    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-nav px-4 py-6 md:flex">
+    <aside className="hidden w-60 shrink-0 select-none flex-col overflow-y-auto border-r border-border bg-nav px-4 py-6 md:flex">
       <Link href="/plan" className="mb-8 flex items-center gap-2.5 px-2">
         <LogoMark size={36} />
         <span className="text-xl font-extrabold tracking-tight">Fynco</span>

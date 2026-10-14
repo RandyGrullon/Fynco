@@ -8,7 +8,7 @@ export const metadata = { title: "Configurar" };
 export default function ConfigurarPage() {
   if (isSupabaseConfigured) redirect("/plan");
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center gap-6 px-6 pb-12 pt-[max(env(safe-area-inset-top),3rem)]">
+    <main className="mx-auto flex min-h-full max-w-lg flex-col justify-center gap-6 px-6 pb-12 pt-[max(env(safe-area-inset-top),3rem)]">
       <LogoMark size={48} />
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight">Falta conectar Supabase</h1>

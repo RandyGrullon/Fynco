@@ -187,9 +187,59 @@ html[data-intro="skip"] .intro-splash {
   }
 }
 
-/* El recargar nativo del navegador se reemplaza por el de la app (también funciona instalada). */
+/* ---------------------------------------------------------------------
+   Como app: la página no se mueve ni hace zoom. Todo vive en .app-raiz, que mide
+   justo lo visible (--app-h lo pone AppViewport, también con el teclado abierto),
+   y solo se desplaza por dentro lo que no cabe. El recargar nativo del navegador
+   se reemplaza por el de la app.
+   --------------------------------------------------------------------- */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 html {
-  overscroll-behavior-y: none;
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+.app-raiz {
+  position: fixed;
+  inset-inline: 0;
+  top: var(--app-y, 0px);
+  height: var(--app-h, 100dvh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
+}
+/* Una pantalla con data-fija (el chat) ocupa justo el alto disponible y maneja su propio scroll. */
+.app-main:has([data-fija]) {
+  overflow-y: hidden;
+}
+.app-main:has([data-fija]) > * {
+  height: 100%;
+}
+/* Mientras se escribe, lo que estorba se esconde (la barra de abajo). */
+html[data-teclado] .sin-teclado {
+  display: none;
+}
+@layer base {
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  [role="button"],
+  [role="tab"] {
+    touch-action: manipulation;
+  }
+  a,
+  button,
+  img {
+    -webkit-touch-callout: none;
+  }
 }
 
 @layer utilities {
