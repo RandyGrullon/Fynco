@@ -7,6 +7,8 @@ const MESSAGES: Record<string, string> = {
   invalid_account: "Elige una de tus cuentas.",
   same_account: "La cuenta de origen y destino deben ser distintas.",
   not_a_card: "Eso solo se puede hacer con una tarjeta de crédito.",
+  debt_currency_mismatch: "Esa cuenta está en otra moneda que la deuda.",
+  debts_due_after_start: "La fecha de pago no puede ser antes del préstamo.",
   nothing_to_pay: "Esa tarjeta no tiene deuda que pagar.",
   card_currency_mismatch: "La cuenta y la tarjeta están en monedas distintas. Usa Transferir para indicar cuánto llegó.",
   payers_sum_mismatch: "Lo que pagó cada uno no suma el total.",

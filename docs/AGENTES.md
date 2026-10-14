@@ -66,6 +66,30 @@ insert into accounts (user_id, name, type, currency, opening_balance, institutio
 values (auth.uid(), 'Visa IKEA Popular', 'credit', 'DOP', -3664078, 'Popular', '5263', 14, 9, 6500000);
 ```
 
+## Deudas y préstamos con personas
+
+Se manejan solo con funciones (las tablas `debts` y `debt_payments` son de solo lectura). El interés es simple; las cuotas y el total los calcula `debt_terms`.
+
+```sql
+-- Me prestaron 30,000 al 5% mensual, 6 cuotas mensuales desde el 13 nov; entró al Popular.
+-- direction: 'borrowed' (me prestaron) o 'lent' (presté). interest_period: 'none', 'monthly', 'annual' o 'total'.
+-- frequency: 'once' (un solo pago; installments = 1), 'weekly', 'biweekly' o 'monthly'. La cuenta es opcional (null).
+select save_debt(null, 'borrowed', 'María', 3000000, 'DOP', '2026-10-13', 5, 'monthly', 6, 'monthly', '2026-11-13', 'ID_CUENTA', 'Para el carro');
+
+-- Pago (o cobro, si prestaste). Con cuenta: el capital no cuenta en estadísticas y el interés sí.
+select record_debt_payment('ID_DEUDA', 650000, '2026-11-13', 'ID_CUENTA');
+
+-- Lo que falta y la próxima cuota
+select d.person, d.direction, t.total / 100.0 as total, coalesce(sum(p.amount), 0) / 100.0 as pagado, t.last_due_on
+  from debts d cross join lateral debt_terms(d) t left join debt_payments p on p.debt_id = d.id
+ where d.user_id = auth.uid() and d.closed_at is null
+ group by d.id, t.total, t.last_due_on;
+
+-- Editar (mismos parámetros con el id) o borrar (borra también sus pagos y movimientos)
+select delete_debt('ID_DEUDA');
+select delete_debt_payment('ID_PAGO');
+```
+
 ## Errores que puede devolver
 
 | Código | Qué significa |
@@ -76,9 +100,11 @@ values (auth.uid(), 'Visa IKEA Popular', 'credit', 'DOP', -3664078, 'Popular', '
 | `nothing_to_pay` | La tarjeta no tiene deuda (pasa un monto) |
 | `card_currency_mismatch` | La cuenta y la tarjeta están en monedas distintas (usa `create_transfer` con el monto que llegó) |
 | `invalid_amount` | Monto vacío, cero o negativo |
+| `debt_currency_mismatch` | La cuenta está en otra moneda que la deuda |
+| `not_found` | La deuda o el pago no existe o no es del usuario |
 
 La app muestra los cambios al volver a abrirla o al deslizar hacia abajo para recargar.
 
 ## Antes de empezar
 
-En Supabase → SQL Editor deben estar corridos, en orden, todos los archivos de `supabase/migrations/` (el último agrega `pay_card` y `set_card_debt`).
+En Supabase → SQL Editor deben estar corridos, en orden, todos los archivos de `supabase/migrations/` (incluye `pay_card`, `set_card_debt` y las deudas con personas).

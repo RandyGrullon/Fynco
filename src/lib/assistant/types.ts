@@ -150,7 +150,56 @@ export interface CardDebtDraft {
   occurred_on: string;
 }
 
-export type Draft = TransactionDraft | SharedExpenseDraft | TransferDraft | SettlementDraft | RecurringDraft | AccountDraft | CardPaymentDraft | CardDebtDraft;
+/** Deuda o préstamo con una persona. Montos en centavos. */
+export interface DebtDraft {
+  type: "debt";
+  id: string;
+  direction: "borrowed" | "lent";
+  person: string;
+  principal: number;
+  currency: string;
+  started_on: string;
+  interest_rate: number;
+  interest_period: "none" | "total" | "monthly" | "annual";
+  installments: number;
+  frequency: "once" | "weekly" | "biweekly" | "monthly";
+  first_due_on: string;
+  account_id: string | null;
+  account_name: string | null;
+  note: string | null;
+  /** Calculados (para mostrar). */
+  interest: number;
+  total: number;
+  installment_amount: number;
+  last_due_on: string;
+}
+
+/** Pago (o cobro) de una deuda con una persona. */
+export interface DebtPaymentDraft {
+  type: "debt_payment";
+  id: string;
+  debt_id: string;
+  person: string;
+  direction: "borrowed" | "lent";
+  currency: string;
+  amount: number;
+  remaining: number;
+  account_id: string | null;
+  account_name: string | null;
+  paid_on: string;
+}
+
+export type Draft =
+  | TransactionDraft
+  | SharedExpenseDraft
+  | TransferDraft
+  | SettlementDraft
+  | RecurringDraft
+  | AccountDraft
+  | CardPaymentDraft
+  | CardDebtDraft
+  | DebtDraft
+  | DebtPaymentDraft;
 
 export interface AssistantAudio {
   mimeType: "audio/wav";

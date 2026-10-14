@@ -17,7 +17,7 @@ Tu cartera personal, tus gastos compartidos (estilo Splitwise) y un asistente fi
 
 Solo hay que poner las variables de entorno y correr el SQL una vez.
 
-1. **Base de datos:** en Supabase → SQL Editor, ejecuta en orden los archivos de [`supabase/migrations/`](supabase/migrations/): primero [`20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql) y luego cada migración nueva (p. ej. [`20261013000001_card_dates.sql`](supabase/migrations/20261013000001_card_dates.sql), fechas de corte y pago de tarjetas, [`20261014000001_credit_limit.sql`](supabase/migrations/20261014000001_credit_limit.sql), límite de crédito, y [`20261015000001_card_payments.sql`](supabase/migrations/20261015000001_card_payments.sql), pagar tarjetas y poner al día lo consumido).
+1. **Base de datos:** en Supabase → SQL Editor, ejecuta en orden los archivos de [`supabase/migrations/`](supabase/migrations/): primero [`20261008000001_init.sql`](supabase/migrations/20261008000001_init.sql) y luego cada migración nueva (p. ej. [`20261013000001_card_dates.sql`](supabase/migrations/20261013000001_card_dates.sql), fechas de corte y pago de tarjetas, [`20261014000001_credit_limit.sql`](supabase/migrations/20261014000001_credit_limit.sql), límite de crédito, [`20261015000001_card_payments.sql`](supabase/migrations/20261015000001_card_payments.sql), pagar tarjetas y poner al día lo consumido, y [`20261016000001_debts.sql`](supabase/migrations/20261016000001_debts.sql), deudas y préstamos con personas).
 2. **Variables** (Vercel → Settings → Environment Variables, o `.env.local` para desarrollo):
 
    | Variable | Para qué |
@@ -57,6 +57,7 @@ npm run typecheck
 - **Recurrentes:** se generan al abrir la app, de forma idempotente (`unique(recurring_rule_id, occurrence_date)`). Opcionalmente también con `pg_cron` (ver el final del SQL).
 
 - **Tarjetas:** lo consumido sube la deuda de la tarjeta y no toca el banco; el dinero sale de una cuenta solo al registrar el pago (`pay_card`). `set_card_debt` deja la deuda en lo que dice el banco.
+- **Deudas con personas:** "me prestaron" o "presté", con interés simple opcional (mensual, anual o total) y cuotas que se calculan solas (`debt_terms`, igual que `src/lib/debts.ts`). Con una cuenta, el capital va como pago de deuda (no cuenta en estadísticas) y solo el interés cuenta como gasto o ingreso.
 - **Agentes:** otro chat de Claude conectado a la base puede registrar datos con las mismas funciones: ver [docs/AGENTES.md](docs/AGENTES.md).
 
 Más detalle en [docs/REDISENO.md](docs/REDISENO.md) y [docs/UI.md](docs/UI.md).

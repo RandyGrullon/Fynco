@@ -409,5 +409,61 @@ await as(RANDY, async () => {
   check('un agente puede actuar a nombre del usuario', agent.r === 'expense' && (await balance(card)) === -30000, agent);
 }
 
+// ---------- Deudas y préstamos entre personas ----------
+{
+  const balance = async (id) => Number((await one(`select balance from account_balances where account_id = $1`, [id])).balance);
+  let bank, debt, lent, pay1;
+  await as(RANDY, async () => {
+    bank = (await one(`insert into accounts (name, type, opening_balance) values ('Banco deudas', 'checking', 100000) returning id`)).id;
+    const ingresosAntes = Number((await one(`select coalesce(sum(income), 0)::bigint i from cashflow_by_month('2026-10-01', '2026-10-31')`)).i);
+    // Me prestaron 20,000 al 10% mensual, 4 cuotas mensuales desde el 15 nov.
+    debt = (await one(
+      `select save_debt(null, 'borrowed', 'Juan', 2000000, 'DOP', '2026-10-15', 10, 'monthly', 4, 'monthly', '2026-11-15', $1) id`,
+      [bank],
+    )).id;
+    const terms = await one(`select t.* from debts d, debt_terms(d) t where d.id = $1`, [debt]);
+    check('4 meses al 10% = 8,000 de interés', Number(terms.interest) === 800000 && Number(terms.total) === 2800000 && String(terms.last_due_on).startsWith('2027-02-15') || terms.last_due_on?.toISOString?.().startsWith('2027-02-15'), terms);
+    check('el préstamo entra a la cuenta', (await balance(bank)) === 2100000);
+    const flujo0 = await one(`select coalesce(sum(income), 0)::bigint i from cashflow_by_month('2026-10-01', '2026-10-31')`);
+    check('el préstamo no cuenta como ingreso', Number(flujo0.i) === ingresosAntes, { antes: ingresosAntes, despues: flujo0.i });
+
+    pay1 = (await one(`select record_debt_payment($1, 700000, '2026-11-15', $2) id`, [debt, bank])).id;
+    const rows = await q(`select kind, amount from transactions where debt_payment_id = $1 order by kind`, [pay1]);
+    check('el pago se divide en capital e interés', rows.length === 2 && rows.some((r) => r.kind === 'settlement' && Number(r.amount) === -500000) && rows.some((r) => r.kind === 'expense' && Number(r.amount) === -200000), rows);
+    check('el pago sale de la cuenta', (await balance(bank)) === 1400000);
+    const flujo1 = await one(`select coalesce(sum(expense), 0)::bigint e from cashflow_by_month('2026-11-01', '2026-11-30')`);
+    check('solo el interés cuenta como gasto', Number(flujo1.e) === 200000, flujo1);
+
+    check('aún no está saldada', (await one(`select closed_at from debts where id = $1`, [debt])).closed_at === null);
+    await one(`select record_debt_payment($1, 2100000, '2027-02-15') id`, [debt]);
+    check('pagada completa se cierra', (await one(`select closed_at from debts where id = $1`, [debt])).closed_at !== null);
+    await one(`select delete_debt_payment($1)`, [pay1]);
+    check('borrar un pago la reabre y devuelve el dinero', (await one(`select closed_at from debts where id = $1`, [debt])).closed_at === null && (await balance(bank)) === 2100000);
+
+    // Presté 5,000 sin interés, un solo pago.
+    lent = (await one(`select save_debt(null, 'lent', 'Ana', 500000, 'DOP', '2026-10-01', 0, 'none', 1, 'once', '2026-10-31', $1) id`, [bank])).id;
+    check('lo prestado sale de la cuenta', (await balance(bank)) === 1600000);
+    await one(`select record_debt_payment($1, 500000, '2026-10-30', $2)`, [lent, bank]);
+    check('el cobro vuelve a la cuenta y la cierra', (await balance(bank)) === 2100000 && (await one(`select closed_at from debts where id = $1`, [lent])).closed_at !== null);
+
+    // Editar: cambiar el monto mueve el movimiento inicial.
+    await one(`select save_debt($1, 'lent', 'Ana', 600000, 'DOP', '2026-10-01', 0, 'none', 1, 'once', '2026-10-31', $2)`, [lent, bank]);
+    check('editar el monto ajusta la cuenta y la reabre', (await balance(bank)) === 2000000 && (await one(`select closed_at from debts where id = $1`, [lent])).closed_at === null);
+
+    check('no se editan a mano los movimientos de una deuda', (await q(`update transactions set amount = -1 where debt_id = $1 returning id`, [debt])).length === 0);
+    check('ni se borran a mano', (await q(`delete from transactions where debt_id = $1 returning id`, [debt])).length === 0);
+    check('ni se crean deudas sin la función', Boolean(await fails(`insert into debts (direction, person, principal, first_due_on) values ('lent', 'X', 1, current_date)`)));
+    check('monedas distintas se rechazan', (await fails(`select save_debt(null, 'lent', 'Y', 100, 'USD', current_date, 0, 'none', 1, 'once', current_date, $1)`, [bank]))?.includes('debt_currency_mismatch'));
+  });
+  await as(ANA, async () => {
+    check('nadie más ve tus deudas', (await q(`select id from debts where id in ($1, $2)`, [debt, lent])).length === 0);
+    check('nadie más paga tus deudas', (await fails(`select record_debt_payment($1, 100)`, [debt]))?.includes('not_found'));
+  });
+  await as(RANDY, async () => {
+    await one(`select delete_debt($1)`, [lent]);
+    check('borrar la deuda devuelve el dinero', (await balance(bank)) === 2100000);
+  });
+}
+
 console.log(`\n${passed} ok, ${failures} fallos`);
 process.exit(failures ? 1 : 0);

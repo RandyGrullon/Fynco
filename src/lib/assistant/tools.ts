@@ -4,13 +4,14 @@
 import { addDays, format, isValid, parse } from "date-fns";
 import type { createSupabaseServer } from "@/lib/supabase/server";
 import { cardDates } from "@/lib/card-dates";
+import { debtStatus, debtTerms, defaultFirstDue, interestLabel, type DebtFrequency, type InterestPeriod } from "@/lib/debts";
 import { computeSharedOverview, myMember, type GroupDetail } from "@/lib/data/groups";
 import { monthRange, parseDate } from "@/lib/dates";
 import { CURRENCY_CODES, formatMoney } from "@/lib/money";
 import { pairwiseDebts, simplifyDebts, splitEqual } from "@/lib/split";
 import type { AccountType, Debt, Group, GroupMember, MemberBalance, Settlement, SharedExpense, TxKind } from "@/lib/types";
 import type { FunctionDeclaration } from "./gemini";
-import type { AccountDraft, CardDebtDraft, CardPaymentDraft, Draft, DraftShare, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "./types";
+import type { AccountDraft, CardDebtDraft, CardPaymentDraft, DebtDraft, DebtPaymentDraft, Draft, DraftShare, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "./types";
 
 export type ServerSupabase = Awaited<ReturnType<typeof createSupabaseServer>>;
 
@@ -186,7 +187,7 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   {
     name: "get_overview",
     description:
-      "Resumen financiero actual del usuario: cuentas con saldos (y, en tarjetas de crédito, próxima fecha de corte y fecha límite de pago), ingresos y gastos de este mes, totales de lo que le deben y lo que debe en gastos compartidos, metas activas con su progreso y cobros recurrentes de los próximos 7 días.",
+      "Resumen financiero actual del usuario: cuentas con saldos (y, en tarjetas de crédito, próxima fecha de corte y fecha límite de pago), deudas y préstamos con personas (cuánto falta y la próxima cuota), ingresos y gastos de este mes, totales de lo que le deben y lo que debe en gastos compartidos, metas activas con su progreso y cobros recurrentes de los próximos 7 días.",
   },
   {
     name: "list_transactions",
@@ -366,6 +367,44 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         date: { type: "STRING", description: "Fecha YYYY-MM-DD. Por defecto hoy." },
       },
       required: ["debt"],
+    },
+  },
+  {
+    name: "propose_debt",
+    description:
+      "Prepara un BORRADOR de deuda o préstamo con una persona ('le tomé prestado 20 mil a Juan', 'le presté 5 mil a Ana al 10% mensual en 4 cuotas'). Interés simple opcional; el total y las cuotas se calculan solos. Si dice en cuántas cuotas, NO preguntes la fecha de la primera: por defecto es un período después del préstamo (se puede cambiar en el borrador). Pregunta solo si es un pago único y no dijo para cuándo. No guarda nada.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        direction: { type: "STRING", format: "enum", enum: ["borrowed", "lent"], description: "borrowed = le prestaron al usuario (debe); lent = el usuario prestó (le deben)." },
+        person: { type: "STRING", description: "Nombre de la persona." },
+        amount: { type: "NUMBER", description: "Monto prestado." },
+        start_date: { type: "STRING", description: "Fecha del préstamo YYYY-MM-DD. Por defecto hoy." },
+        due_date: { type: "STRING", description: "Fecha límite si es un solo pago, o de la primera cuota si es en cuotas (YYYY-MM-DD)." },
+        installments: { type: "INTEGER", description: "Número de cuotas (1 = un solo pago)." },
+        frequency: { type: "STRING", format: "enum", enum: ["weekly", "biweekly", "monthly"], description: "Cada cuánto se paga si son varias cuotas." },
+        interest_rate: { type: "NUMBER", description: "Porcentaje de interés (10 = 10 %). Omítelo si no hay interés." },
+        interest_period: { type: "STRING", format: "enum", enum: ["monthly", "annual", "total"], description: "Si el % es mensual, anual o total (una sola vez)." },
+        account: { type: "STRING", description: "Cuenta donde entró (o de donde salió) el dinero, si lo dice." },
+        note: { type: "STRING", description: "Nota corta, opcional." },
+      },
+      required: ["direction", "person", "amount"],
+    },
+  },
+  {
+    name: "propose_debt_payment",
+    description:
+      "Prepara un BORRADOR de pago de una deuda con una persona ('le pagué 5 mil a Juan', 'Ana me pagó la cuota'). Sin monto = la próxima cuota pendiente. No guarda nada.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        person: { type: "STRING", description: "Persona de la deuda." },
+        amount: { type: "NUMBER", description: "Monto pagado. Omítelo para la próxima cuota." },
+        pay_all: { type: "BOOLEAN", description: "true si saldó todo lo que falta." },
+        date: { type: "STRING", description: "Fecha YYYY-MM-DD. Por defecto hoy." },
+        account: { type: "STRING", description: "Cuenta de donde salió (o a donde entró) el dinero, si lo dice." },
+      },
+      required: ["person"],
     },
   },
   {
@@ -589,6 +628,10 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
       .map((g) => `${clean(g.name)} (${g.currency}; con ${g.members.filter((m) => !m.left_at && m.profile_id !== userId).map((m) => clean(m.display_name)).join(", ") || "nadie más"})`);
     lines.push(`Grupos: ${named.length ? named.join("; ") : "ninguno"}.`);
     lines.push(`Amigos con gastos directos: ${direct.length ? direct.join(", ") : "ninguno"}.`);
+    const openDebts = (await personalDebts()).filter((v) => !v.status.done);
+    lines.push(
+      `Deudas con personas: ${openDebts.length ? openDebts.map((v) => `${clean(v.debt.person)} (${v.debt.direction === "borrowed" ? "le debe" : "le deben"})`).join(", ") : "ninguna"}.`,
+    );
     return lines.join("\n");
   }
 
@@ -667,6 +710,17 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
         ...(a.type === "credit" ? cardInfo(a) : {}),
       })),
       net_worth: [...netWorth].map(([cur, total]) => ({ currency: cur, total: fmt(total, cur), total_cents: total })),
+      personal_debts: (await personalDebts())
+        .filter((v) => !v.status.done)
+        .map(({ debt, terms, status }) => ({
+          person: debt.person,
+          meaning: debt.direction === "borrowed" ? "el usuario le debe" : "le debe al usuario",
+          remaining: fmt(status.remaining, debt.currency),
+          total: fmt(terms.total, debt.currency),
+          interest: interestLabel(debt.interest_rate, debt.interest_period),
+          next_due: status.next ? { date: status.next.due_on, amount: fmt(status.next.pending, debt.currency), installment: `${status.next.n} de ${terms.installments.length}` } : null,
+          overdue: status.overdue ? fmt(status.overdue, debt.currency) : null,
+        })),
       this_month: {
         from: month.from,
         to: month.to,
@@ -1076,6 +1130,133 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
     };
   }
 
+  /** Deudas con personas (vacío si la base aún no tiene la tabla). */
+  const personalDebts = () =>
+    once("debts", async () => {
+      type Row = {
+        id: string;
+        direction: "borrowed" | "lent";
+        person: string;
+        principal: number;
+        currency: string;
+        started_on: string;
+        interest_rate: number;
+        interest_period: InterestPeriod;
+        installments: number;
+        frequency: DebtFrequency;
+        first_due_on: string;
+        account_id: string | null;
+        debt_payments: { amount: number }[] | null;
+      };
+      const res = (await supabase.from("debts").select("*, debt_payments(amount)").eq("user_id", userId)) as { data: Row[] | null; error: unknown };
+      if (res.error) return [];
+      return (res.data ?? []).map((d) => {
+        const debt = { ...d, principal: Number(d.principal), interest_rate: Number(d.interest_rate) };
+        const terms = debtTerms(debt);
+        const paid = (d.debt_payments ?? []).reduce((n, p) => n + Number(p.amount), 0);
+        return { debt, terms, status: debtStatus(terms, paid, today) };
+      });
+    });
+
+  async function proposeDebt(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const direction = args.direction === "lent" ? "lent" : args.direction === "borrowed" ? "borrowed" : null;
+    if (!direction) return { error: "Indica si le prestaron al usuario (borrowed) o si prestó (lent)." };
+    const person = str(args.person, 60);
+    if (!person) return { error: "¿Con quién es la deuda?" };
+    const principal = toCents(args.amount);
+    if (!principal) return { error: "¿Cuánto fue el préstamo?" };
+    const startedOn = validDate(args.start_date) ?? today;
+    const n = Math.max(1, Math.min(360, Math.round(Number(args.installments) || 1)));
+    const frequency: DebtFrequency = n === 1 ? "once" : args.frequency === "weekly" || args.frequency === "biweekly" ? args.frequency : "monthly";
+    const due = validDate(args.due_date);
+    if (!due && n === 1 && !args.installments) return { error: "¿Para cuándo es el pago, o en cuántas cuotas? Pregúntalo junto con lo demás que falte." };
+    const firstDue = due ?? defaultFirstDue(startedOn, frequency === "once" ? "monthly" : frequency);
+    if (firstDue < startedOn) return { error: "La fecha de pago no puede ser antes del préstamo." };
+    const rate = Math.max(0, Math.min(1000, Number(args.interest_rate) || 0));
+    const period: InterestPeriod = rate > 0 ? (args.interest_period === "annual" || args.interest_period === "total" ? args.interest_period : "monthly") : "none";
+
+    const accs = await accounts();
+    const accName = str(args.account, 60);
+    const account = accName ? findAccount(accs, accName) : undefined;
+    const warnings: string[] = [];
+    if (accName && !account) warnings.push(`No encontré la cuenta "${accName}"; quedó sin cuenta (lo puede elegir al editar).`);
+    const cur = account?.currency ?? currency;
+    const terms = debtTerms({ principal, started_on: startedOn, interest_rate: rate, interest_period: period, installments: n, frequency, first_due_on: firstDue });
+    const draft: DebtDraft = {
+      type: "debt",
+      id: crypto.randomUUID(),
+      direction,
+      person,
+      principal,
+      currency: cur,
+      started_on: startedOn,
+      interest_rate: rate,
+      interest_period: period,
+      installments: n,
+      frequency,
+      first_due_on: firstDue,
+      account_id: account?.id ?? null,
+      account_name: account?.name ?? null,
+      note: str(args.note, 200) || null,
+      interest: terms.interest,
+      total: terms.total,
+      installment_amount: terms.installments[0].amount,
+      last_due_on: terms.last_due_on,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: {
+        person,
+        type: direction === "borrowed" ? "le debe" : "le deben",
+        principal: fmt(principal, cur),
+        interest: `${fmt(terms.interest, cur)} (${interestLabel(rate, period)})`,
+        total: fmt(terms.total, cur),
+        installments: n === 1 ? `un pago el ${terms.last_due_on}` : `${n} cuotas de ${fmt(terms.installments[0].amount, cur)} (${frequency}) hasta ${terms.last_due_on}`,
+        account: draft.account_name,
+      },
+      warnings,
+      instruction: "Aún NO está guardado. Resume total y cuotas, y dile que revise y toque Confirmar.",
+    };
+  }
+
+  async function proposeDebtPayment(args: Record<string, unknown>) {
+    if (drafts.length >= MAX_DRAFTS) return { error: `Solo puedo preparar ${MAX_DRAFTS} borradores por mensaje.` };
+    const open = (await personalDebts()).filter((v) => !v.status.done);
+    if (!open.length) return { error: "El usuario no tiene deudas abiertas con personas. Puede crearla con propose_debt." };
+    const person = str(args.person, 60);
+    const view = bestMatch(open, person, (v) => [v.debt.person, v.debt.person.split(" ")[0]]);
+    if (!view) return { error: `No encontré una deuda abierta con "${person}".`, debts: open.map((v) => v.debt.person) };
+    const { debt, status } = view;
+    const amount = args.pay_all === true ? status.remaining : (toCents(args.amount) ?? status.next?.pending ?? status.remaining);
+    if (!amount) return { error: "¿Cuánto fue el pago?" };
+    const accs = await accounts();
+    const accName = str(args.account, 60);
+    const account = accName ? findAccount(accs, accName) : debt.account_id ? accs.find((a) => a.id === debt.account_id) : undefined;
+    const draft: DebtPaymentDraft = {
+      type: "debt_payment",
+      id: crypto.randomUUID(),
+      debt_id: debt.id,
+      person: debt.person,
+      direction: debt.direction,
+      currency: debt.currency,
+      amount,
+      remaining: status.remaining,
+      account_id: account && account.currency === debt.currency ? account.id : null,
+      account_name: account && account.currency === debt.currency ? account.name : null,
+      paid_on: validDate(args.date) ?? today,
+    };
+    drafts.push(draft);
+    return {
+      ok: true,
+      status: "borrador_pendiente",
+      draft: { person: debt.person, amount: fmt(amount, debt.currency), remaining_after: fmt(Math.max(0, status.remaining - amount), debt.currency), account: draft.account_name },
+      instruction: "Aún NO está guardado. Dile que revise y toque Confirmar.",
+    };
+  }
+
   /** Varias operaciones de una vez: gastos, ingresos y transferencias. */
   async function proposeBatch(args: Record<string, unknown>) {
     const items = Array.isArray(args.items) ? args.items.slice(0, MAX_DRAFTS) : [];
@@ -1398,6 +1579,10 @@ export function createToolbox({ supabase, userId, today: todayInput, currency }:
           return await proposeCardPayment(args);
         case "propose_card_debt":
           return await proposeCardDebt(args);
+        case "propose_debt":
+          return await proposeDebt(args);
+        case "propose_debt_payment":
+          return await proposeDebtPayment(args);
         default:
           return { error: `La herramienta ${name} no existe.` };
       }

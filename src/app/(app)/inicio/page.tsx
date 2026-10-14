@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronRight, CreditCard, Eye, EyeOff, Mic, Repeat, Split, Users, type LucideIcon } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ChevronRight, CreditCard, Eye, EyeOff, HandCoins, Mic, Repeat, Split, Users, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BigMoney, Money, usePrivateAccountIds } from "@/components/money";
@@ -11,7 +11,8 @@ import { useSheets } from "@/components/shell/sheets";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { PendingInvites } from "@/components/shared/pending-invites";
 import { AvatarStack, Monogram, accountMonogram, initials } from "@/components/visuals";
-import { useAccounts, useCashflow, useProfile, useRecentTransactions, useRecurring, useSharedOverview, useUpdateProfile } from "@/hooks/queries";
+import { useAccounts, useCashflow, useDebts, useProfile, useRecentTransactions, useRecurring, useSharedOverview, useUpdateProfile } from "@/hooks/queries";
+import { debtView } from "@/components/debts/debt-view";
 import { greeting, monthName, monthRange, shortDate, todayISO } from "@/lib/dates";
 import { addDays, format } from "date-fns";
 import { cardDates, daysUntil } from "@/lib/card-dates";
@@ -50,6 +51,13 @@ export default function InicioPage() {
 
   const weekEnd = format(addDays(new Date(), 7), "yyyy-MM-dd");
   const upcoming = recurring.filter((r) => r.active && r.next_run_on <= weekEnd && r.next_run_on >= todayISO()).slice(0, 3);
+  const { data: debts = [] } = useDebts();
+  // Cuotas de deudas que vencen esta semana (o ya vencieron).
+  const debtDues = debts
+    .map((d) => debtView(d, todayISO()))
+    .filter((v) => !v.status.done && v.status.next && v.status.next.due_on <= weekEnd)
+    .sort((a, b) => a.status.next!.due_on.localeCompare(b.status.next!.due_on))
+    .slice(0, 3);
   const cardPayments = active
     .filter((a) => a.type === "credit")
     .map((a) => ({ account: a, date: cardDates(a.statement_day, a.payment_due_day, todayISO()).nextDue }))
@@ -163,12 +171,38 @@ export default function InicioPage() {
         </Link>
       )}
 
-      {(upcoming.length > 0 || cardPayments.length > 0) && (
+      {(upcoming.length > 0 || cardPayments.length > 0 || debtDues.length > 0) && (
         <section className="flex flex-col gap-2">
           <SectionTitle href="/recurrentes" action="Ver todos">
             Próximos 7 días
           </SectionTitle>
           <ul className="flex flex-col gap-2">
+            {debtDues.map(({ debt: d, status: s, terms: t }) => {
+              const next = s.next!;
+              const late = next.due_on < todayISO();
+              return (
+                <li key={`debt-${d.id}`}>
+                  <Link
+                    href={`/deudas/${d.id}`}
+                    className="flex items-center gap-3 rounded-xl border border-secondary bg-card px-3 py-2.5 transition-colors hover:bg-[#1b1e24] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className={cn("flex h-9 w-9 items-center justify-center rounded-md", late ? "bg-negative/15 text-negative" : "bg-secondary text-muted-foreground")}>
+                      <HandCoins className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">
+                        {d.direction === "borrowed" ? "Pagarle a" : "Cobrarle a"} {d.person}
+                      </span>
+                      <span className={cn("block text-xs", late ? "font-semibold text-negative" : "text-muted-foreground")}>
+                        {late ? "Vencida" : next.due_on === todayISO() ? "Hoy" : shortDate(next.due_on)}
+                        {t.installments.length > 1 ? ` · cuota ${next.n} de ${t.installments.length}` : ""}
+                      </span>
+                    </span>
+                    <Money amount={d.direction === "borrowed" ? -next.pending : next.pending} currency={d.currency} sign="always" className={cn("text-sm font-bold", d.direction === "lent" && "text-positive")} />
+                  </Link>
+                </li>
+              );
+            })}
             {cardPayments.map(({ account: a, date }) => {
               const urgent = daysUntil(date, todayISO()) <= 2;
               return (

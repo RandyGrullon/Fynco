@@ -62,9 +62,46 @@ export interface Transaction {
   shared_expense_id: string | null;
   settlement_id: string | null;
   recurring_rule_id: string | null;
+  /** Movimientos de una deuda (préstamo o pago): se editan desde la deuda. */
+  debt_id?: string | null;
+  debt_payment_id?: string | null;
   source: TxSource;
   note: string | null;
   created_at: string;
+}
+
+export interface PersonDebtPayment {
+  id: string;
+  debt_id: string;
+  user_id: string;
+  /** Centavos. */
+  amount: number;
+  paid_on: string;
+  account_id: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+/** Deuda o préstamo con una persona. Ver src/lib/debts.ts para las cuotas. */
+export interface PersonDebt {
+  id: string;
+  user_id: string;
+  direction: "borrowed" | "lent";
+  person: string;
+  /** Centavos. */
+  principal: number;
+  currency: string;
+  started_on: string;
+  interest_rate: number;
+  interest_period: "none" | "total" | "monthly" | "annual";
+  installments: number;
+  frequency: "once" | "weekly" | "biweekly" | "monthly";
+  first_due_on: string;
+  account_id: string | null;
+  note: string | null;
+  closed_at: string | null;
+  created_at: string;
+  payments: PersonDebtPayment[];
 }
 
 export interface RecurringRule {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Money } from "@/components/money";
 import { TxIcon } from "@/components/visuals";
 import { useSheets } from "@/components/shell/sheets";
@@ -66,8 +67,12 @@ export function TransactionList({ transactions, grouped = true, emptyText = "Sin
   const accById = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
   const catById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
 
-  const openTx = (tx: Transaction) =>
-    tx.kind === "transfer" ? sheets.open({ type: "transfer", tx }) : sheets.open({ type: "transaction", tx });
+  const router = useRouter();
+  const openTx = (tx: Transaction) => {
+    // Lo de una deuda se maneja desde la deuda.
+    if (tx.debt_id) return router.push(`/deudas/${tx.debt_id}`);
+    return tx.kind === "transfer" ? sheets.open({ type: "transfer", tx }) : sheets.open({ type: "transaction", tx });
+  };
 
   // Transferencias con ambas patas en la lista: se muestra una sola fila "Origen → Destino".
   const { visible, pairTo } = useMemo(() => {

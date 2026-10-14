@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as accounts from "@/lib/data/accounts";
+import * as debts from "@/lib/data/debts";
 import * as groups from "@/lib/data/groups";
 import * as planning from "@/lib/data/planning";
 import * as profile from "@/lib/data/profile";
@@ -23,6 +24,7 @@ export const keys = {
   stats: ["stats"] as const,
   invites: ["invites"] as const,
   pin: ["pin"] as const,
+  debts: ["debts"] as const,
 };
 
 /** Todo lo que cambia cuando se mueve dinero. */
@@ -127,6 +129,24 @@ export function useTransactionMutations() {
 }
 
 // ---------- Recurrentes y metas ----------
+// ---------- Deudas ----------
+export function useDebts() {
+  return useQuery({ queryKey: keys.debts, queryFn: debts.fetchDebts });
+}
+
+export function useDebtMutations() {
+  const qc = useQueryClient();
+  const money = useInvalidateMoney();
+  // Las deudas pueden mover dinero en una cuenta.
+  const done = { onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: keys.debts }), money()]) };
+  return {
+    save: useMutation({ mutationFn: (v: { id: string | null; input: debts.DebtInput }) => debts.saveDebt(v.id, v.input), ...done }),
+    remove: useMutation({ mutationFn: debts.deleteDebt, ...done }),
+    pay: useMutation({ mutationFn: debts.recordDebtPayment, ...done }),
+    removePayment: useMutation({ mutationFn: debts.deleteDebtPayment, ...done }),
+  };
+}
+
 export function useRecurring() {
   return useQuery({ queryKey: keys.recurring, queryFn: planning.fetchRecurring });
 }

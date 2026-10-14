@@ -78,6 +78,10 @@ function describeDraft(d: UIDraft) {
       return `pago de ${formatMoney(x.amount, x.currency)} a la tarjeta ${x.card_name} desde ${x.from_account_name ?? "cuenta por elegir"} (${status})`;
     case "card_debt":
       return `deuda de la tarjeta ${x.card_name} a ${formatMoney(x.new_debt, x.currency)} (${status})`;
+    case "debt":
+      return `${x.direction === "borrowed" ? "deuda con" : "préstamo a"} ${x.person} de ${formatMoney(x.principal, x.currency)}, total ${formatMoney(x.total, x.currency)} (${status})`;
+    case "debt_payment":
+      return `${x.direction === "borrowed" ? "pago a" : "cobro a"} ${x.person} de ${formatMoney(x.amount, x.currency)} (${status})`;
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CreditCard, FileUp, Mic, Split } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CreditCard, FileUp, HandCoins, Mic, Split } from "lucide-react";
 import { useAccounts } from "@/hooks/queries";
 import { Panel, PanelContent } from "@/components/ui/panel";
 import { useSheets } from "./sheets";
@@ -65,6 +65,19 @@ export function QuickAddPanel({ open, onOpenChange }: { open: boolean; onOpenCha
               </span>
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => sheets.open({ type: "debt" })}
+            className="col-span-2 flex items-center gap-3 rounded-xl border border-secondary bg-card p-4 text-left transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-primary">
+              <HandCoins className="h-5 w-5" strokeWidth={2.2} />
+            </span>
+            <span>
+              <span className="block text-[15px] font-bold">Deuda o préstamo</span>
+              <span className="block text-xs text-muted-foreground">Te prestaron o prestaste, con o sin interés</span>
+            </span>
+          </button>
           <button
             type="button"
             onClick={() => sheets.open({ type: "import" })}

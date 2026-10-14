@@ -11,7 +11,9 @@ const MAX = 120;
 /** El gesto empieza arriba del todo, fuera de paneles abiertos y de listas con scroll propio. */
 function canStart(target: EventTarget | null) {
   if (window.scrollY > 0) return false;
-  if (document.querySelector("[role=dialog][data-state=open]")) return false;
+  if (document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [data-radix-popper-content-wrapper]')) return false;
+  if (document.body.hasAttribute("data-scroll-locked")) return false;
+  if (target instanceof Element && target.closest('[role="dialog"], [role="alertdialog"]')) return false;
   for (let el = target instanceof Element ? target : null; el && el !== document.body; el = el.parentElement) {
     if (el.scrollTop > 0) return false;
   }

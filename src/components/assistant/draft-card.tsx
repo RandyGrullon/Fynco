@@ -8,10 +8,11 @@ import { MemberAvatar } from "@/components/visuals";
 import { useSheets } from "@/components/shell/sheets";
 import { RecurringPanel } from "@/components/recurring/recurring-panel";
 import { ACCOUNT_TYPE_LABEL, AccountPanel } from "@/components/accounts/account-panel";
-import { useAccountMutations, useAccounts, useRecurringMutations, useSharedMutations, useTransactionMutations } from "@/hooks/queries";
+import { useAccountMutations, useAccounts, useDebtMutations, useRecurringMutations, useSharedMutations, useTransactionMutations } from "@/hooks/queries";
 import { toast } from "@/hooks/use-toast";
 import { dayLabel, shortDate } from "@/lib/dates";
-import type { AccountDraft, CardDebtDraft, CardPaymentDraft, Draft, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "@/lib/assistant/types";
+import type { AccountDraft, CardDebtDraft, CardPaymentDraft, DebtDraft, DebtPaymentDraft, Draft, RecurringDraft, SettlementDraft, SharedExpenseDraft, TransactionDraft, TransferDraft } from "@/lib/assistant/types";
+import { FREQUENCY_LABEL as DEBT_FREQUENCY, interestLabel } from "@/lib/debts";
 import type { Account } from "@/lib/types";
 import type { UIDraft } from "./conversation";
 
@@ -34,6 +35,7 @@ export function useDraftActions() {
   const shared = useSharedMutations();
   const recurring = useRecurringMutations();
   const accountM = useAccountMutations();
+  const debtM = useDebtMutations();
   const sheets = useSheets();
   const [editingRecurring, setEditingRecurring] = useState<RecurringDraft | null>(null);
   const [editingAccount, setEditingAccount] = useState<AccountDraft | null>(null);
@@ -126,6 +128,14 @@ export function useDraftActions() {
           await accountM.setCardDebt.mutateAsync({ card: d.card_id, debt: d.new_debt, occurred_on: d.occurred_on });
           break;
         }
+        case "debt": {
+          await debtM.save.mutateAsync({ id: null, input: debtInput(d) });
+          break;
+        }
+        case "debt_payment": {
+          await debtM.pay.mutateAsync({ debt: d.debt_id, amount: d.amount, paid_on: d.paid_on, account_id: d.account_id });
+          break;
+        }
       }
       return true;
     } catch {
@@ -167,6 +177,10 @@ export function useDraftActions() {
         return sheets.open({ type: "card_payment", cardId: d.card_id });
       case "card_debt":
         return sheets.open({ type: "card_balance", cardId: d.card_id });
+      case "debt":
+        return sheets.open({ type: "debt", preset: debtInput(d) });
+      case "debt_payment":
+        return sheets.open({ type: "debt_payment", debtId: d.debt_id });
     }
   }
 
@@ -198,6 +212,23 @@ export function useDraftActions() {
   const accountEditor = editingAccount ? <AccountPanel open onOpenChange={(o) => !o && setEditingAccount(null)} preset={accountInput(editingAccount)} /> : null;
 
   return { ready, confirm, edit, accountForTransaction, accountForShared, byId, recurringEditor, accountEditor, paymentSources, paymentSource };
+}
+
+function debtInput(d: DebtDraft) {
+  return {
+    direction: d.direction,
+    person: d.person,
+    principal: d.principal,
+    currency: d.currency,
+    started_on: d.started_on,
+    interest_rate: d.interest_rate,
+    interest_period: d.interest_period,
+    installments: d.installments,
+    frequency: d.frequency,
+    first_due_on: d.first_due_on,
+    account_id: d.account_id,
+    note: d.note,
+  };
 }
 
 /** Datos para crear la cuenta. Los campos de tarjeta solo se envían en tarjetas. */
@@ -244,6 +275,10 @@ function labelFor(d: Draft) {
       return "Tarjeta pagada";
     case "card_debt":
       return "Deuda de tarjeta";
+    case "debt":
+      return d.direction === "borrowed" ? "Me prestaron" : "Presté";
+    case "debt_payment":
+      return d.direction === "borrowed" ? "Pago de deuda" : "Cobro de préstamo";
   }
 }
 
@@ -251,6 +286,8 @@ function titleFor(d: Draft) {
   if (d.type === "settlement") return d.i_pay ? `Le pagaste a ${d.to_name}` : `${d.from_name} te pagó`;
   if (d.type === "account" || d.type === "card_debt") return d.type === "account" ? d.name : d.card_name;
   if (d.type === "card_payment") return `Pago ${d.card_name}`;
+  if (d.type === "debt") return d.person;
+  if (d.type === "debt_payment") return d.direction === "borrowed" ? `Pago a ${d.person}` : `${d.person} te pagó`;
   return d.description;
 }
 
@@ -283,7 +320,16 @@ export function DraftCard({
   const positive = (d.type === "transaction" || d.type === "recurring") && d.kind === "income";
   const neutral = d.type === "transfer" || d.type === "settlement" || d.type === "card_payment";
   const label = labelFor(d);
-  const when = d.type === "recurring" ? `Desde ${shortDate(d.start_on)}` : d.type === "account" ? (d.institution ?? "") : dayLabel(d.occurred_on);
+  const when =
+    d.type === "recurring"
+      ? `Desde ${shortDate(d.start_on)}`
+      : d.type === "account"
+        ? (d.institution ?? "")
+        : d.type === "debt"
+          ? dayLabel(d.started_on)
+          : d.type === "debt_payment"
+            ? dayLabel(d.paid_on)
+            : dayLabel(d.occurred_on);
 
   return (
     <section aria-label={saved ? `${label} guardado` : `${label} sin guardar`} className="rounded-2xl border border-secondary bg-card p-4">
@@ -298,6 +344,10 @@ export function DraftCard({
           <Money amount={d.opening_balance} currency={d.currency} className={d.opening_balance < 0 ? "text-lg font-extrabold text-negative" : "text-lg font-extrabold"} />
         ) : d.type === "card_debt" ? (
           <Money amount={-d.new_debt} currency={d.currency} className="text-lg font-extrabold" />
+        ) : d.type === "debt" ? (
+          <Money amount={d.principal} currency={d.currency} className="text-lg font-extrabold" />
+        ) : d.type === "debt_payment" ? (
+          <Money amount={d.amount} currency={d.currency} className={d.direction === "lent" ? "text-lg font-extrabold text-positive" : "text-lg font-extrabold"} />
         ) : (
           <Money
             amount={neutral || positive ? d.amount : -d.amount}
@@ -320,6 +370,15 @@ export function DraftCard({
       {d.type === "account" && <AccountDetails d={d} />}
       {d.type === "card_payment" && <CardPaymentDetails d={d} actions={actions} saved={saved} onUpdate={onUpdate} />}
       {d.type === "card_debt" && <CardDebtDetails d={d} />}
+      {d.type === "debt" && <DebtDetails d={d} />}
+      {d.type === "debt_payment" && (
+        <dl className="mt-3 grid grid-cols-2 gap-3">
+          <Detail label="Faltaba">
+            <Money amount={d.remaining} currency={d.currency} />
+          </Detail>
+          <Detail label={d.direction === "borrowed" ? "Sale de" : "Entra a"}>{d.account_name ?? "Sin cuenta"}</Detail>
+        </dl>
+      )}
       {d.type === "recurring" && (
         <dl className="mt-3 grid grid-cols-2 gap-3">
           <Detail label="Frecuencia">{FREQUENCY_LABEL[d.frequency]}</Detail>
@@ -404,6 +463,27 @@ function CardPaymentDetails({ d, actions, saved, onUpdate }: { d: CardPaymentDra
         )}
       </label>
     </div>
+  );
+}
+
+function DebtDetails({ d }: { d: DebtDraft }) {
+  return (
+    <>
+      <dl className="mt-3 grid grid-cols-2 gap-3">
+        <Detail label="Interés">{interestLabel(d.interest_rate, d.interest_period)}</Detail>
+        <Detail label={d.direction === "borrowed" ? "Total a pagar" : "Total a cobrar"}>
+          <Money amount={d.total} currency={d.currency} />
+        </Detail>
+        <Detail label="Forma de pago">{d.installments === 1 ? `Un pago · ${shortDate(d.last_due_on)}` : `${d.installments} cuotas · ${DEBT_FREQUENCY[d.frequency].toLowerCase()}`}</Detail>
+        {d.installments > 1 && (
+          <Detail label="Cada cuota">
+            <Money amount={d.installment_amount} currency={d.currency} />
+          </Detail>
+        )}
+        <Detail label={d.direction === "borrowed" ? "Entró a" : "Salió de"}>{d.account_name ?? "Sin cuenta"}</Detail>
+      </dl>
+      {d.installments > 1 && <p className="mt-2 text-xs text-muted-foreground">Desde el {shortDate(d.first_due_on)} hasta el {shortDate(d.last_due_on)}.</p>}
+    </>
   );
 }
 
