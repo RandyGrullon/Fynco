@@ -471,13 +471,13 @@ await as(RANDY, async () => {
   let bank, deuda, card, usd, anaAcc;
   await as(RANDY, async () => {
     bank = (await one(`insert into accounts (name, type, opening_balance) values ('Plan banco', 'checking', 10000000) returning id`)).id;
-    deuda = (await one(`insert into accounts (name, type, opening_balance) values ('Deuda papi', 'other', -11060000) returning id`)).id;
+    deuda = (await one(`insert into accounts (name, type, opening_balance) values ('Deuda familiar', 'other', -5000000) returning id`)).id;
     usd = (await one(`insert into accounts (name, type, currency) values ('Plan USD', 'savings', 'USD') returning id`)).id;
     card = (await one(`insert into accounts (name, type, statement_day, payment_due_day, pay_day, pay_from_account_id) values ('Plan Visa', 'credit', 13, 9, 4, $1) returning id`, [bank])).id;
     check('tarjeta con día de pago y cuenta desde donde se paga', Boolean(card));
 
     check('reserved solo en cuentas other', Boolean(await fails(`insert into accounts (name, type, reserved) values ('Mal', 'checking', true)`)));
-    const res = await one(`insert into accounts (name, type, opening_balance, reserved) values ('Préstamo embajada', 'other', -10000000, true) returning reserved`);
+    const res = await one(`insert into accounts (name, type, opening_balance, reserved) values ('Préstamo reservado', 'other', -10000000, true) returning reserved`);
     check('una cuenta other puede ser prestado', res.reserved === true);
     check('pay_day fuera de 1-31 se rechaza', Boolean(await fails(`update accounts set pay_day = 32 where id = $1`, [card])));
     check('no se paga desde sí misma', Boolean(await fails(`update accounts set pay_from_account_id = id where id = $1`, [card])));
@@ -491,7 +491,7 @@ await as(RANDY, async () => {
     // Cuota planificada: transferencia de una sola vez el 16 oct, y otra mensual desde el 1 oct.
     await q(
       `insert into recurring_rules (account_id, to_account_id, kind, amount, description, frequency, start_on, end_on, next_run_on)
-       values ($1, $2, 'transfer', 1000000, 'Cuota papi', 'monthly', '2026-10-16', '2026-10-16', '2026-10-16')`,
+       values ($1, $2, 'transfer', 1000000, 'Cuota familiar', 'monthly', '2026-10-16', '2026-10-16', '2026-10-16')`,
       [bank, deuda],
     );
     check('transferencia recurrente sin destino se rechaza', Boolean(await fails(`insert into recurring_rules (account_id, kind, amount, description, frequency, start_on, next_run_on) values ($1, 'transfer', 100, 'x', 'monthly', '2026-10-01', '2026-10-01')`, [bank])));
@@ -500,12 +500,12 @@ await as(RANDY, async () => {
   });
   await q(`select process_recurring($1, '2026-10-20')`, [RANDY]);
   await q(`select process_recurring($1, '2026-10-21')`, [RANDY]);
-  const legs = await q(`select t.amount, t.account_id, t.transfer_id from transactions t where t.description = 'Cuota papi' order by t.amount`);
+  const legs = await q(`select t.amount, t.account_id, t.transfer_id from transactions t where t.description = 'Cuota familiar' order by t.amount`);
   check('la cuota crea dos patas con el mismo transfer_id', legs.length === 2 && legs[0].transfer_id === legs[1].transfer_id && Number(legs[0].amount) === -1000000, legs);
   check('correr dos veces no duplica', legs.length === 2);
   await as(RANDY, async () => {
-    check('la cuota sale del banco y baja la deuda', (await balance(bank)) === 9000000 && (await balance(deuda)) === -10060000);
-    const rule = await one(`select active from recurring_rules where description = 'Cuota papi'`);
+    check('la cuota sale del banco y baja la deuda', (await balance(bank)) === 9000000 && (await balance(deuda)) === -4000000);
+    const rule = await one(`select active from recurring_rules where description = 'Cuota familiar'`);
     check('la de una sola vez queda inactiva', rule.active === false);
 
     // Ajustes y periodos: solo de su dueño.

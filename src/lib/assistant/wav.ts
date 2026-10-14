@@ -1,7 +1,7 @@
 "use client";
 
 // Grabación de notas de voz para el asistente: MediaRecorder → decodificar → 16 kHz mono →
-// WAV PCM de 16 bits → base64. WAV porque Gemini no acepta webm y funciona en todos los navegadores.
+// WAV PCM de 16 bits → base64. WAV para mandar siempre el mismo formato, venga del navegador que venga.
 import { MAX_RECORDING_MS } from "./types";
 
 export const TARGET_SAMPLE_RATE = 16_000;

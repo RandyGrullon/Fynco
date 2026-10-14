@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUser } from "@/lib/supabase/server";
-import { GeminiError, runToolLoop, type GeminiContent } from "@/lib/assistant/gemini";
 import { GROQ_DEFAULT_MODELS, runGroqToolLoop, transcribeWithGroq, type GroqMessage } from "@/lib/assistant/groq";
+import { IAError } from "@/lib/assistant/ia";
 import { MAX_AUDIO_CHARS } from "@/lib/assistant/types";
 import { crearHerramientas } from "@/lib/finanzas/herramientas";
 import { hoyRD } from "@/lib/finanzas/motor";
@@ -16,7 +16,6 @@ export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 const HISTORIAL = 10; // mensajes anteriores que ve el modelo
-const GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-2.5-flash"];
 
 const Cuerpo = z
   .object({
@@ -93,8 +92,7 @@ export async function POST(req: Request) {
   if (!user) return fail(401, "Tu sesión expiró. Vuelve a entrar.");
 
   const groqKey = process.env.GROQ_API_KEY?.trim();
-  const geminiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!groqKey && !geminiKey) return fail(503, "Falta configurar la llave de Groq en Vercel (GROQ_API_KEY).");
+  if (!groqKey) return fail(503, "Falta configurar la llave de Groq en Vercel (GROQ_API_KEY).");
 
   let cuerpo: z.infer<typeof Cuerpo>;
   try {
@@ -111,11 +109,10 @@ export async function POST(req: Request) {
   // Nota de voz → texto
   let transcripcion: string | undefined;
   if (cuerpo.audio) {
-    if (!groqKey) return fail(503, "Las notas de voz necesitan la llave de Groq.");
     try {
       transcripcion = await transcribeWithGroq(groqKey, cuerpo.audio.data, req.signal);
     } catch (e) {
-      return fail(e instanceof GeminiError ? e.status : 502, e instanceof GeminiError ? e.message : "No pude transcribir la nota de voz.");
+      return fail(e instanceof IAError ? e.status : 502, e instanceof IAError ? e.message : "No pude transcribir la nota de voz.");
     }
     if (!transcripcion) return fail(400, "No te entendí en la nota de voz. Intenta de nuevo, más cerca del micrófono.");
   }
@@ -144,45 +141,23 @@ export async function POST(req: Request) {
   historial.push({ rol: "user", texto: textoUsuario });
 
   let respuesta = "";
-  let errorIA: GeminiError | null = null;
+  let errorIA: IAError | null = null;
   try {
-    if (groqKey) {
-      const msgs: GroqMessage[] = [{ role: "system", content: sistema }];
-      for (const m of historial) {
-        const role = m.rol === "assistant" ? "assistant" : "user";
-        const last = msgs[msgs.length - 1];
-        if (last.role === role) last.content = `${last.content}\n\n${m.texto}`;
-        else msgs.push({ role, content: m.texto } as GroqMessage);
-      }
-      while (msgs[1]?.role === "assistant") msgs.splice(1, 1);
-      const modelos = [...new Set([process.env.GROQ_MODEL?.trim(), ...GROQ_DEFAULT_MODELS].filter((m): m is string => Boolean(m)))];
-      try {
-        const r = await runGroqToolLoop({ apiKey: groqKey, models: modelos, messages: msgs, tools: tools.declaraciones, executeTool: tools.ejecutar, maxRounds: 6, deadline, callTimeoutMs: 25_000, signal: req.signal });
-        respuesta = r.text;
-      } catch (e) {
-        // Sin cupo en Groq: si hay Gemini y todavía no se cambió nada, responde Gemini.
-        const reintentable = e instanceof GeminiError && ["rate_limited", "unavailable", "timeout", "network", "model_unavailable"].includes(e.code);
-        if (!(geminiKey && reintentable && tools.cambios.length === 0 && tools.notasCambiadas === 0)) throw e;
-        console.error("[chat] groq→gemini:", e.code, e.detail);
-      }
+    const msgs: GroqMessage[] = [{ role: "system", content: sistema }];
+    for (const m of historial) {
+      const role = m.rol === "assistant" ? "assistant" : "user";
+      const last = msgs[msgs.length - 1];
+      if (last.role === role) last.content = `${last.content}\n\n${m.texto}`;
+      else msgs.push({ role, content: m.texto } as GroqMessage);
     }
-    if (!respuesta && geminiKey && tools.cambios.length === 0 && tools.notasCambiadas === 0) {
-      const contents: GeminiContent[] = [];
-      for (const m of historial) {
-        const role = m.rol === "assistant" ? "model" : "user";
-        const last = contents[contents.length - 1];
-        if (last && last.role === role) last.parts[0].text = `${last.parts[0].text}\n\n${m.texto}`;
-        else contents.push({ role, parts: [{ text: m.texto }] });
-      }
-      while (contents.length && contents[0].role === "model") contents.shift();
-      const modelos = [...new Set([process.env.GEMINI_MODEL?.trim(), ...GEMINI_MODELS].filter((m): m is string => Boolean(m)))];
-      const r = await runToolLoop({ apiKey: geminiKey, models: modelos, systemInstruction: sistema, contents, tools: tools.declaraciones, executeTool: tools.ejecutar, maxRounds: 6, deadline, callTimeoutMs: 25_000, signal: req.signal });
-      respuesta = r.text;
-    }
+    while (msgs[1]?.role === "assistant") msgs.splice(1, 1);
+    const modelos = [...new Set([process.env.GROQ_MODEL?.trim(), ...GROQ_DEFAULT_MODELS].filter((m): m is string => Boolean(m)))];
+    const r = await runGroqToolLoop({ apiKey: groqKey, models: modelos, messages: msgs, tools: tools.declaraciones, executeTool: tools.ejecutar, maxRounds: 6, deadline, callTimeoutMs: 25_000, signal: req.signal });
+    respuesta = r.text;
   } catch (e) {
-    if (!(e instanceof GeminiError)) {
+    if (!(e instanceof IAError)) {
       console.error("[chat] error interno");
-      errorIA = new GeminiError(500, "internal", "Algo salió mal. Intenta de nuevo.");
+      errorIA = new IAError(500, "internal", "Algo salió mal. Intenta de nuevo.");
     } else {
       console.error("[chat] ia:", e.code, e.detail);
       errorIA = e;

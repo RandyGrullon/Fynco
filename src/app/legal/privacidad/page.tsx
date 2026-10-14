@@ -87,8 +87,7 @@ export default function PrivacidadPage() {
         <ul>
           <li>
             Cuando le escribes al asistente, enviamos tu mensaje, tus notas de memoria, un resumen de tu plan y los últimos mensajes del chat a{" "}
-            <strong>Groq</strong> (y, si Groq no está disponible, a <strong>Google Gemini</strong>), los servicios de inteligencia artificial que
-            generan la respuesta. Si no usas el asistente, no se envía nada.
+            <strong>Groq</strong>, el servicio de inteligencia artificial que genera la respuesta. Si no usas el asistente, no se envía nada.
           </li>
           <li>
             Los mensajes del chat, las notas de memoria y cada versión de tu plan se guardan en tu cuenta para que el asistente recuerde todo y

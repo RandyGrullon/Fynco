@@ -37,7 +37,7 @@ Tu plan de finanzas y un chat con una IA honesta: le cuentas todo (gastos, pagos
 `/api/chat` (servidor, con la sesión del usuario):
 1. Guarda tu mensaje en `pf_chat` antes de nada.
 2. Arma las instrucciones con tus notas de memoria y un resumen del plan, más los últimos mensajes.
-3. Corre el bucle de herramientas con Groq (`openai/gpt-oss-120b` y respaldos); si Groq no tiene cupo y no se cambió nada, usa Gemini.
+3. Corre el bucle de herramientas con Groq (`openai/gpt-oss-120b`; si no tiene cupo, prueba los otros modelos de Groq).
 4. Si cambió el plan, lo guarda como versión nueva y la respuesta queda ligada a esa versión para poder deshacerla.
 
 Herramientas (`src/lib/finanzas/herramientas.ts`): ver el plan y los movimientos, **simular** una compra con cada tarjeta, registrar y editar movimientos, saldos, cortes, pagos de tarjeta, cobros, cuotas de la deuda, préstamos, salidas, ajustes y tarjetas, guardar notas y buscar en el historial y la conversación original.
@@ -52,8 +52,7 @@ Variables (Vercel → Settings → Environment Variables, o `.env.local`):
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto de Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Llave anon (o `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) |
 | `GROQ_API_KEY` | El asistente y las notas de voz |
-| `GEMINI_API_KEY` | Opcional: respaldo si Groq no tiene cupo |
-| `GROQ_MODEL` / `GEMINI_MODEL` | Opcional: modelo preferido |
+| `GROQ_MODEL` | Opcional: modelo preferido |
 | `NEXT_PUBLIC_SITE_URL` | Opcional. Por defecto `https://fynco.grullonb.com` |
 
 Auth en Supabase → Authentication → URL Configuration: Site URL `https://fynco.grullonb.com` y Redirect URL `https://fynco.grullonb.com/auth/callback` (más `http://localhost:9002/auth/callback` para desarrollo). Para "Continuar con Google", activa el proveedor Google.

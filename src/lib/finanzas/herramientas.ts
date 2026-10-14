@@ -1,6 +1,6 @@
 // Herramientas del asistente. Trabajan sobre una copia del plan en memoria;
 // la ruta del chat guarda la copia como versión nueva solo si algo cambió.
-import type { FunctionDeclaration, GeminiSchema } from "@/lib/assistant/gemini";
+import type { FunctionDeclaration, ToolSchema } from "@/lib/assistant/ia";
 import { calcularPlan, cifra, dia, iso, redondear, redondear2 } from "./motor";
 import { enMoneda, fechaCorta, rd } from "./formato";
 import type { Estado, Moneda, Movimiento, Plan } from "./tipos";
@@ -40,8 +40,8 @@ function texto(v: unknown, campo: string, max = 300): string {
 const opcional = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
 const nuevoId = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
-const S = (type: GeminiSchema["type"], description?: string, extra: Partial<GeminiSchema> = {}): GeminiSchema => ({ type, ...(description ? { description } : {}), ...extra });
-const obj = (properties: Record<string, GeminiSchema>, required: string[] = []): GeminiSchema => ({ type: "OBJECT", properties, ...(required.length ? { required } : {}) });
+const S = (type: ToolSchema["type"], description?: string, extra: Partial<ToolSchema> = {}): ToolSchema => ({ type, ...(description ? { description } : {}), ...extra });
+const obj = (properties: Record<string, ToolSchema>, required: string[] = []): ToolSchema => ({ type: "OBJECT", properties, ...(required.length ? { required } : {}) });
 
 export function crearHerramientas(inicial: Estado, hoy: string, fuentes: FuentesExternas) {
   const estado: Estado = structuredClone(inicial);
@@ -111,7 +111,7 @@ export function crearHerramientas(inicial: Estado, hoy: string, fuentes: Fuentes
   }
 
   // ---------- declaraciones ----------
-  const movProps: Record<string, GeminiSchema> = {
+  const movProps: Record<string, ToolSchema> = {
     fecha: S("STRING", "AAAA-MM-DD. Si dice 'hoy', usa la fecha de hoy."),
     tarjeta: S("STRING", `Con qué pagó: ${[...claves(), "cuenta (débito)", "efectivo"].join(", ")}`),
     moneda: S("STRING", "DOP, USD o EUR", { enum: MONEDAS }),

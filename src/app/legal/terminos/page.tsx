@@ -69,7 +69,7 @@ export default function TerminosPage() {
 
       <Section title="5. El asistente">
         <p>
-          El asistente usa inteligencia artificial (Google Gemini) y puede equivocarse, entender mal una nota de voz o registrar un monto incorrecto.
+          El asistente usa inteligencia artificial (Groq) y puede equivocarse, entender mal una nota de voz o registrar un monto incorrecto.
           Revisa lo que propone antes de confirmarlo y no tomes decisiones importantes basándote solo en sus respuestas.
         </p>
       </Section>
